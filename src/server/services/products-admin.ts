@@ -4,6 +4,7 @@ import { invalidateProductCache, invalidateProductsCache } from '../../lib/cache
 import { getDb } from '../db';
 import * as repo from '../repos/products-admin';
 import { getBrandById } from '../repos/admin';
+import * as mediaRepo from '../repos/media';
 import * as seoRepo from '../repos/seo';
 
 export async function listGridProducts() {
@@ -14,7 +15,10 @@ export async function getAdminProduct(id: string) {
   const product = await repo.getProductAdminById(getDb(), id);
   if (!product) return null;
   const seo = product.seoId ? await seoRepo.getSeoById(getDb(), product.seoId) : null;
-  return { ...product, seo };
+  const primaryMedia = product.primaryMediaId
+    ? await mediaRepo.getMediaById(getDb(), product.primaryMediaId)
+    : null;
+  return { ...product, seo, primaryMedia };
 }
 
 export async function createAdminProduct(input: unknown) {

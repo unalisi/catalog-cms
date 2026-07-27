@@ -18,6 +18,7 @@ export const productUpsertSchema = z.object({
   stock: z.coerce.number().int().min(0),
   status: productStatusSchema,
   brandId: z.string().optional().nullable(),
+  primaryMediaId: z.string().optional().nullable(),
   seo: seoFieldsSchema.optional().nullable(),
 });
 

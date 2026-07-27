@@ -99,6 +99,7 @@ export async function createProduct(
     status: Product['status'];
     brandId?: string | null;
     seoId?: string | null;
+    primaryMediaId?: string | null;
   },
 ): Promise<Product> {
   const now = nowIso();
@@ -116,6 +117,7 @@ export async function createProduct(
     status: input.status,
     brandId: input.brandId || null,
     seoId: input.seoId ?? null,
+    primaryMediaId: input.primaryMediaId || null,
     publishedAt: input.status === 'published' ? now : null,
     createdAt: now,
     updatedAt: now,
@@ -140,6 +142,7 @@ export async function updateProductFields(
     status: Product['status'];
     brandId: string | null;
     seoId: string | null;
+    primaryMediaId: string | null;
   }>,
 ): Promise<Product | null> {
   const [existing] = await db.select().from(products).where(eq(products.id, id)).limit(1);

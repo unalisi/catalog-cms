@@ -236,10 +236,10 @@ Teknik çelişkide [`ARCHITECTURE.md`](./ARCHITECTURE.md) üstündür.
 - Media API + UI; settings service; public header/footer ayarlardan beslenir.
 
 **Kabul kriterleri**
-- [ ] Upload R2’ye gider; public’te transform URL çalışır.
-- [ ] Medya seçici tüm içerik formlarından açılır.
-- [ ] Settings değişince public header/footer/meta güncellenir (cache invalidate).
-- [ ] Alt-text zorunlu veya uyarılı (a11y).
+- [x] Upload R2’ye gider; public’te transform URL çalışır.
+- [x] Medya seçici tüm içerik formlarından açılır.
+- [x] Settings değişince public header/footer/meta güncellenir (cache invalidate).
+- [x] Alt-text zorunlu veya uyarılı (a11y).
 
 **Bağımlılıklar:** FAZ 1; admin shell için FAZ 2
 

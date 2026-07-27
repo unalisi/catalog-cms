@@ -53,6 +53,9 @@ const toast = Astro.url.searchParams.get('toast');
       brandId: product.brandId ?? '',
       compareAtPrice: product.compareAtPrice,
       currency: product.currency,
+      primaryMediaId: product.primaryMediaId,
+      primaryMediaUrl: product.primaryMedia?.url ?? null,
+      primaryMediaKey: product.primaryMedia?.key ?? null,
       seo: product.seo,
     }}
     variants={product.variants.map((v) => ({

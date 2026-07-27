@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import MediaPicker, { type MediaItem } from './MediaPicker';
 import SeoPreview from './SeoPreview';
 
 export type SeoFormValue = {
@@ -55,6 +57,8 @@ export default function SeoFields({
   pathPreview = '/',
   siteName = 'Catalog CMS',
 }: Props) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   function patch(partial: Partial<SeoFormValue>) {
     onChange({ ...value, ...partial });
   }
@@ -94,15 +98,24 @@ export default function SeoFields({
               onChange={(e) => patch({ canonical: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-sm">
+          <div className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">OG image URL</span>
-            <input
-              className="rounded-md border border-input bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              value={value.ogImageUrl}
-              placeholder="/favicon.svg"
-              onChange={(e) => patch({ ogImageUrl: e.target.value })}
-            />
-          </label>
+            <div className="flex gap-2">
+              <input
+                className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                value={value.ogImageUrl}
+                placeholder="/media/…"
+                onChange={(e) => patch({ ogImageUrl: e.target.value })}
+              />
+              <button
+                type="button"
+                className="shrink-0 rounded-md border border-border px-3 py-2 hover:bg-muted"
+                onClick={() => setPickerOpen(true)}
+              >
+                Seç
+              </button>
+            </div>
+          </div>
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">robots extra</span>
             <input
@@ -129,6 +142,12 @@ export default function SeoFields({
           ogImageUrl={value.ogImageUrl || undefined}
         />
       </div>
+      <MediaPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(media: MediaItem) => patch({ ogImageUrl: media.url })}
+        title="OG görseli seç"
+      />
     </div>
   );
 }

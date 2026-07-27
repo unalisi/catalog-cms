@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import type { PageSeo } from '../lib/seo/meta';
+import { getCachedSiteSettings } from '../server/services/settings';
 
 interface Props {
   title?: string;
@@ -17,6 +18,19 @@ const {
   cacheStatus = null,
   jsonLd = null,
 } = Astro.props;
+
+const { data: site } = await getCachedSiteSettings();
+const siteName = site?.name ?? 'Catalog CMS';
+const nav = site?.navigation?.length
+  ? site.navigation
+  : [
+      { label: 'Katalog', href: '/catalog' },
+      { label: 'Blog', href: '/blog' },
+    ];
+const favicon = site?.faviconUrl || '/favicon.svg';
+const logoUrl = site?.logoUrl;
+const footerText = site?.footerText || `© ${new Date().getFullYear()} ${siteName}`;
+const gaId = site?.analytics?.gaMeasurementId?.trim() || null;
 
 const pageTitle = seo?.title ?? title;
 const pageDescription = seo?.description ?? description;
@@ -43,7 +57,7 @@ const robots = seo?.robots ?? (seo?.noindex ? 'noindex, nofollow' : undefined);
     {seo?.twitterImage && <meta name="twitter:image" content={seo.twitterImage} />}
     {seo?.twitterSite && <meta name="twitter:site" content={seo.twitterSite} />}
     <meta name="generator" content={Astro.generator} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href={favicon} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -52,6 +66,25 @@ const robots = seo?.robots ?? (seo?.noindex ? 'noindex, nofollow' : undefined);
     />
     <title>{pageTitle}</title>
     {jsonLd && <script is:inline type="application/ld+json" set:html={jsonLd} />}
+    {
+      gaId && (
+        <script
+          is:inline
+          set:html={`
+            (function(){
+              var s=document.createElement('script');
+              s.async=true;
+              s.src='https://www.googletagmanager.com/gtag/js?id=${gaId}';
+              document.head.appendChild(s);
+              window.dataLayer=window.dataLayer||[];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${gaId}');
+            })();
+          `}
+        />
+      )
+    }
   </head>
   <body class="flex min-h-dvh flex-col bg-background text-foreground antialiased">
     <a
@@ -62,13 +95,24 @@ const robots = seo?.robots ?? (seo?.noindex ? 'noindex, nofollow' : undefined);
     </a>
     <header class="border-b border-border">
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-6">
-        <a href="/" class="font-display text-xl font-bold tracking-tight">
-          Catalog CMS
+        <a href="/" class="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+          {
+            logoUrl ? (
+              <img src={logoUrl} alt={site?.logoAlt ?? siteName} class="h-8 w-auto" />
+            ) : (
+              siteName
+            )
+          }
+          {logoUrl && <span class="sr-only">{siteName}</span>}
         </a>
         <nav aria-label="Ana menü" class="flex items-center gap-4 text-sm font-medium">
-          <a href="/catalog" class="text-muted-foreground hover:text-foreground">Katalog</a>
-          <a href="/blog" class="text-muted-foreground hover:text-foreground">Blog</a>
-          <a href="/brand/nord-teknik" class="text-muted-foreground hover:text-foreground">Markalar</a>
+          {
+            nav.map((item) => (
+              <a href={item.href} class="text-muted-foreground hover:text-foreground">
+                {item.label}
+              </a>
+            ))
+          }
           <a
             href="/admin"
             class="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
@@ -83,7 +127,16 @@ const robots = seo?.robots ?? (seo?.noindex ? 'noindex, nofollow' : undefined);
     </main>
     <footer class="mt-auto border-t border-border">
       <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-muted-foreground md:px-6">
-        © {new Date().getFullYear()} Catalog CMS
+        <p>{footerText}</p>
+        {
+          site?.contactEmail && (
+            <p class="mt-2">
+              <a href={`mailto:${site.contactEmail}`} class="hover:text-foreground">
+                {site.contactEmail}
+              </a>
+            </p>
+          )
+        }
       </div>
     </footer>
   </body>

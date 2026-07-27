@@ -69,6 +69,7 @@ export async function createPost(
     publishedAt?: string | null;
     authorId?: string | null;
     seoId?: string | null;
+    coverMediaId?: string | null;
     tags?: string[];
   },
 ): Promise<PostWithTags> {
@@ -83,7 +84,7 @@ export async function createPost(
     status: input.status,
     publishedAt: input.publishedAt ?? null,
     authorId: input.authorId ?? null,
-    coverMediaId: null,
+    coverMediaId: input.coverMediaId ?? null,
     seoId: input.seoId ?? null,
     createdAt: now,
     updatedAt: now,
@@ -105,6 +106,7 @@ export async function updatePost(
     status: Post['status'];
     publishedAt?: string | null;
     seoId?: string | null;
+    coverMediaId?: string | null;
     tags?: string[];
   },
 ): Promise<PostWithTags | null> {
@@ -119,6 +121,7 @@ export async function updatePost(
       content: input.content,
       status: input.status,
       publishedAt: input.publishedAt ?? null,
+      coverMediaId: input.coverMediaId ?? null,
       seoId: input.seoId ?? existing.seoId,
       updatedAt: nowIso(),
     })

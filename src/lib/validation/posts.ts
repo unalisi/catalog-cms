@@ -20,5 +20,6 @@ export const postUpsertSchema = z.object({
     .nullable()
     .refine((v) => !v || !Number.isNaN(Date.parse(v)), 'Geçerli bir tarih girin'),
   tags: z.array(z.string()).max(20).optional().default([]),
+  coverMediaId: z.string().optional().nullable(),
   seo: seoFieldsSchema.optional().nullable(),
 });

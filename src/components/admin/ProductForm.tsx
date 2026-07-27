@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { ApiResult } from '../../lib/api';
+import { mediaTransformPath } from '../../lib/media/urls';
+import MediaPicker, { type MediaItem } from './MediaPicker';
 import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
 
 type Status = 'draft' | 'published' | 'archived';
@@ -29,6 +31,9 @@ type ProductFormProps = {
     brandId: string;
     compareAtPrice: number | null;
     currency: string;
+    primaryMediaId?: string | null;
+    primaryMediaUrl?: string | null;
+    primaryMediaKey?: string | null;
     seo?: {
       title?: string | null;
       description?: string | null;
@@ -79,6 +84,12 @@ export default function ProductForm({
   const [stock, setStock] = useState(String(initial?.stock ?? 0));
   const [status, setStatus] = useState<Status>(initial?.status ?? 'draft');
   const [brandId, setBrandId] = useState(initial?.brandId ?? '');
+  const [primaryMediaId, setPrimaryMediaId] = useState(initial?.primaryMediaId ?? '');
+  const [primaryMediaPreview, setPrimaryMediaPreview] = useState(
+    initial?.primaryMediaUrl ??
+      (initial?.primaryMediaKey ? mediaTransformPath(initial.primaryMediaKey, 320) : ''),
+  );
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [seo, setSeo] = useState<SeoFormValue>(
     initial?.seo ? seoFormFromMeta(initial.seo) : emptySeoForm(),
   );
@@ -104,6 +115,7 @@ export default function ProductForm({
       stock: Number.parseInt(stock, 10) || 0,
       status,
       brandId: brandId || null,
+      primaryMediaId: primaryMediaId || null,
       currency: initial?.currency ?? 'TRY',
       compareAtPrice: initial?.compareAtPrice ?? null,
       seo: {
@@ -274,9 +286,47 @@ export default function ProductForm({
 
       <section className="flex flex-col gap-3 border-t border-border pt-6">
         <h2 className="font-display text-lg font-semibold">Medya</h2>
-        <p className="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-          Medya yükleme FAZ 8’de eklenecek.
-        </p>
+        {primaryMediaPreview ? (
+          <img
+            src={primaryMediaPreview}
+            alt="Ürün görseli"
+            className="h-40 w-40 rounded-md border border-border object-cover"
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">Birincil görsel seçilmedi.</p>
+        )}
+        <div className="flex gap-3 text-sm">
+          <button
+            type="button"
+            className="rounded-md border border-border px-3 py-1.5 hover:bg-muted"
+            onClick={() => setPickerOpen(true)}
+          >
+            Medya seç
+          </button>
+          {primaryMediaId && (
+            <button
+              type="button"
+              className="text-destructive hover:underline"
+              onClick={() => {
+                setPrimaryMediaId('');
+                setPrimaryMediaPreview('');
+              }}
+            >
+              Kaldır
+            </button>
+          )}
+        </div>
+        <MediaPicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onSelect={(media: MediaItem) => {
+            setPrimaryMediaId(media.id);
+            setPrimaryMediaPreview(
+              media.mime === 'image/svg+xml' ? media.url : mediaTransformPath(media.key, 320),
+            );
+          }}
+          title="Ürün görseli seç"
+        />
       </section>
 
       <section className="border-t border-border pt-6">

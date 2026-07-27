@@ -10,6 +10,7 @@ if (!data) {
 }
 const post = data?.post;
 const seo = data?.seo;
+const cover = data?.cover;
 ---
 
 <AdminLayout
@@ -38,6 +39,9 @@ const seo = data?.seo;
             status: post.status,
             publishedAt: post.publishedAt ?? '',
             tags: post.tags.join(', '),
+            coverMediaId: post.coverMediaId,
+            coverMediaUrl: cover?.url ?? null,
+            coverMediaKey: cover?.key ?? null,
             seo,
           }}
         />

@@ -1,0 +1,12 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import SettingsForm from '../../../components/admin/SettingsForm';
+---
+
+<AdminLayout
+  title="Ayarlar"
+  breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'Ayarlar' }]}
+>
+  <h1 class="mb-6 font-display text-2xl font-bold">Site ayarları</h1>
+  <SettingsForm client:load />
+</AdminLayout>

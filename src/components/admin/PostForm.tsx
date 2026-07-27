@@ -1,6 +1,8 @@
-import type { ApiResult } from '../../lib/api';
-import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
 import { useState } from 'react';
+import type { ApiResult } from '../../lib/api';
+import { mediaTransformPath } from '../../lib/media/urls';
+import MediaPicker, { type MediaItem } from './MediaPicker';
+import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -15,6 +17,9 @@ type PostFormProps = {
     status: Status;
     publishedAt: string;
     tags: string;
+    coverMediaId?: string | null;
+    coverMediaUrl?: string | null;
+    coverMediaKey?: string | null;
     seo?: {
       title?: string | null;
       description?: string | null;
@@ -42,6 +47,12 @@ export default function PostForm({ mode, postId, initial }: PostFormProps) {
   const [status, setStatus] = useState<Status>(initial?.status ?? 'draft');
   const [publishedAt, setPublishedAt] = useState(toDatetimeLocal(initial?.publishedAt));
   const [tags, setTags] = useState(initial?.tags ?? '');
+  const [coverMediaId, setCoverMediaId] = useState(initial?.coverMediaId ?? '');
+  const [coverPreview, setCoverPreview] = useState(
+    initial?.coverMediaUrl ??
+      (initial?.coverMediaKey ? mediaTransformPath(initial.coverMediaKey, 640) : ''),
+  );
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [seo, setSeo] = useState<SeoFormValue>(
     initial?.seo ? seoFormFromMeta(initial.seo) : emptySeoForm(),
   );
@@ -94,6 +105,7 @@ export default function PostForm({ mode, postId, initial }: PostFormProps) {
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean),
+      coverMediaId: coverMediaId || null,
       seo: {
         title: seo.title || null,
         description: seo.description || null,
@@ -214,7 +226,53 @@ export default function PostForm({ mode, postId, initial }: PostFormProps) {
           />
           <span className="text-xs text-muted-foreground">Virgülle ayırın.</span>
         </label>
+
+        <div className="flex flex-col gap-2 text-sm">
+          <span className="font-medium">Kapak görseli</span>
+          {coverPreview ? (
+            <img
+              src={coverPreview}
+              alt="Kapak"
+              className="h-40 w-full max-w-md rounded-md border border-border object-cover"
+            />
+          ) : (
+            <p className="text-muted-foreground">Seçilmedi.</p>
+          )}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              className="rounded-md border border-border px-3 py-1.5 hover:bg-muted"
+              onClick={() => setPickerOpen(true)}
+            >
+              Medya seç
+            </button>
+            {coverMediaId && (
+              <button
+                type="button"
+                className="text-destructive hover:underline"
+                onClick={() => {
+                  setCoverMediaId('');
+                  setCoverPreview('');
+                }}
+              >
+                Kaldır
+              </button>
+            )}
+          </div>
+        </div>
       </div>
+
+      <MediaPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(media: MediaItem) => {
+          setCoverMediaId(media.id);
+          setCoverPreview(
+            media.mime === 'image/svg+xml' ? media.url : mediaTransformPath(media.key, 640),
+          );
+        }}
+        title="Kapak görseli seç"
+      />
 
       <section className="border-t border-border pt-6">
         <h2 className="mb-4 font-display text-lg font-semibold">SEO</h2>

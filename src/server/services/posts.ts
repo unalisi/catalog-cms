@@ -6,6 +6,7 @@ import { postUpsertSchema } from '../../lib/validation/posts';
 import { zodFieldErrors } from '../../lib/validation/admin';
 import { getDb } from '../db';
 import * as postsRepo from '../repos/posts';
+import * as mediaRepo from '../repos/media';
 import * as seoRepo from '../repos/seo';
 
 function normalizePublishedAt(
@@ -32,7 +33,8 @@ export async function getAdminPost(id: string) {
   const post = await postsRepo.getPostById(db, id);
   if (!post) return null;
   const seo = post.seoId ? await seoRepo.getSeoById(db, post.seoId) : null;
-  return { post, seo };
+  const cover = post.coverMediaId ? await mediaRepo.getMediaById(db, post.coverMediaId) : null;
+  return { post, seo, cover };
 }
 
 export async function createAdminPost(input: unknown) {
@@ -60,6 +62,7 @@ export async function createAdminPost(input: unknown) {
     excerpt: rest.excerpt?.trim() || null,
     publishedAt,
     seoId,
+    coverMediaId: rest.coverMediaId || null,
     tags: normalizeTags(tags),
   });
   await invalidatePostCache(post.slug);
@@ -93,6 +96,7 @@ export async function updateAdminPost(id: string, input: unknown) {
     excerpt: rest.excerpt?.trim() || null,
     publishedAt,
     seoId,
+    coverMediaId: rest.coverMediaId || null,
     tags: normalizeTags(tags),
   });
   if (!post) return { ok: false as const, notFound: true as const };

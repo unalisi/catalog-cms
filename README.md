@@ -147,5 +147,18 @@ Sonraki adım: **FAZ 6 — Blog modülü**.
 
 Seed: `npm run db:seed:blog:local` / `:remote`
 
-Sonraki adım: **FAZ 7 — Medya kütüphanesi**.
+Sonraki adım: **FAZ 8 — Medya kütüphanesi & site ayarları** (ardından FAZ 7 import).
+
+## FAZ 8 durumu
+
+- [x] `/admin/media` yükleme / arama / alt-text / silme (R2 + D1)
+- [x] Public `/media/[...key]` + Images transform `?w=` (64–1920)
+- [x] `MediaPicker` — ürün, blog, SEO OG, galeri section, settings logo/favicon
+- [x] `/admin/settings` — logo, favicon, iletişim, sosyal, nav, analytics, SEO defaults
+- [x] Public header/footer ayarlardan; `settings:site` / `nav:main` cache invalidate
+- [x] Alt metin upload’ta zorunlu
+
+Seed: `npm run db:seed:settings:local` / `:remote`
+
+Sonraki adım: **FAZ 7 — WordPress / katalog içe aktarımı**.
 

@@ -5,7 +5,7 @@ import {
   sectionLabels,
   type SectionType,
 } from '../../lib/sections/registry';
-
+import MediaPicker, { type MediaItem } from './MediaPicker';
 type Status = 'draft' | 'published' | 'archived';
 
 type SectionRow = {
@@ -58,6 +58,7 @@ export default function PageEditor({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
+  const [galleryPickerIndex, setGalleryPickerIndex] = useState<number | null>(null);
   const dragId = useRef<string | null>(null);
 
   const selected = useMemo(
@@ -442,18 +443,27 @@ export default function PageEditor({
                               updateField('images', next);
                             }}
                           />
-                          <button
-                            type="button"
-                            className="justify-self-start text-xs text-destructive"
-                            onClick={() =>
-                              updateField(
-                                'images',
-                                images.filter((_, i) => i !== index),
-                              )
-                            }
-                          >
-                            Kaldır
-                          </button>
+                          <div className="flex gap-3">
+                            <button
+                              type="button"
+                              className="text-xs hover:underline"
+                              onClick={() => setGalleryPickerIndex(index)}
+                            >
+                              Medyadan seç
+                            </button>
+                            <button
+                              type="button"
+                              className="text-xs text-destructive"
+                              onClick={() =>
+                                updateField(
+                                  'images',
+                                  images.filter((_, i) => i !== index),
+                                )
+                              }
+                            >
+                              Kaldır
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -518,6 +528,24 @@ export default function PageEditor({
           />
         </div>
       </div>
+
+      <MediaPicker
+        open={galleryPickerIndex != null}
+        onClose={() => setGalleryPickerIndex(null)}
+        onSelect={(media: MediaItem) => {
+          if (galleryPickerIndex == null) return;
+          const images = (config.images as { src: string; alt: string }[]) ?? [];
+          const next = [...images];
+          const current = next[galleryPickerIndex] ?? { src: '', alt: '' };
+          next[galleryPickerIndex] = {
+            src: media.url,
+            alt: current.alt || media.alt,
+          };
+          updateField('images', next);
+          setGalleryPickerIndex(null);
+        }}
+        title="Galeri görseli seç"
+      />
     </div>
   );
 }
