@@ -70,8 +70,10 @@ Alternatif: Cloudflare Dashboard → Worker `catalog-cms` → Settings → Build
 - [x] Light-only design token’ları
 - [x] Layout’lar, middleware, `/api/health`
 - [x] GitHub Actions deploy iskeleti
-- [ ] Remote D1/KV id’leri (`npm run cf:setup` sonrası)
-- [ ] İlk `wrangler deploy` + `workers.dev` doğrulama
-- [ ] GitHub remote + `main` push
+- [x] Remote D1/KV/R2 kaynakları + `wrangler.jsonc` id’leri
+- [x] `wrangler deploy` → https://catalog-cms.unalisi-dev.workers.dev
+- [x] Git `main` + ilk commit’ler
+- [ ] GitHub remote + `main` push (repo oluşturma)
+- [ ] GitHub Actions secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`)
 
 Sonraki adım: **FAZ 1 — Veri katmanı & public katalog**.
