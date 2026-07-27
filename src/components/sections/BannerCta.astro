@@ -1,0 +1,28 @@
+---
+import type { SectionConfigMap } from '../../lib/sections/registry';
+
+interface Props {
+  config: SectionConfigMap['banner-cta'];
+}
+
+const { config } = Astro.props;
+---
+
+<section class="bg-accent text-accent-foreground">
+  <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-16 md:flex-row md:items-center md:justify-between md:px-6">
+    <div class="max-w-xl">
+      <h2 class="font-display text-2xl font-bold">{config.title}</h2>
+      {config.body && <p class="mt-2 text-accent-foreground/80">{config.body}</p>}
+    </div>
+    {
+      config.ctaLabel && config.ctaHref && (
+        <a
+          href={config.ctaHref}
+          class="inline-flex shrink-0 items-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+        >
+          {config.ctaLabel}
+        </a>
+      )
+    }
+  </div>
+</section>

@@ -1,106 +1,50 @@
 ---
 import PublicLayout from '../layouts/PublicLayout.astro';
-import ProductListItem from '../components/public/ProductListItem.astro';
+import SectionRenderer from '../components/sections/SectionRenderer.astro';
 import { buildPageSeo } from '../lib/seo/meta';
-import { getProductList, getBrands, getCategories } from '../server/services/catalog';
+import {
+  organizationJsonLd,
+  stringifyJsonLd,
+  websiteJsonLd,
+} from '../lib/seo/jsonld';
+import { getPublishedPage } from '../server/services/pages';
+import { getSeoDefaults } from '../server/services/seo';
 
 const origin = Astro.url.origin;
-const [{ data: list, status }, { data: brands }, { data: categories }] = await Promise.all([
-  getProductList({ pageSize: 5 }),
-  getBrands(),
-  getCategories(),
+const [{ data: page, status }, { data: defaults }] = await Promise.all([
+  getPublishedPage('home'),
+  getSeoDefaults(),
 ]);
+const seoDefaults = defaults!;
+
+if (!page) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
 
 const seo = buildPageSeo({
-  title: 'Catalog CMS',
-  description: 'Ürün kataloğu. Hızlı. SEO odaklı.',
+  title: page.title,
+  description: seoDefaults.defaultDescription,
   path: '/',
   origin,
+  seoTitle: page.seo?.title,
+  seoDescription: page.seo?.description,
+  canonical: page.seo?.canonical,
+  noindex: page.seo?.noindex,
+  robotsExtra: page.seo?.robotsExtra,
+  ogImageUrl: page.seo?.ogImageUrl,
+  defaults: seoDefaults,
+  isHome: true,
 });
+
+const jsonLd = stringifyJsonLd([
+  organizationJsonLd(origin, seoDefaults),
+  websiteJsonLd(origin, seoDefaults),
+]);
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 Astro.response.headers.set('X-Cache', status);
 ---
 
-<PublicLayout seo={seo} cacheStatus={status}>
-  <section class="relative overflow-hidden border-b border-border">
-    <div
-      class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_oklch(0.88_0.18_95_/_0.25),_transparent_55%)]"
-      aria-hidden="true"
-    >
-    </div>
-    <div class="relative mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 md:px-6 md:py-28">
-      <p class="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-        Catalog CMS
-      </p>
-      <h1 class="max-w-3xl font-display text-4xl font-bold tracking-tight md:text-5xl">
-        Ürün kataloğu. Hızlı. SEO odaklı.
-      </h1>
-      <p class="max-w-xl text-lg text-muted-foreground">
-        Cloudflare Workers + D1 + KV ile yayınlanan katalog. Seed verisi FAZ 1 ile yüklü.
-      </p>
-      <div class="flex flex-wrap gap-3">
-        <a
-          href="/catalog"
-          class="inline-flex items-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
-        >
-          Kataloğa git
-        </a>
-        <a
-          href="/admin"
-          class="inline-flex items-center rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground hover:opacity-90"
-        >
-          Admin paneli
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <section class="mx-auto max-w-6xl px-4 py-16 md:px-6">
-    <div class="flex items-end justify-between gap-4">
-      <h2 class="font-display text-2xl font-bold">Öne çıkan ürünler</h2>
-      <a href="/catalog" class="text-sm font-medium text-muted-foreground hover:text-foreground">
-        Tümü
-      </a>
-    </div>
-    <div class="mt-6 divide-y divide-border border-t border-border">
-      {(list?.items ?? []).map((product) => <ProductListItem product={product} />)}
-    </div>
-  </section>
-
-  <section class="border-t border-border bg-muted/30">
-    <div class="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2 md:px-6">
-      <div>
-        <h2 class="font-display text-xl font-bold">Markalar</h2>
-        <ul class="mt-4 flex flex-col gap-2">
-          {
-            (brands ?? []).map((brand) => (
-              <li>
-                <a href={`/brand/${brand.slug}`} class="text-muted-foreground hover:text-foreground">
-                  {brand.name}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-      <div>
-        <h2 class="font-display text-xl font-bold">Kategoriler</h2>
-        <ul class="mt-4 flex flex-col gap-2">
-          {
-            (categories ?? []).map((cat) => (
-              <li>
-                <a
-                  href={`/category/${cat.slug}`}
-                  class="text-muted-foreground hover:text-foreground"
-                >
-                  {cat.name}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </div>
-  </section>
+<PublicLayout seo={seo} cacheStatus={status} jsonLd={jsonLd}>
+  <SectionRenderer sections={page.sections} />
 </PublicLayout>

@@ -1,0 +1,30 @@
+---
+import ProductListItem from '../public/ProductListItem.astro';
+import type { SectionConfigMap } from '../../lib/sections/registry';
+import { getProductList } from '../../server/services/catalog';
+
+interface Props {
+  config: SectionConfigMap['featured-products'];
+}
+
+const { config } = Astro.props;
+const { data } = await getProductList({ pageSize: config.limit });
+---
+
+<section class="mx-auto max-w-6xl px-4 py-16 md:px-6">
+  <div class="flex items-end justify-between gap-4">
+    <h2 class="font-display text-2xl font-bold">{config.title}</h2>
+    <a href="/catalog" class="text-sm font-medium text-muted-foreground hover:text-foreground">
+      Tümü
+    </a>
+  </div>
+  <div class="mt-6 divide-y divide-border border-t border-border">
+    {
+      (data?.items ?? []).length === 0 ? (
+        <p class="py-8 text-sm text-muted-foreground">Henüz ürün yok.</p>
+      ) : (
+        (data?.items ?? []).map((product) => <ProductListItem product={product} />)
+      )
+    }
+  </div>
+</section>

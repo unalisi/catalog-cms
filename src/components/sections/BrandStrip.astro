@@ -1,0 +1,35 @@
+---
+import type { SectionConfigMap } from '../../lib/sections/registry';
+import { getBrands } from '../../server/services/catalog';
+
+interface Props {
+  config: SectionConfigMap['brand-strip'];
+}
+
+const { config } = Astro.props;
+const { data: brands } = await getBrands();
+---
+
+<section class="border-t border-border bg-muted/30">
+  <div class="mx-auto max-w-6xl px-4 py-14 md:px-6">
+    {config.title && <h2 class="font-display text-xl font-bold">{config.title}</h2>}
+    <ul class="mt-6 flex flex-wrap gap-x-8 gap-y-3">
+      {
+        (brands ?? []).length === 0 ? (
+          <li class="text-sm text-muted-foreground">Marka yok.</li>
+        ) : (
+          (brands ?? []).map((brand) => (
+            <li>
+              <a
+                href={`/brand/${brand.slug}`}
+                class="text-base font-medium text-muted-foreground hover:text-foreground"
+              >
+                {brand.name}
+              </a>
+            </li>
+          ))
+        )
+      }
+    </ul>
+  </div>
+</section>

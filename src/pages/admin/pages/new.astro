@@ -1,0 +1,16 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import PageForm from '../../../components/admin/PageForm';
+---
+
+<AdminLayout
+  title="Yeni sayfa"
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { href: '/admin/pages', label: 'Sayfalar' },
+    { label: 'Yeni' },
+  ]}
+>
+  <h1 class="mb-6 font-display text-2xl font-bold">Yeni sayfa</h1>
+  <PageForm client:load />
+</AdminLayout>

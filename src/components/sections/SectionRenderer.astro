@@ -1,0 +1,63 @@
+---
+import Hero from './Hero.astro';
+import FeaturedProducts from './FeaturedProducts.astro';
+import BrandStrip from './BrandStrip.astro';
+import CategoryGrid from './CategoryGrid.astro';
+import BannerCta from './BannerCta.astro';
+import BlogPreview from './BlogPreview.astro';
+import Faq from './Faq.astro';
+import RichText from './RichText.astro';
+import Gallery from './Gallery.astro';
+import {
+  isSectionType,
+  parseConfigJson,
+  type SectionConfigMap,
+  type SectionType,
+} from '../../lib/sections/registry';
+
+export type RenderSection = {
+  id: string;
+  type: string;
+  configJson: string;
+};
+
+interface Props {
+  sections: RenderSection[];
+}
+
+const { sections } = Astro.props;
+
+function typedConfig<T extends SectionType>(type: T, configJson: string): SectionConfigMap[T] {
+  return parseConfigJson(type, configJson) as SectionConfigMap[T];
+}
+---
+
+{
+  sections.map((section) => {
+    if (!isSectionType(section.type)) return null;
+    switch (section.type) {
+      case 'hero':
+        return <Hero config={typedConfig('hero', section.configJson)} />;
+      case 'featured-products':
+        return (
+          <FeaturedProducts config={typedConfig('featured-products', section.configJson)} />
+        );
+      case 'brand-strip':
+        return <BrandStrip config={typedConfig('brand-strip', section.configJson)} />;
+      case 'category-grid':
+        return <CategoryGrid config={typedConfig('category-grid', section.configJson)} />;
+      case 'banner-cta':
+        return <BannerCta config={typedConfig('banner-cta', section.configJson)} />;
+      case 'blog-preview':
+        return <BlogPreview config={typedConfig('blog-preview', section.configJson)} />;
+      case 'faq':
+        return <Faq config={typedConfig('faq', section.configJson)} />;
+      case 'rich-text':
+        return <RichText config={typedConfig('rich-text', section.configJson)} />;
+      case 'gallery':
+        return <Gallery config={typedConfig('gallery', section.configJson)} />;
+      default:
+        return null;
+    }
+  })
+}
