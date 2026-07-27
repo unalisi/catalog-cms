@@ -1,0 +1,3 @@
+name,slug,sku,price,stock,description,brand,categories,image,status
+Import Demo Kulaklık,import-demo-kulaklik,IMP-ANC-01,1299.90,25,"FAZ 7 import örnek ürünü",Nord Teknik,"Elektronik,Aksesuar",,published
+Import Demo Mouse,import-demo-mouse,IMP-MSE-01,899.00,40,Ergonomik kablosuz mouse,Nord Teknik,Elektronik,,draft

@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "catalog-cms",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  "main": "./src/worker.ts",
   "compatibility_date": "2026-07-27",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -38,5 +38,9 @@
   ],
   "images": {
     "binding": "IMAGES"
+  },
+  "queues": {
+    "producers": [{ "binding": "IMPORT_QUEUE", "queue": "catalog-import" }],
+    "consumers": [{ "queue": "catalog-import", "max_batch_size": 5, "max_retries": 3 }]
   }
 }

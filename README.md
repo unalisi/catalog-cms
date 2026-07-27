@@ -162,3 +162,16 @@ Seed: `npm run db:seed:settings:local` / `:remote`
 
 Sonraki adım: **FAZ 7 — WordPress / katalog içe aktarımı**.
 
+## FAZ 7 durumu
+
+- [x] Ortak `ImportRecord` + CSV / WooCommerce JSON / WXR adaptörleri
+- [x] `import_jobs` / `import_items` + migration `0005`
+- [x] Dry-run (ürün tablosuna yazmadan rapor)
+- [x] Apply: `IMPORT_QUEUE` batch + upsert (SKU→slug) + uzak medya → R2
+- [x] Çakışma: `skip | overwrite | merge`; kaydedilebilir CSV mapping profili (localStorage)
+- [x] `/admin/import` sihirbazı + job izleme
+
+Örnek CSV: `db/samples/import-demo.csv`
+
+Sonraki adım: **FAZ 9 — Sertleştirme, performans & yayın**.
+

@@ -213,11 +213,11 @@ Teknik çelişkide [`ARCHITECTURE.md`](./ARCHITECTURE.md) üstündür.
 - `src/server/import/**`, queue consumer, `import_jobs` / `import_items`.
 
 **Kabul kriterleri**
-- [ ] Üç kaynak aynı normalize modele map’lenir.
-- [ ] Dry-run D1 ürün tablosuna yazmadan rapor üretir.
-- [ ] Upsert SKU/slug ile çift kayıt oluşturmaz.
-- [ ] Uzak görseller R2’ye yazılır ve `media` bağlanır.
-- [ ] Büyük iş Queue’da; HTTP timeout’a takılmaz; job izlenebilir.
+- [x] Üç kaynak aynı normalize modele map’lenir.
+- [x] Dry-run D1 ürün tablosuna yazmadan rapor üretir.
+- [x] Upsert SKU/slug ile çift kayıt oluşturmaz.
+- [x] Uzak görseller R2’ye yazılır ve `media` bağlanır.
+- [x] Büyük iş Queue’da; HTTP timeout’a takılmaz; job izlenebilir.
 
 **Bağımlılıklar:** FAZ 3 (ürün modeli), FAZ 8 (medya upload yolu) — FAZ 8 tamamlanmadan apply’da medya adımı bloklanır; parse/dry-run FAZ 8 ile kısmen paralel gidebilir.
 

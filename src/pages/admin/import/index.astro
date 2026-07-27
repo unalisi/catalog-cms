@@ -1,0 +1,17 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ImportWizard from '../../../components/admin/ImportWizard';
+---
+
+<AdminLayout
+  title="İçe aktarım"
+  breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'İçe aktarım' }]}
+>
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-bold">Katalog içe aktarım</h1>
+    <p class="mt-1 text-sm text-muted-foreground">
+      CSV · WooCommerce JSON · WXR → dry-run → Queue apply (SKU/slug upsert, medya R2)
+    </p>
+  </div>
+  <ImportWizard client:load />
+</AdminLayout>
