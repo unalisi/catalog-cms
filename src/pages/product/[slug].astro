@@ -2,7 +2,13 @@
 import PublicLayout from '../../layouts/PublicLayout.astro';
 import { formatMoney } from '../../lib/money';
 import { buildPageSeo } from '../../lib/seo/meta';
+import {
+  breadcrumbJsonLd,
+  productJsonLd,
+  stringifyJsonLd,
+} from '../../lib/seo/jsonld';
 import { getProductBySlug } from '../../server/services/catalog';
+import { getSeoDefaults } from '../../server/services/seo';
 
 export const prerender = false;
 
@@ -10,6 +16,8 @@ const { slug } = Astro.params;
 const result = slug ? await getProductBySlug(slug) : { data: null, status: 'MISS' as const };
 const product = result.data;
 const status = result.status;
+const { data: defaults } = await getSeoDefaults();
+const seoDefaults = defaults!;
 
 if (!product) {
   Astro.response.status = 404;
@@ -26,6 +34,10 @@ const seo = product
       seoDescription: product.seo?.description,
       canonical: product.seo?.canonical,
       noindex: product.seo?.noindex,
+      robotsExtra: product.seo?.robotsExtra,
+      ogImageUrl: product.seo?.ogImageUrl,
+      ogType: 'product',
+      defaults: seoDefaults,
     })
   : buildPageSeo({
       title: 'Ürün bulunamadı',
@@ -33,7 +45,31 @@ const seo = product
       path: `/product/${slug ?? ''}`,
       origin,
       noindex: true,
+      defaults: seoDefaults,
     });
+
+const jsonLd = product
+  ? stringifyJsonLd([
+      productJsonLd({
+        origin,
+        name: product.name,
+        description: product.description,
+        slug: product.slug,
+        sku: product.sku,
+        price: product.price,
+        currency: product.currency,
+        brandName: product.brand?.name,
+        imageUrl: product.seo?.ogImageUrl ?? undefined,
+      }),
+      breadcrumbJsonLd(origin, [
+        { name: 'Katalog', path: '/catalog' },
+        ...(product.brand
+          ? [{ name: product.brand.name, path: `/brand/${product.brand.slug}` }]
+          : []),
+        { name: product.name, path: `/product/${product.slug}` },
+      ]),
+    ])
+  : null;
 
 if (product) {
   Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
@@ -43,7 +79,7 @@ if (product) {
 }
 ---
 
-<PublicLayout seo={seo} cacheStatus={product ? status : null}>
+<PublicLayout seo={seo} cacheStatus={product ? status : null} jsonLd={jsonLd}>
   {
     !product ? (
       <section class="mx-auto max-w-6xl px-4 py-24 text-center md:px-6">

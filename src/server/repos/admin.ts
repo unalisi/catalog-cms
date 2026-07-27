@@ -22,7 +22,13 @@ export async function isBrandSlugTaken(db: Db, slug: string, excludeId?: string)
 
 export async function createBrand(
   db: Db,
-  input: { name: string; slug: string; description?: string | null; status: Brand['status'] },
+  input: {
+    name: string;
+    slug: string;
+    description?: string | null;
+    status: Brand['status'];
+    seoId?: string | null;
+  },
 ): Promise<Brand> {
   const now = nowIso();
   const id = newId('brand');
@@ -32,6 +38,7 @@ export async function createBrand(
     slug: input.slug,
     description: input.description ?? null,
     status: input.status,
+    seoId: input.seoId ?? null,
     createdAt: now,
     updatedAt: now,
   });
@@ -43,7 +50,13 @@ export async function createBrand(
 export async function updateBrand(
   db: Db,
   id: string,
-  input: { name: string; slug: string; description?: string | null; status: Brand['status'] },
+  input: {
+    name: string;
+    slug: string;
+    description?: string | null;
+    status: Brand['status'];
+    seoId?: string | null;
+  },
 ): Promise<Brand | null> {
   await db
     .update(brands)
@@ -52,6 +65,7 @@ export async function updateBrand(
       slug: input.slug,
       description: input.description ?? null,
       status: input.status,
+      ...(input.seoId !== undefined ? { seoId: input.seoId } : {}),
       updatedAt: nowIso(),
     })
     .where(eq(brands.id, id));
@@ -95,6 +109,7 @@ export async function createCategory(
     parentId?: string | null;
     position: number;
     status: Category['status'];
+    seoId?: string | null;
   },
 ): Promise<Category> {
   const now = nowIso();
@@ -107,6 +122,7 @@ export async function createCategory(
     parentId: input.parentId || null,
     position: input.position,
     status: input.status,
+    seoId: input.seoId ?? null,
     createdAt: now,
     updatedAt: now,
   });
@@ -125,6 +141,7 @@ export async function updateCategory(
     parentId?: string | null;
     position: number;
     status: Category['status'];
+    seoId?: string | null;
   },
 ): Promise<Category | null> {
   await db
@@ -136,6 +153,7 @@ export async function updateCategory(
       parentId: input.parentId || null,
       position: input.position,
       status: input.status,
+      ...(input.seoId !== undefined ? { seoId: input.seoId } : {}),
       updatedAt: nowIso(),
     })
     .where(eq(categories.id, id));

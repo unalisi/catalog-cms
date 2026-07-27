@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { getSessionUser, isSameOrigin } from './server/auth/session';
+import { findRedirect } from './server/services/seo';
 
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
@@ -16,6 +17,25 @@ function isProtectedAdminPath(pathname: string): boolean {
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
   const isAdminArea = isProtectedAdminPath(pathname);
+
+  // Public redirects (skip admin + api + assets)
+  if (
+    !isAdminArea &&
+    !pathname.startsWith('/api/') &&
+    !pathname.startsWith('/_astro') &&
+    context.request.method === 'GET'
+  ) {
+    try {
+      const redirect = await findRedirect(pathname);
+      if (redirect && redirect.toPath !== pathname) {
+        const target = new URL(redirect.toPath, context.url.origin);
+        target.search = context.url.search;
+        return context.redirect(target.toString(), redirect.statusCode as 301 | 302);
+      }
+    } catch {
+      // DB unavailable should not block the site
+    }
+  }
 
   if (isAdminArea) {
     const user = await getSessionUser(context);

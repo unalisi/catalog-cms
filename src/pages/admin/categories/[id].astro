@@ -3,10 +3,12 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import CategoryForm from '../../../components/admin/CategoryForm';
 import { getDb } from '../../../server/db';
 import { getCategoryById, listAllCategories } from '../../../server/repos/admin';
+import { getSeoById } from '../../../server/repos/seo';
 
 const { id } = Astro.params;
 const db = getDb();
 const category = id ? await getCategoryById(db, id) : null;
+const seo = category?.seoId ? await getSeoById(db, category.seoId) : null;
 const parents = (await listAllCategories(db)).map((c) => ({ id: c.id, name: c.name }));
 if (!category) {
   Astro.response.status = 404;
@@ -39,6 +41,7 @@ if (!category) {
             parentId: category.parentId ?? '',
             position: category.position,
             status: category.status,
+            seo,
           }}
         />
       </>

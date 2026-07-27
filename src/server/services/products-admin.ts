@@ -4,13 +4,17 @@ import { invalidateProductCache, invalidateProductsCache } from '../../lib/cache
 import { getDb } from '../db';
 import * as repo from '../repos/products-admin';
 import { getBrandById } from '../repos/admin';
+import * as seoRepo from '../repos/seo';
 
 export async function listGridProducts() {
   return repo.listProductsForGrid(getDb());
 }
 
 export async function getAdminProduct(id: string) {
-  return repo.getProductAdminById(getDb(), id);
+  const product = await repo.getProductAdminById(getDb(), id);
+  if (!product) return null;
+  const seo = product.seoId ? await seoRepo.getSeoById(getDb(), product.seoId) : null;
+  return { ...product, seo };
 }
 
 export async function createAdminProduct(input: unknown) {
@@ -25,7 +29,10 @@ export async function createAdminProduct(input: unknown) {
   if (parsed.data.sku && (await repo.isProductSkuTaken(db, parsed.data.sku))) {
     return { ok: false as const, fields: { sku: 'Bu SKU zaten kullanılıyor' } };
   }
-  const product = await repo.createProduct(db, parsed.data);
+  const { seo, ...rest } = parsed.data;
+  let seoId: string | null = null;
+  if (seo) seoId = await seoRepo.upsertSeoMeta(db, null, seo);
+  const product = await repo.createProduct(db, { ...rest, seoId });
   await invalidateProductCache(product.slug);
   return { ok: true as const, data: product };
 }
@@ -44,8 +51,14 @@ export async function updateAdminProduct(id: string, input: unknown) {
   if (parsed.data.sku && (await repo.isProductSkuTaken(db, parsed.data.sku, id))) {
     return { ok: false as const, fields: { sku: 'Bu SKU zaten kullanılıyor' } };
   }
-  const product = await repo.updateProductFields(db, id, parsed.data);
+  const { seo, ...rest } = parsed.data;
+  let seoId = existing.seoId;
+  if (seo) seoId = await seoRepo.upsertSeoMeta(db, existing.seoId, seo);
+  const product = await repo.updateProductFields(db, id, { ...rest, seoId });
   if (!product) return { ok: false as const, notFound: true as const };
+  if (existing.slug !== product.slug) {
+    await seoRepo.recordSlugChangeRedirect(db, '/product', existing.slug, product.slug);
+  }
   await invalidateProductCache(product.slug, existing.slug);
   return { ok: true as const, data: product };
 }
@@ -100,6 +113,9 @@ export async function bulkUpdateProducts(input: unknown) {
       if (!product) {
         errors.push({ id: change.id, message: 'Güncellenemedi' });
         continue;
+      }
+      if (change.fields.slug && change.fields.slug !== existing.slug) {
+        await seoRepo.recordSlugChangeRedirect(db, '/product', existing.slug, product.slug);
       }
 
       let brandName = existing.brandName;

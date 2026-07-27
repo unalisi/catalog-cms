@@ -2,7 +2,9 @@
 import PublicLayout from '../../layouts/PublicLayout.astro';
 import ProductListItem from '../../components/public/ProductListItem.astro';
 import { buildPageSeo } from '../../lib/seo/meta';
+import { breadcrumbJsonLd, stringifyJsonLd } from '../../lib/seo/jsonld';
 import { getBrandBySlug, getProductList } from '../../server/services/catalog';
+import { getSeoDefaults } from '../../server/services/seo';
 
 export const prerender = false;
 
@@ -10,6 +12,8 @@ const { slug } = Astro.params;
 const result = slug ? await getBrandBySlug(slug) : { data: null, status: 'MISS' as const };
 const brand = result.data;
 const status = result.status;
+const { data: defaults } = await getSeoDefaults();
+const seoDefaults = defaults!;
 
 if (!brand) {
   Astro.response.status = 404;
@@ -29,13 +33,26 @@ const seo = brand
       seoDescription: brand.seo?.description,
       canonical: brand.seo?.canonical,
       noindex: brand.seo?.noindex,
+      robotsExtra: brand.seo?.robotsExtra,
+      ogImageUrl: brand.seo?.ogImageUrl,
+      defaults: seoDefaults,
     })
   : buildPageSeo({
       title: 'Marka bulunamadı',
       path: `/brand/${slug ?? ''}`,
       origin,
       noindex: true,
+      defaults: seoDefaults,
     });
+
+const jsonLd = brand
+  ? stringifyJsonLd([
+      breadcrumbJsonLd(origin, [
+        { name: 'Katalog', path: '/catalog' },
+        { name: brand.name, path: `/brand/${brand.slug}` },
+      ]),
+    ])
+  : null;
 
 if (brand) {
   Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
@@ -43,7 +60,7 @@ if (brand) {
 }
 ---
 
-<PublicLayout seo={seo} cacheStatus={brand ? status : null}>
+<PublicLayout seo={seo} cacheStatus={brand ? status : null} jsonLd={jsonLd}>
   {
     !brand ? (
       <section class="mx-auto max-w-6xl px-4 py-24 text-center md:px-6">

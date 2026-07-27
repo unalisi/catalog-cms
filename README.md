@@ -114,3 +114,24 @@ Giriş: `admin@catalog.local` / `ADMIN_BOOTSTRAP_PASSWORD` (local/prod secret; v
 
 Sonraki adım: **FAZ 4 — Section-bazlı sayfa düzenleyici**.
 
+## FAZ 4 durumu
+
+- [x] `pages` + `page_sections` + migration `0002` + `home` seed
+- [x] Section registry (9 tip) + public `SectionRenderer`
+- [x] `/admin/pages` listesi + `/admin/pages/[slug]` editör (DnD, görünürlük, tip formları)
+- [x] Canlı önizleme: admin içinde iframe
+- [x] `page:slug:{slug}` KV cache + invalidation
+- [x] Ana sayfa (`/`) CMS section’larından beslenir
+
+Sonraki adım: **FAZ 5 — SEO modülü**.
+
+## FAZ 5 durumu
+
+- [x] Varlık SEO CRUD (ürün / marka / kategori / sayfa) + SERP/OG önizleme
+- [x] Global SEO defaults (`settings:seo`) + `/admin/seo`
+- [x] `redirects` tablosu + slug değişiminde otomatik 301 + middleware
+- [x] JSON-LD: Organization, WebSite, Product, BreadcrumbList
+- [x] Public meta: canonical, OG, Twitter, robots; sitemap noindex filtresi
+
+Sonraki adım: **FAZ 6 — Blog modülü**.
+

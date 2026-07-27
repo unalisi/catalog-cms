@@ -7,6 +7,7 @@ interface Props {
   description?: string;
   seo?: PageSeo;
   cacheStatus?: 'HIT' | 'MISS' | null;
+  jsonLd?: string | null;
 }
 
 const {
@@ -14,12 +15,13 @@ const {
   description = 'Ürün katalog ve içerik yönetim sistemi',
   seo,
   cacheStatus = null,
+  jsonLd = null,
 } = Astro.props;
 
 const pageTitle = seo?.title ?? title;
 const pageDescription = seo?.description ?? description;
 const canonical = seo?.canonical;
-const noindex = seo?.noindex ?? false;
+const robots = seo?.robots ?? (seo?.noindex ? 'noindex, nofollow' : undefined);
 ---
 
 <!doctype html>
@@ -28,12 +30,18 @@ const noindex = seo?.noindex ?? false;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={pageDescription} />
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {robots && <meta name="robots" content={robots} />}
     {canonical && <link rel="canonical" href={canonical} />}
     <meta property="og:title" content={seo?.ogTitle ?? pageTitle} />
     <meta property="og:description" content={seo?.ogDescription ?? pageDescription} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={seo?.ogType ?? 'website'} />
     {canonical && <meta property="og:url" content={canonical} />}
+    {seo?.ogImage && <meta property="og:image" content={seo.ogImage} />}
+    <meta name="twitter:card" content={seo?.twitterCard ?? 'summary'} />
+    <meta name="twitter:title" content={seo?.twitterTitle ?? pageTitle} />
+    <meta name="twitter:description" content={seo?.twitterDescription ?? pageDescription} />
+    {seo?.twitterImage && <meta name="twitter:image" content={seo.twitterImage} />}
+    {seo?.twitterSite && <meta name="twitter:site" content={seo.twitterSite} />}
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -43,6 +51,7 @@ const noindex = seo?.noindex ?? false;
       rel="stylesheet"
     />
     <title>{pageTitle}</title>
+    {jsonLd && <script is:inline type="application/ld+json" set:html={jsonLd} />}
   </head>
   <body class="flex min-h-dvh flex-col bg-background text-foreground antialiased">
     <a

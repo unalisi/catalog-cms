@@ -3,9 +3,11 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import BrandForm from '../../../components/admin/BrandForm';
 import { getDb } from '../../../server/db';
 import { getBrandById } from '../../../server/repos/admin';
+import { getSeoById } from '../../../server/repos/seo';
 
 const { id } = Astro.params;
 const brand = id ? await getBrandById(getDb(), id) : null;
+const seo = brand?.seoId ? await getSeoById(getDb(), brand.seoId) : null;
 if (!brand) {
   Astro.response.status = 404;
 }
@@ -34,6 +36,7 @@ if (!brand) {
             slug: brand.slug,
             description: brand.description ?? '',
             status: brand.status,
+            seo,
           }}
         />
       </>

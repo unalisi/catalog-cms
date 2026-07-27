@@ -3,6 +3,7 @@ export const CACHE_TTL = {
   brand: 3600,
   category: 3600,
   list: 300,
+  page: 1800,
   sitemap: 3600,
   settings: 3600,
 } as const;

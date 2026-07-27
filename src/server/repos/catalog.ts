@@ -2,6 +2,7 @@ import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import {
   brands,
   categories,
+  pages,
   productCategories,
   products,
   productVariants,
@@ -266,7 +267,7 @@ export async function listPublishedCategories(db: Db): Promise<Category[]> {
 }
 
 export async function listSitemapEntries(db: Db) {
-  const [productRows, brandRows, categoryRows] = await Promise.all([
+  const [productRows, brandRows, categoryRows, pageRows] = await Promise.all([
     db
       .select({
         slug: products.slug,
@@ -291,12 +292,21 @@ export async function listSitemapEntries(db: Db) {
       })
       .from(categories)
       .where(eq(categories.status, 'published')),
+    db
+      .select({
+        slug: pages.slug,
+        updatedAt: pages.updatedAt,
+        seoId: pages.seoId,
+      })
+      .from(pages)
+      .where(eq(pages.status, 'published')),
   ]);
 
   const seoIds = [
     ...productRows.map((r) => r.seoId),
     ...brandRows.map((r) => r.seoId),
     ...categoryRows.map((r) => r.seoId),
+    ...pageRows.map((r) => r.seoId),
   ].filter((id): id is string => Boolean(id));
 
   const seoRows =
@@ -306,9 +316,22 @@ export async function listSitemapEntries(db: Db) {
   const seoById = new Map(seoRows.map((s) => [s.id, s]));
 
   const urls: { loc: string; lastmod: string }[] = [
-    { loc: '/', lastmod: new Date().toISOString() },
     { loc: '/catalog', lastmod: new Date().toISOString() },
   ];
+
+  for (const row of pageRows) {
+    const seo = row.seoId ? seoById.get(row.seoId) : undefined;
+    if (seo?.noindex) continue;
+    const loc = row.slug === 'home' ? '/' : `/${row.slug}`;
+    // Only home is publicly routed in FAZ 4/5
+    if (row.slug !== 'home') continue;
+    urls.unshift({ loc, lastmod: row.updatedAt });
+  }
+
+  // Fallback home if no published home page row
+  if (!urls.some((u) => u.loc === '/')) {
+    urls.unshift({ loc: '/', lastmod: new Date().toISOString() });
+  }
 
   for (const row of productRows) {
     const seo = row.seoId ? seoById.get(row.seoId) : undefined;

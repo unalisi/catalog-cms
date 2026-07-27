@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ApiResult } from '../../lib/api';
+import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -28,6 +29,14 @@ type ProductFormProps = {
     brandId: string;
     compareAtPrice: number | null;
     currency: string;
+    seo?: {
+      title?: string | null;
+      description?: string | null;
+      canonical?: string | null;
+      ogImageUrl?: string | null;
+      noindex?: boolean | null;
+      robotsExtra?: string | null;
+    } | null;
   };
   variants?: Variant[];
 };
@@ -70,6 +79,9 @@ export default function ProductForm({
   const [stock, setStock] = useState(String(initial?.stock ?? 0));
   const [status, setStatus] = useState<Status>(initial?.status ?? 'draft');
   const [brandId, setBrandId] = useState(initial?.brandId ?? '');
+  const [seo, setSeo] = useState<SeoFormValue>(
+    initial?.seo ? seoFormFromMeta(initial.seo) : emptySeoForm(),
+  );
   const [fields, setFields] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -94,6 +106,14 @@ export default function ProductForm({
       brandId: brandId || null,
       currency: initial?.currency ?? 'TRY',
       compareAtPrice: initial?.compareAtPrice ?? null,
+      seo: {
+        title: seo.title || null,
+        description: seo.description || null,
+        canonical: seo.canonical || null,
+        ogImageUrl: seo.ogImageUrl || null,
+        noindex: seo.noindex,
+        robotsExtra: seo.robotsExtra || null,
+      },
     };
     const res = await fetch(
       mode === 'create' ? '/api/admin/products' : `/api/admin/products/${productId}`,
@@ -117,7 +137,7 @@ export default function ProductForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-8">
+    <form onSubmit={onSubmit} className="flex max-w-4xl flex-col gap-8">
       {error && (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
@@ -259,11 +279,15 @@ export default function ProductForm({
         </p>
       </section>
 
-      <section className="flex flex-col gap-3 border-t border-border pt-6">
-        <h2 className="font-display text-lg font-semibold">SEO</h2>
-        <p className="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-          SEO alanları FAZ 5’te eklenecek (title, description, canonical, OG).
-        </p>
+      <section className="border-t border-border pt-6">
+        <h2 className="mb-4 font-display text-lg font-semibold">SEO</h2>
+        <SeoFields
+          value={seo}
+          onChange={setSeo}
+          fallbackTitle={name}
+          fallbackDescription={description}
+          pathPreview={slug ? `/product/${slug}` : '/product/…'}
+        />
       </section>
 
       <div className="flex gap-3 border-t border-border pt-6">

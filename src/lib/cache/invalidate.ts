@@ -37,3 +37,13 @@ export async function invalidateProductsCache(slugs: string[]) {
   }
   await bumpListProductsVersion();
 }
+
+export async function invalidatePageCache(slug: string, previousSlug?: string) {
+  const keys = [CACHE_KEYS.page(slug), CACHE_KEYS.sitemap];
+  if (previousSlug && previousSlug !== slug) keys.push(CACHE_KEYS.page(previousSlug));
+  await cacheDelete(...keys);
+}
+
+export async function invalidateSitemapCache() {
+  await cacheDelete(CACHE_KEYS.sitemap);
+}

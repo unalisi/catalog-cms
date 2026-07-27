@@ -143,11 +143,11 @@ Teknik çelişkide [`ARCHITECTURE.md`](./ARCHITECTURE.md) üstündür.
 - Canlı önizleme (admin içinde iframe veya yan panel — FAZ içinde netleştir, tek yaklaşım seç).
 
 **Kabul kriterleri**
-- [ ] DnD sırası kalıcı.
-- [ ] Her section tipi şemaya göre form üretir.
-- [ ] `is_visible=false` public’te görünmez.
-- [ ] Bilinmeyen tip public’i kırmaz.
-- [ ] `page:{slug}` cache invalidation çalışır.
+- [x] DnD sırası kalıcı.
+- [x] Her section tipi şemaya göre form üretir.
+- [x] `is_visible=false` public’te görünmez.
+- [x] Bilinmeyen tip public’i kırmaz.
+- [x] `page:{slug}` cache invalidation çalışır.
 
 **Bağımlılıklar:** FAZ 2 (tercihen FAZ 3 ile paralel değil; grid bittikten sonra odak)
 
@@ -168,11 +168,11 @@ Teknik çelişkide [`ARCHITECTURE.md`](./ARCHITECTURE.md) üstündür.
 - Redirect middleware entegrasyonu.
 
 **Kabul kriterleri**
-- [ ] Her public sayfada title, description, canonical, OG.
-- [ ] Slug değişimi eski path’i 301 eder.
-- [ ] JSON-LD Rich Results açısından geçerli yapı.
-- [ ] `noindex` sitemap’te yok + robots meta.
-- [ ] Fallback meta (seo_meta boşsa) tutarlı üretilir.
+- [x] Her public sayfada title, description, canonical, OG.
+- [x] Slug değişimi eski path’i 301 eder.
+- [x] JSON-LD Rich Results açısından geçerli yapı.
+- [x] `noindex` sitemap’te yok + robots meta.
+- [x] Fallback meta (seo_meta boşsa) tutarlı üretilir.
 
 **Bağımlılıklar:** FAZ 1, FAZ 4 (sayfa SEO’su için)
 

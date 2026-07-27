@@ -2,7 +2,9 @@
 import PublicLayout from '../../layouts/PublicLayout.astro';
 import ProductListItem from '../../components/public/ProductListItem.astro';
 import { buildPageSeo } from '../../lib/seo/meta';
+import { breadcrumbJsonLd, stringifyJsonLd } from '../../lib/seo/jsonld';
 import { getCategoryBySlug, getProductList } from '../../server/services/catalog';
+import { getSeoDefaults } from '../../server/services/seo';
 
 export const prerender = false;
 
@@ -10,6 +12,8 @@ const { slug } = Astro.params;
 const result = slug ? await getCategoryBySlug(slug) : { data: null, status: 'MISS' as const };
 const category = result.data;
 const status = result.status;
+const { data: defaults } = await getSeoDefaults();
+const seoDefaults = defaults!;
 
 if (!category) {
   Astro.response.status = 404;
@@ -29,13 +33,26 @@ const seo = category
       seoDescription: category.seo?.description,
       canonical: category.seo?.canonical,
       noindex: category.seo?.noindex,
+      robotsExtra: category.seo?.robotsExtra,
+      ogImageUrl: category.seo?.ogImageUrl,
+      defaults: seoDefaults,
     })
   : buildPageSeo({
       title: 'Kategori bulunamadı',
       path: `/category/${slug ?? ''}`,
       origin,
       noindex: true,
+      defaults: seoDefaults,
     });
+
+const jsonLd = category
+  ? stringifyJsonLd([
+      breadcrumbJsonLd(origin, [
+        { name: 'Katalog', path: '/catalog' },
+        { name: category.name, path: `/category/${category.slug}` },
+      ]),
+    ])
+  : null;
 
 if (category) {
   Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
@@ -43,7 +60,7 @@ if (category) {
 }
 ---
 
-<PublicLayout seo={seo} cacheStatus={category ? status : null}>
+<PublicLayout seo={seo} cacheStatus={category ? status : null} jsonLd={jsonLd}>
   {
     !category ? (
       <section class="mx-auto max-w-6xl px-4 py-24 text-center md:px-6">

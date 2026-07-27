@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { seoFieldsSchema } from './seo';
 
 export const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta girin'),
@@ -14,6 +15,7 @@ export const brandSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug yalnızca küçük harf, rakam ve tire'),
   description: z.string().max(2000).optional().nullable(),
   status: z.enum(['draft', 'published', 'archived']),
+  seo: seoFieldsSchema.optional().nullable(),
 });
 
 export const categorySchema = z.object({
@@ -27,6 +29,7 @@ export const categorySchema = z.object({
   parentId: z.string().optional().nullable(),
   position: z.coerce.number().int().min(0).default(0),
   status: z.enum(['draft', 'published', 'archived']),
+  seo: seoFieldsSchema.optional().nullable(),
 });
 
 export function zodFieldErrors(error: z.ZodError): Record<string, string> {

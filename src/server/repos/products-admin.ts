@@ -98,6 +98,7 @@ export async function createProduct(
     stock: number;
     status: Product['status'];
     brandId?: string | null;
+    seoId?: string | null;
   },
 ): Promise<Product> {
   const now = nowIso();
@@ -114,6 +115,7 @@ export async function createProduct(
     stock: input.stock,
     status: input.status,
     brandId: input.brandId || null,
+    seoId: input.seoId ?? null,
     publishedAt: input.status === 'published' ? now : null,
     createdAt: now,
     updatedAt: now,
@@ -137,6 +139,7 @@ export async function updateProductFields(
     stock: number;
     status: Product['status'];
     brandId: string | null;
+    seoId: string | null;
   }>,
 ): Promise<Product | null> {
   const [existing] = await db.select().from(products).where(eq(products.id, id)).limit(1);

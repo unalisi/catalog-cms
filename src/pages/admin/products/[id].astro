@@ -4,12 +4,12 @@ import ProductForm from '../../../components/admin/ProductForm';
 import DeleteButton from '../../../components/admin/DeleteButton';
 import { getDb } from '../../../server/db';
 import { listAllBrands } from '../../../server/repos/admin';
-import { getProductAdminById } from '../../../server/repos/products-admin';
+import { getAdminProduct } from '../../../server/services/products-admin';
 
 const id = Astro.params.id;
 if (!id) return Astro.redirect('/admin/products');
 
-const product = await getProductAdminById(getDb(), id);
+const product = await getAdminProduct(id);
 if (!product) return Astro.redirect('/admin/products');
 
 const brands = (await listAllBrands(getDb())).map((b) => ({ id: b.id, name: b.name }));
@@ -53,6 +53,7 @@ const toast = Astro.url.searchParams.get('toast');
       brandId: product.brandId ?? '',
       compareAtPrice: product.compareAtPrice,
       currency: product.currency,
+      seo: product.seo,
     }}
     variants={product.variants.map((v) => ({
       id: v.id,

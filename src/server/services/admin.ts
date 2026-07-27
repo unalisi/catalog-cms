@@ -2,6 +2,7 @@ import { brandSchema, categorySchema, zodFieldErrors } from '../../lib/validatio
 import { invalidateBrandCache, invalidateCategoryCache } from '../../lib/cache/invalidate';
 import { getDb } from '../db';
 import * as adminRepo from '../repos/admin';
+import * as seoRepo from '../repos/seo';
 
 export async function createBrand(input: unknown) {
   const parsed = brandSchema.safeParse(input);
@@ -12,7 +13,10 @@ export async function createBrand(input: unknown) {
   if (await adminRepo.isBrandSlugTaken(db, parsed.data.slug)) {
     return { ok: false as const, fields: { slug: 'Bu slug zaten kullanılıyor' } };
   }
-  const brand = await adminRepo.createBrand(db, parsed.data);
+  const { seo, ...rest } = parsed.data;
+  let seoId: string | null = null;
+  if (seo) seoId = await seoRepo.upsertSeoMeta(db, null, seo);
+  const brand = await adminRepo.createBrand(db, { ...rest, seoId });
   await invalidateBrandCache(brand.slug);
   return { ok: true as const, data: brand };
 }
@@ -28,8 +32,14 @@ export async function updateBrand(id: string, input: unknown) {
   if (await adminRepo.isBrandSlugTaken(db, parsed.data.slug, id)) {
     return { ok: false as const, fields: { slug: 'Bu slug zaten kullanılıyor' } };
   }
-  const brand = await adminRepo.updateBrand(db, id, parsed.data);
+  const { seo, ...rest } = parsed.data;
+  let seoId = existing.seoId;
+  if (seo) seoId = await seoRepo.upsertSeoMeta(db, existing.seoId, seo);
+  const brand = await adminRepo.updateBrand(db, id, { ...rest, seoId });
   if (!brand) return { ok: false as const, notFound: true as const };
+  if (existing.slug !== brand.slug) {
+    await seoRepo.recordSlugChangeRedirect(db, '/brand', existing.slug, brand.slug);
+  }
   await invalidateBrandCache(brand.slug, existing.slug);
   return { ok: true as const, data: brand };
 }
@@ -57,9 +67,13 @@ export async function createCategory(input: unknown) {
   if (await adminRepo.isCategorySlugTaken(db, parsed.data.slug)) {
     return { ok: false as const, fields: { slug: 'Bu slug zaten kullanılıyor' } };
   }
+  const { seo, ...rest } = parsed.data;
+  let seoId: string | null = null;
+  if (seo) seoId = await seoRepo.upsertSeoMeta(db, null, seo);
   const category = await adminRepo.createCategory(db, {
-    ...parsed.data,
-    parentId: parsed.data.parentId || null,
+    ...rest,
+    parentId: rest.parentId || null,
+    seoId,
   });
   await invalidateCategoryCache(category.slug);
   return { ok: true as const, data: category };
@@ -85,11 +99,18 @@ export async function updateCategory(id: string, input: unknown) {
   if (await adminRepo.isCategorySlugTaken(db, parsed.data.slug, id)) {
     return { ok: false as const, fields: { slug: 'Bu slug zaten kullanılıyor' } };
   }
+  const { seo, ...rest } = parsed.data;
+  let seoId = existing.seoId;
+  if (seo) seoId = await seoRepo.upsertSeoMeta(db, existing.seoId, seo);
   const category = await adminRepo.updateCategory(db, id, {
-    ...parsed.data,
-    parentId: parsed.data.parentId || null,
+    ...rest,
+    parentId: rest.parentId || null,
+    seoId,
   });
   if (!category) return { ok: false as const, notFound: true as const };
+  if (existing.slug !== category.slug) {
+    await seoRepo.recordSlugChangeRedirect(db, '/category', existing.slug, category.slug);
+  }
   await invalidateCategoryCache(category.slug, existing.slug);
   return { ok: true as const, data: category };
 }

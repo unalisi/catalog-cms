@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ApiResult } from '../../lib/api';
+import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -11,6 +12,14 @@ type BrandFormProps = {
     slug: string;
     description: string;
     status: Status;
+    seo?: {
+      title?: string | null;
+      description?: string | null;
+      canonical?: string | null;
+      ogImageUrl?: string | null;
+      noindex?: boolean | null;
+      robotsExtra?: string | null;
+    } | null;
   };
 };
 
@@ -19,6 +28,9 @@ export default function BrandForm({ mode, brandId, initial }: BrandFormProps) {
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [status, setStatus] = useState<Status>(initial?.status ?? 'draft');
+  const [seo, setSeo] = useState<SeoFormValue>(
+    initial?.seo ? seoFormFromMeta(initial.seo) : emptySeoForm(),
+  );
   const [fields, setFields] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -45,7 +57,20 @@ export default function BrandForm({ mode, brandId, initial }: BrandFormProps) {
     setSaving(true);
     setError(null);
     setFields({});
-    const payload = { name, slug, description: description || null, status };
+    const payload = {
+      name,
+      slug,
+      description: description || null,
+      status,
+      seo: {
+        title: seo.title || null,
+        description: seo.description || null,
+        canonical: seo.canonical || null,
+        ogImageUrl: seo.ogImageUrl || null,
+        noindex: seo.noindex,
+        robotsExtra: seo.robotsExtra || null,
+      },
+    };
     const res = await fetch(mode === 'create' ? '/api/admin/brands' : `/api/admin/brands/${brandId}`, {
       method: mode === 'create' ? 'POST' : 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -62,55 +87,68 @@ export default function BrandForm({ mode, brandId, initial }: BrandFormProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex max-w-xl flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex max-w-4xl flex-col gap-8">
       {error && (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       )}
-      <label className="flex flex-col gap-1.5 text-sm">
-        <span className="font-medium">Ad</span>
-        <input
-          className="rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={onNameBlur}
-          required
+      <div className="flex max-w-xl flex-col gap-4">
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Ad</span>
+          <input
+            className="rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={onNameBlur}
+            required
+          />
+          {fields.name && <span className="text-destructive">{fields.name}</span>}
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Slug</span>
+          <input
+            className="rounded-md border border-input bg-background px-3 py-2 font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            required
+          />
+          {fields.slug && <span className="text-destructive">{fields.slug}</span>}
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Açıklama</span>
+          <textarea
+            className="min-h-24 rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Durum</span>
+          <select
+            className="rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as Status)}
+          >
+            <option value="draft">Taslak</option>
+            <option value="published">Yayında</option>
+            <option value="archived">Arşiv</option>
+          </select>
+        </label>
+      </div>
+
+      <section className="border-t border-border pt-6">
+        <h2 className="mb-4 font-display text-lg font-semibold">SEO</h2>
+        <SeoFields
+          value={seo}
+          onChange={setSeo}
+          fallbackTitle={name}
+          fallbackDescription={description}
+          pathPreview={slug ? `/brand/${slug}` : '/brand/…'}
         />
-        {fields.name && <span className="text-destructive">{fields.name}</span>}
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm">
-        <span className="font-medium">Slug</span>
-        <input
-          className="rounded-md border border-input bg-background px-3 py-2 font-mono focus:outline-none focus:ring-2 focus:ring-ring"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          required
-        />
-        {fields.slug && <span className="text-destructive">{fields.slug}</span>}
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm">
-        <span className="font-medium">Açıklama</span>
-        <textarea
-          className="min-h-24 rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        {fields.description && <span className="text-destructive">{fields.description}</span>}
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm">
-        <span className="font-medium">Durum</span>
-        <select
-          className="rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as Status)}
-        >
-          <option value="draft">Taslak</option>
-          <option value="published">Yayında</option>
-          <option value="archived">Arşiv</option>
-        </select>
-      </label>
-      <div className="flex gap-3 pt-2">
+      </section>
+
+      <div className="flex gap-3 border-t border-border pt-6">
         <button
           type="submit"
           disabled={saving}

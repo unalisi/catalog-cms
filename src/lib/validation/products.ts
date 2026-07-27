@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { seoFieldsSchema } from './seo';
 
 export const productStatusSchema = z.enum(['draft', 'published', 'archived']);
 
@@ -17,6 +18,7 @@ export const productUpsertSchema = z.object({
   stock: z.coerce.number().int().min(0),
   status: productStatusSchema,
   brandId: z.string().optional().nullable(),
+  seo: seoFieldsSchema.optional().nullable(),
 });
 
 export const productBulkChangeSchema = z.object({
