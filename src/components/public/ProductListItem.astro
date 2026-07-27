@@ -1,0 +1,49 @@
+---
+import { formatMoney } from '../../lib/money';
+
+interface Props {
+  product: {
+    slug: string;
+    name: string;
+    description: string | null;
+    price: number;
+    compareAtPrice: number | null;
+    currency: string;
+    brand: { slug: string; name: string } | null;
+  };
+}
+
+const { product } = Astro.props;
+---
+
+<article class="flex flex-col gap-3 border-b border-border py-5">
+  <div class="flex flex-wrap items-baseline justify-between gap-2">
+    <h2 class="font-display text-lg font-semibold">
+      <a href={`/product/${product.slug}`} class="hover:underline">{product.name}</a>
+    </h2>
+    <p class="font-mono text-base font-semibold text-primary">
+      {formatMoney(product.price, product.currency)}
+    </p>
+  </div>
+  {
+    product.compareAtPrice != null && product.compareAtPrice > product.price && (
+      <p class="font-mono text-sm text-muted-foreground line-through">
+        {formatMoney(product.compareAtPrice, product.currency)}
+      </p>
+    )
+  }
+  {
+    product.brand && (
+      <p class="text-sm text-muted-foreground">
+        <a href={`/brand/${product.brand.slug}`} class="hover:text-foreground hover:underline">
+          {product.brand.name}
+        </a>
+      </p>
+    )
+  }
+  {
+    product.description && (
+      <p class="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+    )
+  }
+</article>

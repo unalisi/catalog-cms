@@ -76,4 +76,19 @@ Alternatif: Cloudflare Dashboard → Worker `catalog-cms` → Settings → Build
 - [ ] GitHub remote + `main` push (repo oluşturma)
 - [ ] GitHub Actions secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`)
 
-Sonraki adım: **FAZ 1 — Veri katmanı & public katalog**.
+## FAZ 1 durumu
+
+- [x] Drizzle şema + D1 migration (`0000_init_catalog`)
+- [x] Seed (1 marka, 2 kategori, 5 ürün)
+- [x] KV cache-first + `X-Cache` header
+- [x] Public katalog / ürün / marka / kategori
+- [x] `sitemap.xml` + `robots.txt` + 404
+- [x] Fiyatlar integer minor unit (`formatMoney`)
+
+```bash
+npm run db:migrate:local && npm run db:seed:local
+npm run db:migrate:remote && npm run db:seed:remote
+npm run deploy
+```
+
+Sonraki adım: **FAZ 2 — Admin CMS çekirdeği**.

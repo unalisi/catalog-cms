@@ -1,0 +1,73 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import ProductListItem from '../../components/public/ProductListItem.astro';
+import { buildPageSeo } from '../../lib/seo/meta';
+import { getBrandBySlug, getProductList } from '../../server/services/catalog';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const result = slug ? await getBrandBySlug(slug) : { data: null, status: 'MISS' as const };
+const brand = result.data;
+const status = result.status;
+
+if (!brand) {
+  Astro.response.status = 404;
+}
+
+const list = brand
+  ? await getProductList({ brandSlug: brand.slug, pageSize: 24 })
+  : { data: null };
+const origin = Astro.url.origin;
+const seo = brand
+  ? buildPageSeo({
+      title: brand.name,
+      description: brand.description,
+      path: `/brand/${brand.slug}`,
+      origin,
+      seoTitle: brand.seo?.title,
+      seoDescription: brand.seo?.description,
+      canonical: brand.seo?.canonical,
+      noindex: brand.seo?.noindex,
+    })
+  : buildPageSeo({
+      title: 'Marka bulunamadı',
+      path: `/brand/${slug ?? ''}`,
+      origin,
+      noindex: true,
+    });
+
+if (brand) {
+  Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  Astro.response.headers.set('X-Cache', status);
+}
+---
+
+<PublicLayout seo={seo} cacheStatus={brand ? status : null}>
+  {
+    !brand ? (
+      <section class="mx-auto max-w-6xl px-4 py-24 text-center md:px-6">
+        <h1 class="font-display text-3xl font-bold">Marka bulunamadı</h1>
+        <a href="/catalog" class="mt-8 inline-flex rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+          Kataloğa dön
+        </a>
+      </section>
+    ) : (
+      <section class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
+        <p class="text-sm text-muted-foreground">Marka</p>
+        <h1 class="mt-2 font-display text-3xl font-bold">{brand.name}</h1>
+        {brand.description && <p class="mt-3 max-w-2xl text-muted-foreground">{brand.description}</p>}
+        <p class="mt-2 text-sm text-muted-foreground">
+          {brand.productCount} ürün · cache {status}
+        </p>
+        <div class="mt-10 divide-y divide-border border-t border-border">
+          {(list.data?.items ?? []).length === 0 ? (
+            <div class="py-16 text-center text-muted-foreground">Bu markaya ait ürün yok.</div>
+          ) : (
+            (list.data?.items ?? []).map((product) => <ProductListItem product={product} />)
+          )}
+        </div>
+      </section>
+    )
+  }
+</PublicLayout>

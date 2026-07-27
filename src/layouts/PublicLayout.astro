@@ -1,15 +1,25 @@
 ---
 import '../styles/global.css';
+import type { PageSeo } from '../lib/seo/meta';
 
 interface Props {
   title?: string;
   description?: string;
+  seo?: PageSeo;
+  cacheStatus?: 'HIT' | 'MISS' | null;
 }
 
 const {
   title = 'Catalog CMS',
   description = 'Ürün katalog ve içerik yönetim sistemi',
+  seo,
+  cacheStatus = null,
 } = Astro.props;
+
+const pageTitle = seo?.title ?? title;
+const pageDescription = seo?.description ?? description;
+const canonical = seo?.canonical;
+const noindex = seo?.noindex ?? false;
 ---
 
 <!doctype html>
@@ -17,7 +27,13 @@ const {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
+    <meta name="description" content={pageDescription} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:title" content={seo?.ogTitle ?? pageTitle} />
+    <meta property="og:description" content={seo?.ogDescription ?? pageDescription} />
+    <meta property="og:type" content="website" />
+    {canonical && <meta property="og:url" content={canonical} />}
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,9 +42,9 @@ const {
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <title>{title}</title>
+    <title>{pageTitle}</title>
   </head>
-  <body class="min-h-dvh bg-background text-foreground antialiased">
+  <body class="flex min-h-dvh flex-col bg-background text-foreground antialiased">
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
@@ -42,6 +58,7 @@ const {
         </a>
         <nav aria-label="Ana menü" class="flex items-center gap-4 text-sm font-medium">
           <a href="/catalog" class="text-muted-foreground hover:text-foreground">Katalog</a>
+          <a href="/brand/nord-teknik" class="text-muted-foreground hover:text-foreground">Markalar</a>
           <a
             href="/admin"
             class="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
@@ -51,7 +68,7 @@ const {
         </nav>
       </div>
     </header>
-    <main id="main">
+    <main id="main" class="flex-1" data-cache={cacheStatus ?? undefined}>
       <slot />
     </main>
     <footer class="mt-auto border-t border-border">

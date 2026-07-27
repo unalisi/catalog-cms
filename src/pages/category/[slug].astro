@@ -1,0 +1,89 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import ProductListItem from '../../components/public/ProductListItem.astro';
+import { buildPageSeo } from '../../lib/seo/meta';
+import { getCategoryBySlug, getProductList } from '../../server/services/catalog';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const result = slug ? await getCategoryBySlug(slug) : { data: null, status: 'MISS' as const };
+const category = result.data;
+const status = result.status;
+
+if (!category) {
+  Astro.response.status = 404;
+}
+
+const list = category
+  ? await getProductList({ categorySlug: category.slug, pageSize: 24 })
+  : { data: null };
+const origin = Astro.url.origin;
+const seo = category
+  ? buildPageSeo({
+      title: category.name,
+      description: category.description,
+      path: `/category/${category.slug}`,
+      origin,
+      seoTitle: category.seo?.title,
+      seoDescription: category.seo?.description,
+      canonical: category.seo?.canonical,
+      noindex: category.seo?.noindex,
+    })
+  : buildPageSeo({
+      title: 'Kategori bulunamadı',
+      path: `/category/${slug ?? ''}`,
+      origin,
+      noindex: true,
+    });
+
+if (category) {
+  Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  Astro.response.headers.set('X-Cache', status);
+}
+---
+
+<PublicLayout seo={seo} cacheStatus={category ? status : null}>
+  {
+    !category ? (
+      <section class="mx-auto max-w-6xl px-4 py-24 text-center md:px-6">
+        <h1 class="font-display text-3xl font-bold">Kategori bulunamadı</h1>
+        <a href="/catalog" class="mt-8 inline-flex rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+          Kataloğa dön
+        </a>
+      </section>
+    ) : (
+      <section class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
+        <p class="text-sm text-muted-foreground">Kategori</p>
+        <h1 class="mt-2 font-display text-3xl font-bold">{category.name}</h1>
+        {category.description && (
+          <p class="mt-3 max-w-2xl text-muted-foreground">{category.description}</p>
+        )}
+        <p class="mt-2 text-sm text-muted-foreground">
+          {category.productCount} ürün · cache {status}
+        </p>
+        {category.children.length > 0 && (
+          <ul class="mt-6 flex flex-wrap gap-2">
+            {category.children.map((child) => (
+              <li>
+                <a
+                  href={`/category/${child.slug}`}
+                  class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
+                >
+                  {child.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div class="mt-10 divide-y divide-border border-t border-border">
+          {(list.data?.items ?? []).length === 0 ? (
+            <div class="py-16 text-center text-muted-foreground">Bu kategoride ürün yok.</div>
+          ) : (
+            (list.data?.items ?? []).map((product) => <ProductListItem product={product} />)
+          )}
+        </div>
+      </section>
+    )
+  }
+</PublicLayout>

@@ -1,7 +1,9 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { env } from 'cloudflare:workers';
+import * as schema from '../../db/schema';
 
-/** D1 client. Schema wiring lands in FAZ 1. */
 export function getDb() {
-  return drizzle(env.DB);
+  return drizzle(env.DB, { schema });
 }
+
+export type Db = ReturnType<typeof getDb>;
