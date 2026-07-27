@@ -1,0 +1,47 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import PostForm from '../../../components/admin/PostForm';
+import { getAdminPost } from '../../../server/services/posts';
+
+const { id } = Astro.params;
+const data = id ? await getAdminPost(id) : null;
+if (!data) {
+  Astro.response.status = 404;
+}
+const post = data?.post;
+const seo = data?.seo;
+---
+
+<AdminLayout
+  title={post ? `Düzenle · ${post.title}` : 'Yazı bulunamadı'}
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { href: '/admin/blog', label: 'Blog' },
+    { label: post?.title ?? 'Bulunamadı' },
+  ]}
+>
+  {
+    !post ? (
+      <p>Yazı bulunamadı.</p>
+    ) : (
+      <>
+        <h1 class="mb-6 font-display text-2xl font-bold">{post.title}</h1>
+        <PostForm
+          client:load
+          mode="edit"
+          postId={post.id}
+          initial={{
+            title: post.title,
+            slug: post.slug,
+            excerpt: post.excerpt ?? '',
+            content: post.content,
+            status: post.status,
+            publishedAt: post.publishedAt ?? '',
+            tags: post.tags.join(', '),
+            seo,
+          }}
+        />
+      </>
+    )
+  }
+</AdminLayout>

@@ -158,7 +158,7 @@ Teknik çelişkide [`ARCHITECTURE.md`](./ARCHITECTURE.md) üstündür.
 **Kapsam**
 - Varlık SEO alanları (ürün, marka, kategori, sayfa, post): title, description, canonical, OG, noindex.
 - Slug benzersizliği; değişince otomatik `redirects` + middleware 301.
-- JSON-LD: `Organization`, `WebSite`, `Product`, `BreadcrumbList` (+ Article FAZ 6’da tamamlanır).
+- JSON-LD: `Organization`, `WebSite`, `Product`, `BreadcrumbList`, `Article`.
 - `/admin/seo`: global defaults + yönlendirme listesi.
 - Meta SERP/OG önizleme bileşeni.
 - Sitemap/robots `noindex` ve status’a duyarlı; KV cache.
@@ -190,13 +190,14 @@ Teknik çelişkide [`ARCHITECTURE.md`](./ARCHITECTURE.md) üstündür.
 - Admin blog ekranları; `posts` şeması; RSS endpoint.
 
 **Kabul kriterleri**
-- [ ] CRUD + yayın/planlama çalışır.
-- [ ] Liste sayfalanır; detay SEO + Article JSON-LD.
-- [ ] `rss.xml` geçerli.
-- [ ] Blog önizleme section’ı güncel yazıları gösterir.
+- [x] CRUD + yayın/planlama çalışır.
+- [x] Liste sayfalanır; detay SEO + Article JSON-LD.
+- [x] `rss.xml` geçerli.
+- [x] Blog önizleme section’ı güncel yazıları gösterir.
 
 **Bağımlılıklar:** FAZ 5
 
+**Format kararı:** sanitize edilmiş HTML (MDX değil).
 ---
 
 ## FAZ 7 — WordPress / Katalog İçe Aktarımı (Kritik)

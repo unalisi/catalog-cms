@@ -25,7 +25,9 @@
     "db:seed:pages:local": "wrangler d1 execute DB --local --file=./db/seed-pages.sql",
     "db:seed:pages:remote": "wrangler d1 execute DB --remote --file=./db/seed-pages.sql",
     "db:seed:seo:local": "wrangler d1 execute DB --local --file=./db/seed-seo.sql",
-    "db:seed:seo:remote": "wrangler d1 execute DB --remote --file=./db/seed-seo.sql"
+    "db:seed:seo:remote": "wrangler d1 execute DB --remote --file=./db/seed-seo.sql",
+    "db:seed:blog:local": "wrangler d1 execute DB --local --file=./db/seed-blog.sql",
+    "db:seed:blog:remote": "wrangler d1 execute DB --remote --file=./db/seed-blog.sql"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.1.5",

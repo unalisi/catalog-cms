@@ -36,6 +36,18 @@ export async function bumpListProductsVersion(): Promise<string> {
   return next;
 }
 
+export async function getListPostsVersion(): Promise<string> {
+  const ver = await env.CACHE.get(CACHE_KEYS.listPostsVer);
+  return ver ?? '0';
+}
+
+export async function bumpListPostsVersion(): Promise<string> {
+  const current = Number((await env.CACHE.get(CACHE_KEYS.listPostsVer)) ?? '0');
+  const next = String(current + 1);
+  await env.CACHE.put(CACHE_KEYS.listPostsVer, next);
+  return next;
+}
+
 /**
  * Cache-first read: HIT from KV, else loader → put.
  */

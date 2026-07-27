@@ -135,3 +135,17 @@ Sonraki adım: **FAZ 5 — SEO modülü**.
 
 Sonraki adım: **FAZ 6 — Blog modülü**.
 
+## FAZ 6 durumu
+
+**İçerik formatı:** sanitize edilmiş HTML (MDX yok). Admin textarea → sunucuda allowlist sanitizer (`src/lib/html/sanitize.ts`).
+
+- [x] `posts` + `post_tags` + migration `0004` + `db/seed-blog.sql`
+- [x] Admin CRUD (`/admin/blog`) + etiketler + draft/published/scheduled (`published_at`)
+- [x] Public `/blog`, `/blog/[slug]`, `rss.xml`, Article JSON-LD
+- [x] `blog-preview` section gerçek yazılardan beslenir
+- [x] Sitemap’e blog URL’leri; slug değişiminde `/blog/...` 301
+
+Seed: `npm run db:seed:blog:local` / `:remote`
+
+Sonraki adım: **FAZ 7 — Medya kütüphanesi**.
+

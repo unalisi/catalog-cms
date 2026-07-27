@@ -1,0 +1,132 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import { buildPageSeo } from '../../lib/seo/meta';
+import {
+  articleJsonLd,
+  breadcrumbJsonLd,
+  stringifyJsonLd,
+} from '../../lib/seo/jsonld';
+import { getPublicPostBySlug } from '../../server/services/posts';
+import { getSeoDefaults } from '../../server/services/seo';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const result = slug ? await getPublicPostBySlug(slug) : { data: null, status: 'MISS' as const };
+const post = result.data;
+const status = result.status;
+const { data: defaults } = await getSeoDefaults();
+const seoDefaults = defaults!;
+
+if (!post) {
+  Astro.response.status = 404;
+}
+
+const origin = Astro.url.origin;
+const seo = post
+  ? buildPageSeo({
+      title: post.title,
+      description: post.excerpt,
+      path: `/blog/${post.slug}`,
+      origin,
+      seoTitle: post.seo?.title,
+      seoDescription: post.seo?.description,
+      canonical: post.seo?.canonical,
+      noindex: post.seo?.noindex,
+      robotsExtra: post.seo?.robotsExtra,
+      ogImageUrl: post.seo?.ogImageUrl,
+      ogType: 'article',
+      defaults: seoDefaults,
+    })
+  : buildPageSeo({
+      title: 'Yazı bulunamadı',
+      description: 'Aradığınız blog yazısı mevcut değil.',
+      path: `/blog/${slug ?? ''}`,
+      origin,
+      noindex: true,
+      defaults: seoDefaults,
+    });
+
+const jsonLd = post
+  ? stringifyJsonLd([
+      articleJsonLd({
+        origin,
+        title: post.title,
+        description: post.excerpt ?? post.seo?.description,
+        slug: post.slug,
+        publishedAt: post.publishedAt,
+        updatedAt: post.updatedAt,
+        imageUrl: post.seo?.ogImageUrl,
+        siteName: seoDefaults.organizationName,
+      }),
+      breadcrumbJsonLd(origin, [
+        { name: 'Blog', path: '/blog' },
+        { name: post.title, path: `/blog/${post.slug}` },
+      ]),
+    ])
+  : null;
+
+if (post) {
+  Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  Astro.response.headers.set('X-Cache', status);
+} else {
+  Astro.response.headers.set('Cache-Control', 'private, no-store');
+}
+---
+
+<PublicLayout seo={seo} cacheStatus={post ? status : undefined} jsonLd={jsonLd}>
+  {
+    !post ? (
+      <section class="mx-auto max-w-3xl px-4 py-16 md:px-6">
+        <h1 class="font-display text-3xl font-bold">Yazı bulunamadı</h1>
+        <p class="mt-4 text-muted-foreground">
+          <a href="/blog" class="underline">
+            Blog’a dön
+          </a>
+        </p>
+      </section>
+    ) : (
+      <article class="mx-auto max-w-3xl px-4 py-12 md:px-6 md:py-16">
+        <p class="text-xs uppercase tracking-wide text-muted-foreground">
+          <a href="/blog" class="hover:text-foreground">
+            Blog
+          </a>
+          {post.publishedAt && (
+            <>
+              {' · '}
+              <time datetime={post.publishedAt}>
+                {new Date(post.publishedAt).toLocaleDateString('tr-TR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </time>
+            </>
+          )}
+        </p>
+        <h1 class="mt-3 font-display text-4xl font-bold tracking-tight">{post.title}</h1>
+        {post.excerpt && <p class="mt-4 text-lg text-muted-foreground">{post.excerpt}</p>}
+        {
+          post.tags.length > 0 && (
+            <ul class="mt-6 flex flex-wrap gap-2 text-sm">
+              {post.tags.map((t) => (
+                <li>
+                  <a
+                    href={`/blog?tag=${encodeURIComponent(t)}`}
+                    class="text-muted-foreground hover:text-foreground"
+                  >
+                    #{t}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+        <div
+          class="prose-blog mt-10 space-y-4 text-base leading-relaxed [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:mt-8 [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-4 [&_strong]:font-semibold"
+          set:html={post.content}
+        />
+      </article>
+    )
+  }
+</PublicLayout>

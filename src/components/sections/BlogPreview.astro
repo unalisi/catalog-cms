@@ -1,16 +1,54 @@
 ---
 import type { SectionConfigMap } from '../../lib/sections/registry';
+import { getRecentPosts } from '../../server/services/posts';
 
 interface Props {
   config: SectionConfigMap['blog-preview'];
 }
 
 const { config } = Astro.props;
+const limit = Math.min(12, Math.max(1, config.limit ?? 3));
+const { data: posts, status } = await getRecentPosts(limit);
+const items = posts ?? [];
 ---
 
-<section class="mx-auto max-w-6xl px-4 py-16 md:px-6">
-  <h2 class="font-display text-2xl font-bold">{config.title}</h2>
-  <p class="mt-4 text-sm text-muted-foreground">
-    Blog yazıları FAZ 6’da eklenecek. Limit: {config.limit}.
-  </p>
+<section class="mx-auto max-w-6xl px-4 py-16 md:px-6" data-cache={status}>
+  <div class="flex items-end justify-between gap-4">
+    <h2 class="font-display text-2xl font-bold">{config.title}</h2>
+    <a href="/blog" class="text-sm text-muted-foreground hover:text-foreground">
+      Tüm yazılar
+    </a>
+  </div>
+
+  {
+    items.length === 0 ? (
+      <p class="mt-6 text-sm text-muted-foreground">Henüz yayınlanmış yazı yok.</p>
+    ) : (
+      <ul class="mt-8 grid gap-8 md:grid-cols-3">
+        {items.map((post) => (
+          <li>
+            <article>
+              <p class="text-xs uppercase tracking-wide text-muted-foreground">
+                {post.publishedAt
+                  ? new Date(post.publishedAt).toLocaleDateString('tr-TR', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  : ''}
+              </p>
+              <h3 class="mt-2 font-display text-lg font-semibold">
+                <a href={`/blog/${post.slug}`} class="hover:underline">
+                  {post.title}
+                </a>
+              </h3>
+              {post.excerpt && (
+                <p class="mt-2 line-clamp-3 text-sm text-muted-foreground">{post.excerpt}</p>
+              )}
+            </article>
+          </li>
+        ))}
+      </ul>
+    )
+  }
 </section>

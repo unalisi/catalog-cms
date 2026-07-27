@@ -1,0 +1,141 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import { buildPageSeo } from '../../lib/seo/meta';
+import { getPublicPostList } from '../../server/services/posts';
+import { getSeoDefaults } from '../../server/services/seo';
+
+export const prerender = false;
+
+const origin = Astro.url.origin;
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') ?? '1') || 1);
+const tag = Astro.url.searchParams.get('tag') ?? undefined;
+
+const [{ data: list, status }, { data: defaults }] = await Promise.all([
+  getPublicPostList({ page, tag }),
+  getSeoDefaults(),
+]);
+
+const items = list?.items ?? [];
+const total = list?.total ?? 0;
+const pageSize = 10;
+const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+const seo = buildPageSeo({
+  title: tag ? `Blog · ${tag}` : 'Blog',
+  description: tag
+    ? `${tag} etiketli yazılar`
+    : 'Catalog CMS blog yazıları — ürün ve yayın notları.',
+  path: tag ? `/blog?tag=${encodeURIComponent(tag)}` : '/blog',
+  origin,
+  defaults: defaults!,
+});
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+Astro.response.headers.set('X-Cache', status);
+---
+
+<PublicLayout seo={seo} cacheStatus={status}>
+  <section class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 class="font-display text-3xl font-bold">Blog</h1>
+        <p class="mt-1 text-muted-foreground">
+          {total} yazı{tag ? ` · #${tag}` : ''} · cache {status}
+        </p>
+      </div>
+      <a href="/rss.xml" class="text-sm text-muted-foreground hover:text-foreground">
+        RSS
+      </a>
+    </div>
+
+    {
+      tag && (
+        <p class="mt-4 text-sm">
+          <a href="/blog" class="text-muted-foreground hover:text-foreground">
+            ← Tüm yazılar
+          </a>
+        </p>
+      )
+    }
+
+    {
+      items.length === 0 ? (
+        <p class="mt-12 text-muted-foreground">Henüz yayınlanmış yazı yok.</p>
+      ) : (
+        <ul class="mt-10 flex flex-col divide-y divide-border border-y border-border">
+          {items.map((post) => (
+            <li class="py-8">
+              <article>
+                <p class="text-xs uppercase tracking-wide text-muted-foreground">
+                  {post.publishedAt
+                    ? new Date(post.publishedAt).toLocaleDateString('tr-TR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })
+                    : ''}
+                </p>
+                <h2 class="mt-2 font-display text-2xl font-bold">
+                  <a href={`/blog/${post.slug}`} class="hover:underline">
+                    {post.title}
+                  </a>
+                </h2>
+                {
+                  post.excerpt && (
+                    <p class="mt-3 max-w-2xl text-muted-foreground">{post.excerpt}</p>
+                  )
+                }
+                {
+                  post.tags.length > 0 && (
+                    <ul class="mt-4 flex flex-wrap gap-2 text-xs">
+                      {post.tags.map((t) => (
+                        <li>
+                          <a
+                            href={`/blog?tag=${encodeURIComponent(t)}`}
+                            class="text-muted-foreground hover:text-foreground"
+                          >
+                            #{t}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )
+                }
+              </article>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      totalPages > 1 && (
+        <nav class="mt-10 flex items-center justify-between text-sm" aria-label="Sayfalama">
+          {page > 1 ? (
+            <a
+              href={`/blog?page=${page - 1}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`}
+              class="hover:underline"
+            >
+              ← Önceki
+            </a>
+          ) : (
+            <span />
+          )}
+          <span class="text-muted-foreground">
+            {page} / {totalPages}
+          </span>
+          {page < totalPages ? (
+            <a
+              href={`/blog?page=${page + 1}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`}
+              class="hover:underline"
+            >
+              Sonraki →
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )
+    }
+  </section>
+</PublicLayout>

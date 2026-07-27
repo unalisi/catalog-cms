@@ -13,6 +13,7 @@ import {
   type SeoMeta,
 } from '../../../db/schema';
 import type { Db } from '../db';
+import { listPublishedPostsForSitemap } from './posts';
 
 export type ProductListItem = {
   id: string;
@@ -267,7 +268,7 @@ export async function listPublishedCategories(db: Db): Promise<Category[]> {
 }
 
 export async function listSitemapEntries(db: Db) {
-  const [productRows, brandRows, categoryRows, pageRows] = await Promise.all([
+  const [productRows, brandRows, categoryRows, pageRows, postRows] = await Promise.all([
     db
       .select({
         slug: products.slug,
@@ -300,6 +301,7 @@ export async function listSitemapEntries(db: Db) {
       })
       .from(pages)
       .where(eq(pages.status, 'published')),
+    listPublishedPostsForSitemap(db),
   ]);
 
   const seoIds = [
@@ -307,6 +309,7 @@ export async function listSitemapEntries(db: Db) {
     ...brandRows.map((r) => r.seoId),
     ...categoryRows.map((r) => r.seoId),
     ...pageRows.map((r) => r.seoId),
+    ...postRows.map((r) => r.seoId),
   ].filter((id): id is string => Boolean(id));
 
   const seoRows =
@@ -317,6 +320,7 @@ export async function listSitemapEntries(db: Db) {
 
   const urls: { loc: string; lastmod: string }[] = [
     { loc: '/catalog', lastmod: new Date().toISOString() },
+    { loc: '/blog', lastmod: new Date().toISOString() },
   ];
 
   for (const row of pageRows) {
@@ -347,6 +351,14 @@ export async function listSitemapEntries(db: Db) {
     const seo = row.seoId ? seoById.get(row.seoId) : undefined;
     if (seo?.noindex) continue;
     urls.push({ loc: `/category/${row.slug}`, lastmod: row.updatedAt });
+  }
+  for (const row of postRows) {
+    const seo = row.seoId ? seoById.get(row.seoId) : undefined;
+    if (seo?.noindex) continue;
+    urls.push({
+      loc: `/blog/${row.slug}`,
+      lastmod: row.updatedAt || row.publishedAt || new Date().toISOString(),
+    });
   }
 
   return urls;

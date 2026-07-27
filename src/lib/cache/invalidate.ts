@@ -1,5 +1,5 @@
 import { CACHE_KEYS } from './keys';
-import { bumpListProductsVersion, cacheDelete } from './kv';
+import { bumpListPostsVersion, bumpListProductsVersion, cacheDelete } from './kv';
 
 export async function invalidateBrandCache(slug: string, previousSlug?: string) {
   const keys = [
@@ -46,4 +46,11 @@ export async function invalidatePageCache(slug: string, previousSlug?: string) {
 
 export async function invalidateSitemapCache() {
   await cacheDelete(CACHE_KEYS.sitemap);
+}
+
+export async function invalidatePostCache(slug: string, previousSlug?: string) {
+  const keys = [CACHE_KEYS.post(slug), CACHE_KEYS.sitemap];
+  if (previousSlug && previousSlug !== slug) keys.push(CACHE_KEYS.post(previousSlug));
+  await cacheDelete(...keys);
+  await bumpListPostsVersion();
 }

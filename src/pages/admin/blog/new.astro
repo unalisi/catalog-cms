@@ -1,0 +1,16 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import PostForm from '../../../components/admin/PostForm';
+---
+
+<AdminLayout
+  title="Yeni yazı"
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { href: '/admin/blog', label: 'Blog' },
+    { label: 'Yeni' },
+  ]}
+>
+  <h1 class="mb-6 font-display text-2xl font-bold">Yeni yazı</h1>
+  <PostForm client:load mode="create" />
+</AdminLayout>

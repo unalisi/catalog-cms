@@ -74,6 +74,35 @@ export function productJsonLd(input: {
   };
 }
 
+export function articleJsonLd(input: {
+  origin: string;
+  title: string;
+  description?: string | null;
+  slug: string;
+  publishedAt?: string | null;
+  updatedAt?: string | null;
+  imageUrl?: string | null;
+  siteName: string;
+}): JsonLd {
+  const url = new URL(`/blog/${input.slug}`, input.origin).toString();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: input.title,
+    description: input.description ?? undefined,
+    url,
+    mainEntityOfPage: url,
+    datePublished: input.publishedAt ?? undefined,
+    dateModified: input.updatedAt ?? input.publishedAt ?? undefined,
+    image: input.imageUrl ?? undefined,
+    publisher: {
+      '@type': 'Organization',
+      name: input.siteName,
+      url: input.origin,
+    },
+  };
+}
+
 export function stringifyJsonLd(nodes: JsonLd[]): string {
   return JSON.stringify(nodes.length === 1 ? nodes[0] : nodes);
 }
