@@ -1,7 +1,7 @@
 # PLAN.md — Fazlı Geliştirme Yol Haritası
 
 > **Proje:** Cloudflare tabanlı Ürün Katalog + İçerik Yönetim Sistemi (CMS)
-> **Kurulum:** Sıfırdan Astro 6 + `@astrojs/cloudflare` (Next.js migrasyonu yok)
+> **Kurulum:** Sıfırdan Astro 7 + `@astrojs/cloudflare` (Next.js migrasyonu yok)
 > **Hedef mimari:** Astro · Workers · D1 · KV · R2 · Images · Queues · Drizzle · Zod
 > **Tema:** Yalnızca **light** — Siyah / Sarı / Beyaz ([`DESIGN.md`](./DESIGN.md))
 > **Odak:** SEO + hız

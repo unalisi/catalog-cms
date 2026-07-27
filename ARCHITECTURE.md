@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — Teknik Mimari Kararları
 
-> **Stack:** Astro 6 · `@astrojs/cloudflare` · Cloudflare Workers · D1 · KV · R2 · Images · Queues · Drizzle · Zod · React (admin island)
+> **Stack:** Astro 7 · `@astrojs/cloudflare` · Cloudflare Workers · D1 · KV · R2 · Images · Queues · Drizzle · Zod · React (admin island)
 > **Odak:** SEO + hız (düşük JS, cache-first, edge SSR)
 > **Tema:** Yalnızca light — Siyah / Sarı / Beyaz ([`DESIGN.md`](./DESIGN.md))
 > **İlgili belgeler:** [`PLAN.md`](./PLAN.md) · [`DESIGN.md`](./DESIGN.md)
@@ -63,7 +63,7 @@ npx astro add sitemap   # veya elle /sitemap.xml endpoint
 
 Bootstrap sırası (FAZ 0): **Astro iskelet → Cloudflare binding kaynakları → GitHub init → `wrangler deploy` → Workers Builds / Actions**. Ayrıntı §13.
 
-- **Astro 6+** + `@astrojs/cloudflare` (adapter 13+)
+- **Astro 7+** + `@astrojs/cloudflare` (adapter 14+)
 - `output: "server"` — varsayılan on-demand SSR
 - `wrangler.jsonc` zorunlu (bindings var); `wrangler.toml` kullanılmaz
 - Worker **`name`** alanı dashboard’daki Worker adıyla **birebir aynı** olmalı (Workers Builds bunu zorunlu kılar)
