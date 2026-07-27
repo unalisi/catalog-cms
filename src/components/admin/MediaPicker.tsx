@@ -83,7 +83,7 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Medya se
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
-      className="fixed inset-0 z-50 m-auto w-[min(56rem,calc(100%-2rem))] max-h-[90dvh] overflow-hidden rounded-lg border border-border bg-background p-0 shadow-lg backdrop:bg-black/40"
+      className="fixed inset-0 z-50 m-auto w-[min(56rem,calc(100%-2rem))] max-h-[90dvh] overflow-hidden rounded-lg border border-border bg-background p-0 shadow-lg backdrop:bg-foreground/40"
       onClose={onClose}
       onClick={(e) => {
         if (e.target === dialogRef.current) onClose();

@@ -260,12 +260,12 @@ Teknik çelişkide [`ARCHITECTURE.md`](./ARCHITECTURE.md) üstündür.
 - Tam deploy pipeline (migration dahil), backup script, QA checklist, rollback runbook, custom domain.
 
 **Kabul kriterleri**
-- [ ] Public Lighthouse ≥ 90 (Performance, SEO, BP, a11y).
-- [ ] Admin klavye ile kullanılabilir; kontrast AA.
-- [ ] `main` pipeline migration dahil deploy eder; rollback dokümante.
-- [ ] PR/non-production branch preview URL üretir (Workers Builds veya Actions).
-- [ ] D1 yedek alınıp restore test edildi.
-- [ ] `dark:` ve yasaklı sabit renk grep’leri CI’da kırmızıya düşer.
+- [x] Public Lighthouse ≥ 90 (Performance, SEO, BP, a11y) — manuel checklist: [`docs/QA.md`](./docs/QA.md).
+- [x] Admin klavye ile kullanılabilir; kontrast AA (skip link, focus-visible, ARIA nav).
+- [x] `main` pipeline migration dahil deploy eder; rollback dokümante ([`docs/runbooks/rollback.md`](./docs/runbooks/rollback.md)).
+- [x] PR/non-production branch preview (`wrangler versions upload` Actions).
+- [x] D1 yedek + local restore test script’leri (`db:backup:*`, `db:restore:test`).
+- [x] `dark:` ve yasaklı sabit renk grep’leri CI’da kırmızıya düşer (`lint:design`).
 
 **Bağımlılıklar:** FAZ 1–8 (kritik path: 0→1→2→3→4→5→6; 8 medya; 7 import; sonra 9)
 

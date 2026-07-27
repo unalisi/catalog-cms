@@ -18,7 +18,7 @@ export default function SeoPreview({ title, description, path, siteName, ogImage
           SERP önizleme
         </p>
         <p className="truncate text-sm text-muted-foreground">{url}</p>
-        <p className="mt-1 text-lg font-medium text-[#1a0dab]" style={{ color: 'oklch(0.45 0.12 250)' }}>
+        <p className="mt-1 text-lg font-medium" style={{ color: 'oklch(0.45 0.12 250)' }}>
           {displayTitle || siteName}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">{displayDesc}</p>

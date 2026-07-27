@@ -60,7 +60,16 @@ Worker adı: **`catalog-cms`** (`wrangler.jsonc` → `name`). Dashboard ile ayn�
 Bu repo [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) içerir.
 
 1. Repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
-2. `main` push → typecheck → build → deploy
+2. `main` push → design lint → typecheck → build → **D1 migrate** → deploy
+3. PR → CI + `wrangler versions upload` preview ([`.github/workflows/preview.yml`](./.github/workflows/preview.yml))
+
+Ops: [`docs/runbooks/rollback.md`](./docs/runbooks/rollback.md) · QA: [`docs/QA.md`](./docs/QA.md)
+
+```bash
+npm run lint:design
+npm run db:backup:remote
+npm run db:restore:test   # local only
+```
 
 Alternatif: Cloudflare Dashboard → Worker `catalog-cms` → Settings → Builds → Connect GitHub (Workers Builds). **İkisini birden production’a bağlama.**
 
@@ -173,5 +182,13 @@ Sonraki adım: **FAZ 7 — WordPress / katalog içe aktarımı**.
 
 Örnek CSV: `db/samples/import-demo.csv`
 
-Sonraki adım: **FAZ 9 — Sertleştirme, performans & yayın**.
+## FAZ 9 durumu
+
+- [x] CSP + güvenlik başlıkları + import/login rate limit + `X-Request-Id` logları
+- [x] CI (`lint:design` / typecheck / build), deploy (+ D1 migrate), PR preview upload
+- [x] D1 backup / local restore test + rollback runbook + QA checklist
+- [x] 404/500, admin skip-link, design token lint
+- [x] Custom domain adımları runbook’ta
+
+Sonraki: Lighthouse skorlarını production URL üzerinde [`docs/QA.md`](./docs/QA.md) ile doğrula; gerekirse custom domain bağla.
 

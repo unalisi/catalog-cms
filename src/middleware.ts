@@ -1,11 +1,15 @@
 import { defineMiddleware } from 'astro:middleware';
 import { getSessionUser, isSameOrigin } from './server/auth/session';
 import { findRedirect } from './server/services/seo';
+import { adminCsp, publicCsp } from './lib/security/csp';
+import { clientIp, logEvent, newRequestId, rateLimit } from './lib/security/rate-limit';
 
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'X-Frame-Options': 'SAMEORIGIN',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+  'Cross-Origin-Opener-Policy': 'same-origin',
 };
 
 function isProtectedAdminPath(pathname: string): boolean {
@@ -15,15 +19,22 @@ function isProtectedAdminPath(pathname: string): boolean {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const { pathname } = context.url;
-  const isAdminArea = isProtectedAdminPath(pathname);
+  const started = Date.now();
+  const requestId = newRequestId();
+  context.locals.requestId = requestId;
 
-  // Public redirects (skip admin + api + assets)
+  const { pathname } = context.url;
+  const method = context.request.method;
+  const isAdminArea = isProtectedAdminPath(pathname);
+  const ip = clientIp(context.request, context.clientAddress || 'unknown');
+
+  // Public redirects (skip admin + api + assets + media)
   if (
     !isAdminArea &&
     !pathname.startsWith('/api/') &&
     !pathname.startsWith('/_astro') &&
-    context.request.method === 'GET'
+    !pathname.startsWith('/media/') &&
+    method === 'GET'
   ) {
     try {
       const redirect = await findRedirect(pathname);
@@ -37,13 +48,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
+  if (pathname.startsWith('/api/admin/import') && method !== 'GET' && method !== 'HEAD') {
+    if (!(await rateLimit('import', ip, 30, 60))) {
+      return Response.json(
+        { ok: false, error: { code: 'rate_limited', message: 'Çok fazla import isteği' } },
+        { status: 429, headers: { 'X-Request-Id': requestId } },
+      );
+    }
+  }
+
   if (isAdminArea) {
     const user = await getSessionUser(context);
     if (!user) {
       if (pathname.startsWith('/api/admin')) {
         return Response.json(
           { ok: false, error: { code: 'unauthorized', message: 'Giriş gerekli' } },
-          { status: 401 },
+          { status: 401, headers: { 'X-Request-Id': requestId } },
         );
       }
       const login = new URL('/admin/login', context.url);
@@ -54,13 +74,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     if (
       pathname.startsWith('/api/admin') &&
-      context.request.method !== 'GET' &&
-      context.request.method !== 'HEAD' &&
+      method !== 'GET' &&
+      method !== 'HEAD' &&
       !isSameOrigin(context.request)
     ) {
       return Response.json(
         { ok: false, error: { code: 'forbidden', message: 'Geçersiz origin' } },
-        { status: 403 },
+        { status: 403, headers: { 'X-Request-Id': requestId } },
       );
     }
   }
@@ -70,9 +90,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     headers.set(key, value);
   }
-  if (isAdminArea) {
+  headers.set('Content-Security-Policy', isAdminArea || pathname.startsWith('/admin') ? adminCsp() : publicCsp());
+  headers.set('X-Request-Id', requestId);
+  if (isAdminArea || pathname.startsWith('/admin')) {
     headers.set('Cache-Control', 'private, no-store');
   }
+
+  logEvent({
+    level: 'info',
+    msg: 'request',
+    requestId,
+    method,
+    path: pathname,
+    status: response.status,
+    ms: Date.now() - started,
+    admin: isAdminArea,
+  });
 
   return new Response(response.body, {
     status: response.status,

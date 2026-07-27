@@ -5,6 +5,7 @@ import { getDb } from '../db';
 import { hashPassword, verifyPassword } from './password';
 import { newId, nowIso } from '../../lib/utils/id';
 import { env } from 'cloudflare:workers';
+import { rateLimit } from '../../lib/security/rate-limit';
 
 export type SessionUser = {
   id: string;
@@ -104,9 +105,5 @@ export function isSameOrigin(request: Request): boolean {
 }
 
 export async function rateLimitLogin(ip: string): Promise<boolean> {
-  const key = `rl:login:${ip || 'unknown'}`;
-  const current = Number((await env.CACHE.get(key)) ?? '0');
-  if (current >= 20) return false;
-  await env.CACHE.put(key, String(current + 1), { expirationTtl: 60 });
-  return true;
+  return rateLimit('login', ip, 20, 60);
 }

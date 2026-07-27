@@ -7,6 +7,7 @@ interface Props {
   title?: string;
   description?: string;
   seo?: PageSeo;
+  noindex?: boolean;
   cacheStatus?: 'HIT' | 'MISS' | null;
   jsonLd?: string | null;
 }
@@ -15,6 +16,7 @@ const {
   title = 'Catalog CMS',
   description = 'Ürün katalog ve içerik yönetim sistemi',
   seo,
+  noindex = false,
   cacheStatus = null,
   jsonLd = null,
 } = Astro.props;
@@ -35,7 +37,8 @@ const gaId = site?.analytics?.gaMeasurementId?.trim() || null;
 const pageTitle = seo?.title ?? title;
 const pageDescription = seo?.description ?? description;
 const canonical = seo?.canonical;
-const robots = seo?.robots ?? (seo?.noindex ? 'noindex, nofollow' : undefined);
+const robots =
+  seo?.robots ?? (seo?.noindex || noindex ? 'noindex, nofollow' : undefined);
 ---
 
 <!doctype html>
