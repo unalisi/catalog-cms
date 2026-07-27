@@ -1,0 +1,47 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import CategoryForm from '../../../components/admin/CategoryForm';
+import { getDb } from '../../../server/db';
+import { getCategoryById, listAllCategories } from '../../../server/repos/admin';
+
+const { id } = Astro.params;
+const db = getDb();
+const category = id ? await getCategoryById(db, id) : null;
+const parents = (await listAllCategories(db)).map((c) => ({ id: c.id, name: c.name }));
+if (!category) {
+  Astro.response.status = 404;
+}
+---
+
+<AdminLayout
+  title={category ? `Düzenle · ${category.name}` : 'Kategori bulunamadı'}
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { href: '/admin/categories', label: 'Kategoriler' },
+    { label: category?.name ?? 'Bulunamadı' },
+  ]}
+>
+  {
+    !category ? (
+      <p>Kategori bulunamadı.</p>
+    ) : (
+      <>
+        <h1 class="mb-6 font-display text-2xl font-bold">{category.name}</h1>
+        <CategoryForm
+          client:load
+          mode="edit"
+          categoryId={category.id}
+          parents={parents}
+          initial={{
+            name: category.name,
+            slug: category.slug,
+            description: category.description ?? '',
+            parentId: category.parentId ?? '',
+            position: category.position,
+            status: category.status,
+          }}
+        />
+      </>
+    )
+  }
+</AdminLayout>

@@ -1,0 +1,78 @@
+---
+import '../../styles/global.css';
+
+const next = Astro.url.searchParams.get('next') || '/admin';
+const error = Astro.url.searchParams.get('error');
+const user = await Astro.session?.get('user');
+if (user) {
+  return Astro.redirect('/admin');
+}
+---
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Source+Sans+3:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>Giriş · Admin</title>
+  </head>
+  <body class="flex min-h-dvh items-center justify-center bg-background px-4 text-foreground antialiased">
+    <div class="w-full max-w-md">
+      <p class="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+        Catalog CMS
+      </p>
+      <h1 class="mt-2 font-display text-3xl font-bold">Admin girişi</h1>
+      <p class="mt-2 text-sm text-muted-foreground">
+        Oturum Astro Sessions + KV ile tutulur.
+      </p>
+
+      {
+        error && (
+          <p class="mt-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error === 'invalid' ? 'E-posta veya parola hatalı.' : 'Formu kontrol edin.'}
+          </p>
+        )
+      }
+
+      <form method="POST" action="/api/admin/auth/login" class="mt-8 flex flex-col gap-4">
+        <input type="hidden" name="next" value={next} />
+        <label class="flex flex-col gap-1.5 text-sm">
+          <span class="font-medium">E-posta</span>
+          <input
+            type="email"
+            name="email"
+            required
+            autocomplete="username"
+            value="admin@catalog.local"
+            class="rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+        <label class="flex flex-col gap-1.5 text-sm">
+          <span class="font-medium">Parola</span>
+          <input
+            type="password"
+            name="password"
+            required
+            minlength="8"
+            autocomplete="current-password"
+            class="rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+        <button
+          type="submit"
+          class="rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+        >
+          Giriş yap
+        </button>
+      </form>
+    </div>
+  </body>
+</html>

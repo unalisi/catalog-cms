@@ -1,29 +1,33 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getDb } from '../../server/db';
+import { getDashboardCounts } from '../../server/repos/admin';
+
+const counts = await getDashboardCounts(getDb());
 ---
 
-<AdminLayout title="Dashboard">
+<AdminLayout title="Dashboard" breadcrumbs={[{ label: 'Dashboard' }]}>
   <div class="flex flex-col gap-6">
     <div>
-      <p class="text-sm text-muted-foreground">Admin</p>
       <h1 class="font-display text-2xl font-bold">Dashboard</h1>
+      <p class="mt-1 text-sm text-muted-foreground">Katalog özeti</p>
     </div>
-    <p class="max-w-2xl text-muted-foreground">
-      FAZ 0 iskeleti hazır. Kimlik doğrulama, CRUD ve veri katmanı sonraki fazlarda eklenecek.
-    </p>
     <div class="grid gap-4 sm:grid-cols-3">
       <div class="rounded-md border border-border bg-muted/30 p-4">
         <p class="text-sm text-muted-foreground">Ürünler</p>
-        <p class="font-display text-2xl font-bold">—</p>
+        <p class="font-display text-2xl font-bold">{counts.products}</p>
       </div>
-      <div class="rounded-md border border-border bg-muted/30 p-4">
+      <a href="/admin/brands" class="rounded-md border border-border bg-muted/30 p-4 hover:border-primary">
         <p class="text-sm text-muted-foreground">Markalar</p>
-        <p class="font-display text-2xl font-bold">—</p>
-      </div>
-      <div class="rounded-md border border-border bg-muted/30 p-4">
+        <p class="font-display text-2xl font-bold">{counts.brands}</p>
+      </a>
+      <a
+        href="/admin/categories"
+        class="rounded-md border border-border bg-muted/30 p-4 hover:border-primary"
+      >
         <p class="text-sm text-muted-foreground">Kategoriler</p>
-        <p class="font-display text-2xl font-bold">—</p>
-      </div>
+        <p class="font-display text-2xl font-bold">{counts.categories}</p>
+      </a>
     </div>
   </div>
 </AdminLayout>

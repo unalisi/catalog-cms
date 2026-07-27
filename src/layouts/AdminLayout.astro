@@ -3,10 +3,12 @@ import '../styles/global.css';
 
 interface Props {
   title?: string;
+  breadcrumbs?: { href?: string; label: string }[];
 }
 
-const { title = 'Admin' } = Astro.props;
+const { title = 'Admin', breadcrumbs = [] } = Astro.props;
 const pathname = Astro.url.pathname;
+const user = Astro.locals.user;
 
 const nav = [
   { href: '/admin', label: 'Dashboard', exact: true },
@@ -73,8 +75,40 @@ function isActive(href: string, exact = false) {
       <div class="flex min-w-0 flex-1 flex-col">
         <header class="border-b border-border px-4 py-3 md:px-6">
           <div class="flex items-center justify-between gap-4">
-            <p class="text-sm text-muted-foreground">Admin panel · FAZ 0 iskelet</p>
-            <a href="/" class="text-sm text-muted-foreground hover:text-foreground">Siteye dön</a>
+            <div class="min-w-0">
+              {
+                breadcrumbs.length > 0 && (
+                  <nav aria-label="Breadcrumb" class="mb-1">
+                    <ol class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      {breadcrumbs.map((item, index) => (
+                        <li class="flex items-center gap-2">
+                          {index > 0 && <span aria-hidden="true">/</span>}
+                          {item.href ? (
+                            <a href={item.href} class="hover:text-foreground">
+                              {item.label}
+                            </a>
+                          ) : (
+                            <span class="text-foreground">{item.label}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  </nav>
+                )
+              }
+              <p class="truncate text-sm text-muted-foreground">{user?.email ?? 'Admin'}</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <a href="/" class="text-sm text-muted-foreground hover:text-foreground">Siteye dön</a>
+              <form method="POST" action="/api/admin/auth/logout">
+                <button
+                  type="submit"
+                  class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
+                >
+                  Çıkış
+                </button>
+              </form>
+            </div>
           </div>
         </header>
         <main class="flex-1 p-4 md:p-6">

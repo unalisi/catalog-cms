@@ -1,0 +1,78 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import EmptyState from '../../../components/admin/EmptyState.astro';
+import DeleteButton from '../../../components/admin/DeleteButton';
+import { getDb } from '../../../server/db';
+import { listAllBrands } from '../../../server/repos/admin';
+import type { Brand } from '../../../../db/schema';
+
+const brands: Brand[] = await listAllBrands(getDb());
+const toast = Astro.url.searchParams.get('toast');
+---
+
+<AdminLayout
+  title="Markalar"
+  breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'Markalar' }]}
+>
+  <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold">Markalar</h1>
+      <p class="mt-1 text-sm text-muted-foreground">{brands.length} kayıt</p>
+    </div>
+    <a
+      href="/admin/brands/new"
+      class="inline-flex rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+    >
+      Yeni marka
+    </a>
+  </div>
+
+  {
+    toast === 'saved' && (
+      <p class="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+        Marka kaydedildi.
+      </p>
+    )
+  }
+
+  {
+    brands.length === 0 ? (
+      <EmptyState
+        title="Henüz marka yok"
+        description="İlk markayı oluşturarak kataloğu yapılandırın."
+        actionHref="/admin/brands/new"
+        actionLabel="Marka ekle"
+      />
+    ) : (
+      <div class="overflow-x-auto rounded-md border border-border">
+        <table class="w-full min-w-[40rem] text-left text-sm">
+          <thead class="bg-muted">
+            <tr>
+              <th class="px-3 py-2 font-medium">Ad</th>
+              <th class="px-3 py-2 font-medium">Slug</th>
+              <th class="px-3 py-2 font-medium">Durum</th>
+              <th class="px-3 py-2 font-medium">İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {brands.map((brand) => (
+              <tr class="border-t border-border hover:bg-muted/40">
+                <td class="px-3 py-2 font-medium">{brand.name}</td>
+                <td class="px-3 py-2 font-mono text-muted-foreground">{brand.slug}</td>
+                <td class="px-3 py-2">{brand.status}</td>
+                <td class="px-3 py-2">
+                  <div class="flex items-center gap-3">
+                    <a href={`/admin/brands/${brand.id}`} class="hover:underline">
+                      Düzenle
+                    </a>
+                    <DeleteButton client:load endpoint={`/api/admin/brands/${brand.id}`} />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+</AdminLayout>

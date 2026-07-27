@@ -1,0 +1,20 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import CategoryForm from '../../../components/admin/CategoryForm';
+import { getDb } from '../../../server/db';
+import { listAllCategories } from '../../../server/repos/admin';
+
+const parents = (await listAllCategories(getDb())).map((c) => ({ id: c.id, name: c.name }));
+---
+
+<AdminLayout
+  title="Yeni kategori"
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { href: '/admin/categories', label: 'Kategoriler' },
+    { label: 'Yeni' },
+  ]}
+>
+  <h1 class="mb-6 font-display text-2xl font-bold">Yeni kategori</h1>
+  <CategoryForm client:load mode="create" parents={parents} />
+</AdminLayout>

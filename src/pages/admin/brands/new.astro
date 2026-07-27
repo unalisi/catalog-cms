@@ -1,0 +1,16 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import BrandForm from '../../../components/admin/BrandForm';
+---
+
+<AdminLayout
+  title="Yeni marka"
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { href: '/admin/brands', label: 'Markalar' },
+    { label: 'Yeni' },
+  ]}
+>
+  <h1 class="mb-6 font-display text-2xl font-bold">Yeni marka</h1>
+  <BrandForm client:load mode="create" />
+</AdminLayout>

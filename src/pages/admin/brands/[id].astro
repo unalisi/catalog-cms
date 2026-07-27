@@ -1,0 +1,42 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import BrandForm from '../../../components/admin/BrandForm';
+import { getDb } from '../../../server/db';
+import { getBrandById } from '../../../server/repos/admin';
+
+const { id } = Astro.params;
+const brand = id ? await getBrandById(getDb(), id) : null;
+if (!brand) {
+  Astro.response.status = 404;
+}
+---
+
+<AdminLayout
+  title={brand ? `Düzenle · ${brand.name}` : 'Marka bulunamadı'}
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { href: '/admin/brands', label: 'Markalar' },
+    { label: brand?.name ?? 'Bulunamadı' },
+  ]}
+>
+  {
+    !brand ? (
+      <p>Marka bulunamadı.</p>
+    ) : (
+      <>
+        <h1 class="mb-6 font-display text-2xl font-bold">{brand.name}</h1>
+        <BrandForm
+          client:load
+          mode="edit"
+          brandId={brand.id}
+          initial={{
+            name: brand.name,
+            slug: brand.slug,
+            description: brand.description ?? '',
+            status: brand.status,
+          }}
+        />
+      </>
+    )
+  }
+</AdminLayout>

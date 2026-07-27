@@ -91,4 +91,16 @@ npm run db:migrate:remote && npm run db:seed:remote
 npm run deploy
 ```
 
-Sonraki adım: **FAZ 2 — Admin CMS çekirdeği**.
+## FAZ 2 durumu
+
+- [x] `users` + PBKDF2 + Astro Sessions (KV `SESSION`)
+- [x] Middleware guard (`/admin/*`, `/api/admin/*`)
+- [x] Login / logout + admin shell (breadcrumb, çıkış)
+- [x] Marka CRUD + Kategori CRUD (parent) + alan validasyonu
+- [x] Yazımda KV invalidation + list version bump
+- [x] Dashboard sayaçları
+
+Giriş: `admin@catalog.local` / `ADMIN_BOOTSTRAP_PASSWORD` (local/prod secret; varsayılan örnek `ChangeMeNow!`)
+
+Sonraki adım: **FAZ 3 — Excel-benzeri ürün data grid**.
+
