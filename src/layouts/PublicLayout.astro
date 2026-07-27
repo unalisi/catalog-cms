@@ -1,0 +1,63 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Catalog CMS',
+  description = 'Ürün katalog ve içerik yönetim sistemi',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-dvh bg-background text-foreground antialiased">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
+    >
+      İçeriğe geç
+    </a>
+    <header class="border-b border-border">
+      <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-6">
+        <a href="/" class="font-display text-xl font-bold tracking-tight">
+          Catalog CMS
+        </a>
+        <nav aria-label="Ana menü" class="flex items-center gap-4 text-sm font-medium">
+          <a href="/catalog" class="text-muted-foreground hover:text-foreground">Katalog</a>
+          <a
+            href="/admin"
+            class="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
+          >
+            Admin
+          </a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="mt-auto border-t border-border">
+      <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-muted-foreground md:px-6">
+        © {new Date().getFullYear()} Catalog CMS
+      </div>
+    </footer>
+  </body>
+</html>

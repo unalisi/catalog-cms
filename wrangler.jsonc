@@ -1,0 +1,44 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "catalog-cms",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-07-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  // Replace database_id / kv ids after: npm run cf:setup
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "catalog-db",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "db/migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "00000000000000000000000000000001"
+    },
+    {
+      "binding": "SESSION",
+      "id": "00000000000000000000000000000002"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "catalog-media"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  }
+  // IMPORT_QUEUE added in FAZ 7
+}

@@ -1,0 +1,86 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+}
+
+const { title = 'Admin' } = Astro.props;
+const pathname = Astro.url.pathname;
+
+const nav = [
+  { href: '/admin', label: 'Dashboard', exact: true },
+  { href: '/admin/products', label: 'Ürünler' },
+  { href: '/admin/brands', label: 'Markalar' },
+  { href: '/admin/categories', label: 'Kategoriler' },
+  { href: '/admin/pages', label: 'Sayfalar' },
+  { href: '/admin/seo', label: 'SEO' },
+  { href: '/admin/blog', label: 'Blog' },
+  { href: '/admin/media', label: 'Medya' },
+  { href: '/admin/settings', label: 'Ayarlar' },
+];
+
+function isActive(href: string, exact = false) {
+  if (exact) return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+---
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title} · Admin</title>
+  </head>
+  <body class="min-h-dvh bg-background text-foreground antialiased">
+    <div class="flex min-h-dvh">
+      <aside class="hidden w-64 shrink-0 border-r border-border bg-muted/40 md:block">
+        <div class="border-b border-border px-4 py-4">
+          <a href="/admin" class="font-display text-lg font-bold">Catalog Admin</a>
+        </div>
+        <nav aria-label="Admin menü" class="flex flex-col gap-1 p-3">
+          {
+            nav.map((item) => {
+              const active = isActive(item.href, item.exact);
+              return (
+                <a
+                  href={item.href}
+                  class:list={[
+                    'rounded-md px-3 py-2 text-sm font-medium',
+                    active
+                      ? 'border-l-2 border-primary bg-primary/10 text-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  ]}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              );
+            })
+          }
+        </nav>
+      </aside>
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header class="border-b border-border px-4 py-3 md:px-6">
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-sm text-muted-foreground">Admin panel · FAZ 0 iskelet</p>
+            <a href="/" class="text-sm text-muted-foreground hover:text-foreground">Siteye dön</a>
+          </div>
+        </header>
+        <main class="flex-1 p-4 md:p-6">
+          <slot />
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
