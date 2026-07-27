@@ -12,23 +12,22 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
-  // Replace database_id / kv ids after: npm run cf:setup
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "catalog-db",
-      "database_id": "00000000-0000-0000-0000-000000000001",
+      "database_id": "93c9c5cc-6651-4dda-95f7-0fa610b85f67",
       "migrations_dir": "db/migrations"
     }
   ],
   "kv_namespaces": [
     {
       "binding": "CACHE",
-      "id": "00000000000000000000000000000001"
+      "id": "61980cf442cd4804b76558e33769caa9"
     },
     {
       "binding": "SESSION",
-      "id": "00000000000000000000000000000002"
+      "id": "ff377a7aceb140989f372ff607ac04f4"
     }
   ],
   "r2_buckets": [
@@ -40,5 +39,4 @@
   "images": {
     "binding": "IMAGES"
   }
-  // IMPORT_QUEUE added in FAZ 7
 }
