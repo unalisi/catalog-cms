@@ -102,5 +102,15 @@ npm run deploy
 
 Giriş: `admin@catalog.local` / `ADMIN_BOOTSTRAP_PASSWORD` (local/prod secret; varsayılan örnek `ChangeMeNow!`)
 
-Sonraki adım: **FAZ 3 — Excel-benzeri ürün data grid**.
+## FAZ 3 durumu
+
+- [x] `/admin/products` sanallaştırılmış Excel-benzeri grid (`@tanstack/react-virtual`)
+- [x] Seçim: hücre / Cmd·Ctrl / Shift·sürükle / satır / sütun / tümü
+- [x] Inline edit, Tab/ok, Esc, TSV paste, fill-down/right
+- [x] Bulk bar + `PATCH /api/admin/products/bulk` (kısmi hata + rollback toast)
+- [x] `/admin/products/new` + `/admin/products/[id]` form (varyant/medya/SEO iskeleti)
+- [x] Grid yazımında ürün cache invalidation (`X-Cache: MISS`)
+- [x] ≥1000 satır seed: `npm run db:seed:grid:local` / `:remote`
+
+Sonraki adım: **FAZ 4 — Section-bazlı sayfa düzenleyici**.
 

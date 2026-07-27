@@ -4,9 +4,10 @@ import type { ApiResult } from '../../lib/api';
 type Props = {
   endpoint: string;
   label?: string;
+  redirectTo?: string;
 };
 
-export default function DeleteButton({ endpoint, label = 'Sil' }: Props) {
+export default function DeleteButton({ endpoint, label = 'Sil', redirectTo }: Props) {
   const [busy, setBusy] = useState(false);
 
   async function onClick() {
@@ -19,7 +20,7 @@ export default function DeleteButton({ endpoint, label = 'Sil' }: Props) {
       window.alert(json.error.message ?? 'Silinemedi');
       return;
     }
-    window.location.reload();
+    window.location.href = redirectTo ?? window.location.pathname;
   }
 
   return (

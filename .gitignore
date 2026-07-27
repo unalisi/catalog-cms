@@ -29,3 +29,6 @@ pnpm-debug.log*
 
 # leftover scaffold
 cosmic-conjunction/
+
+# generated load-test seed (FAZ 3)
+db/seed-grid.sql

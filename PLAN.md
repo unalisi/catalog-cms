@@ -119,12 +119,12 @@ Teknik çelişkide [`ARCHITECTURE.md`](./ARCHITECTURE.md) üstündür.
 - Bulk API + service katmanı.
 
 **Kabul kriterleri**
-- [ ] Klavye gezinme tam (ok, Tab, Enter, Esc).
-- [ ] Tüm seçim modları görsel olarak ayırt edilir (`DESIGN.md` §8).
-- [ ] Tab-ayraçlı paste doğru hücrelere dağılır.
-- [ ] ≥ 1.000 satırda virtualization ile akıcı scroll.
-- [ ] Sunucu hatasında optimistic rollback + toast.
-- [ ] Grid yazımı public ürün cache’ini bozar (miss doğrulanır).
+- [x] Klavye gezinme tam (ok, Tab, Enter, Esc).
+- [x] Tüm seçim modları görsel olarak ayırt edilir (`DESIGN.md` §8).
+- [x] Tab-ayraçlı paste doğru hücrelere dağılır.
+- [x] ≥ 1.000 satırda virtualization ile akıcı scroll.
+- [x] Sunucu hatasında optimistic rollback + toast.
+- [x] Grid yazımı public ürün cache’ini bozar (miss doğrulanır).
 
 **Bağımlılıklar:** FAZ 2
 

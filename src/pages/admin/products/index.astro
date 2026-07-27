@@ -1,13 +1,40 @@
 ---
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ProductGrid from '../../../components/admin/product-grid/ProductGrid';
+import { getDb } from '../../../server/db';
+import { listAllBrands } from '../../../server/repos/admin';
+import { listProductsForGrid } from '../../../server/repos/products-admin';
+
+const db = getDb();
+const products = await listProductsForGrid(db);
+const brands = (await listAllBrands(db)).map((b) => ({ id: b.id, name: b.name }));
+const toast = Astro.url.searchParams.get('toast');
 ---
 
 <AdminLayout
   title="Ürünler"
   breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'Ürünler' }]}
 >
-  <h1 class="font-display text-2xl font-bold">Ürünler</h1>
-  <p class="mt-2 text-muted-foreground">
-    Excel-benzeri ürün grid FAZ 3’te eklenecek.
-  </p>
+  <div class="mb-4 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold">Ürünler</h1>
+      <p class="mt-1 text-sm text-muted-foreground">{products.length} kayıt · Excel-benzeri grid</p>
+    </div>
+    <a
+      href="/admin/products/new"
+      class="inline-flex rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+    >
+      Yeni ürün
+    </a>
+  </div>
+
+  {
+    toast === 'saved' && (
+      <p class="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+        Ürün kaydedildi.
+      </p>
+    )
+  }
+
+  <ProductGrid client:load initialProducts={products} brands={brands} />
 </AdminLayout>
