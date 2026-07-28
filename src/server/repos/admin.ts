@@ -1,7 +1,16 @@
-import { and, asc, count, eq, ne } from 'drizzle-orm';
-import { brands, categories, products, type Brand, type Category } from '../../../db/schema';
+import { and, asc, count, desc, eq, ne } from 'drizzle-orm';
+import {
+  brands,
+  categories,
+  pageSections,
+  pages,
+  products,
+  type Brand,
+  type Category,
+} from '../../../db/schema';
 import type { Db } from '../db';
 import { newId, nowIso } from '../../lib/utils/id';
+import { isSectionType, sectionLabels } from '../../lib/sections/registry';
 
 export async function listAllBrands(db: Db): Promise<Brand[]> {
   return db.select().from(brands).orderBy(asc(brands.name));
@@ -178,5 +187,97 @@ export async function getDashboardCounts(db: Db) {
     products: productsCount?.value ?? 0,
     brands: brandsCount?.value ?? 0,
     categories: categoriesCount?.value ?? 0,
+  };
+}
+
+export async function getDashboardOverview(db: Db) {
+  const [
+    [productsTotal],
+    [published],
+    [draft],
+    [archived],
+    [brandsCount],
+    recentProducts,
+    homePage,
+  ] = await Promise.all([
+    db.select({ value: count() }).from(products),
+    db
+      .select({ value: count() })
+      .from(products)
+      .where(eq(products.status, 'published')),
+    db.select({ value: count() }).from(products).where(eq(products.status, 'draft')),
+    db.select({ value: count() }).from(products).where(eq(products.status, 'archived')),
+    db.select({ value: count() }).from(brands),
+    db
+      .select({
+        id: products.id,
+        name: products.name,
+        sku: products.sku,
+        status: products.status,
+        brandName: brands.name,
+      })
+      .from(products)
+      .leftJoin(brands, eq(products.brandId, brands.id))
+      .orderBy(desc(products.updatedAt))
+      .limit(4),
+    db.select().from(pages).where(eq(pages.slug, 'home')).limit(1),
+  ]);
+
+  const home = homePage[0] ?? null;
+  let homeSections: {
+    id: string;
+    type: string;
+    typeLabel: string;
+    title: string;
+    status: 'published' | 'draft' | 'archived';
+  }[] = [];
+
+  if (home) {
+    const sections = await db
+      .select()
+      .from(pageSections)
+      .where(eq(pageSections.pageId, home.id))
+      .orderBy(asc(pageSections.position))
+      .limit(4);
+
+    homeSections = sections.map((s, index) => {
+      let title = '';
+      try {
+        const cfg = JSON.parse(s.configJson) as { title?: string };
+        title = cfg.title?.trim() || '';
+      } catch {
+        title = '';
+      }
+      const typeLabel = isSectionType(s.type) ? sectionLabels[s.type] : s.type;
+      const status: 'published' | 'draft' | 'archived' = !s.isVisible
+        ? 'archived'
+        : home.status === 'draft'
+          ? 'draft'
+          : 'published';
+      return {
+        id: s.id,
+        type: s.type,
+        typeLabel,
+        title: title || `Bölüm ${String(index + 1).padStart(2, '0')}`,
+        status,
+      };
+    });
+  }
+
+  const total = productsTotal?.value ?? 0;
+  const publishedCount = published?.value ?? 0;
+  const coverage =
+    total > 0 ? Math.round((publishedCount / total) * 100) : 0;
+
+  return {
+    products: total,
+    published: publishedCount,
+    draft: draft?.value ?? 0,
+    archived: archived?.value ?? 0,
+    brands: brandsCount?.value ?? 0,
+    coverage,
+    recentProducts,
+    homeSections,
+    homePageId: home?.id ?? null,
   };
 }

@@ -1,36 +1,21 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { DashboardOverview } from '../../components/admin/DashboardOverview';
 import { getDb } from '../../server/db';
-import { getDashboardCounts } from '../../server/repos/admin';
+import { getDashboardOverview } from '../../server/repos/admin';
 
-const counts = await getDashboardCounts(getDb());
+const overview = await getDashboardOverview(getDb());
 ---
 
-<AdminLayout title="Dashboard" breadcrumbs={[{ label: 'Dashboard' }]}>
-  <div class="flex flex-col gap-4">
-    <div>
-      <h1 class="font-display text-2xl font-bold tracking-tight">Dashboard</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Katalog özeti</p>
-    </div>
-    <div class="grid gap-4 sm:grid-cols-3">
-      <div class="rounded-lg border border-border bg-background p-4 md:p-6">
-        <p class="text-sm text-muted-foreground">Ürünler</p>
-        <p class="font-display text-2xl font-bold">{counts.products}</p>
-      </div>
-      <a
-        href="/admin/brands"
-        class="rounded-lg border border-border bg-background p-4 md:p-6 hover:border-primary"
-      >
-        <p class="text-sm text-muted-foreground">Markalar</p>
-        <p class="font-display text-2xl font-bold">{counts.brands}</p>
-      </a>
-      <a
-        href="/admin/categories"
-        class="rounded-lg border border-border bg-background p-4 md:p-6 hover:border-primary"
-      >
-        <p class="text-sm text-muted-foreground">Kategoriler</p>
-        <p class="font-display text-2xl font-bold">{counts.categories}</p>
-      </a>
-    </div>
-  </div>
+<AdminLayout title="Genel Bakış" breadcrumbs={[{ label: 'Genel Bakış' }]}>
+  <DashboardOverview
+    products={overview.products}
+    published={overview.published}
+    draft={overview.draft}
+    archived={overview.archived}
+    coverage={overview.coverage}
+    recentProducts={overview.recentProducts}
+    homeSections={overview.homeSections}
+    homePageSlug="home"
+  />
 </AdminLayout>
