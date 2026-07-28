@@ -2,6 +2,7 @@ import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import {
   brands,
   categories,
+  media,
   pages,
   productCategories,
   products,
@@ -14,6 +15,7 @@ import {
 } from '../../../db/schema';
 import type { Db } from '../db';
 import { listPublishedPostsForSitemap } from './posts';
+import { mediaPublicPath } from '../../lib/media/urls';
 
 export type ProductListItem = {
   id: string;
@@ -25,6 +27,7 @@ export type ProductListItem = {
   compareAtPrice: number | null;
   currency: string;
   stock: number;
+  imageUrl: string | null;
   brand: { id: string; slug: string; name: string } | null;
 };
 
@@ -90,9 +93,11 @@ export async function listPublishedProducts(
     .select({
       product: products,
       brand: brands,
+      mediaKey: media.key,
     })
     .from(products)
     .leftJoin(brands, eq(products.brandId, brands.id))
+    .leftJoin(media, eq(products.primaryMediaId, media.id))
     .where(where)
     .orderBy(asc(products.name))
     .limit(opts.pageSize)
@@ -100,7 +105,7 @@ export async function listPublishedProducts(
 
   return {
     total: totalRow?.value ?? 0,
-    items: rows.map(({ product, brand }) => ({
+    items: rows.map(({ product, brand, mediaKey }) => ({
       id: product.id,
       slug: product.slug,
       sku: product.sku,
@@ -110,6 +115,7 @@ export async function listPublishedProducts(
       compareAtPrice: product.compareAtPrice,
       currency: product.currency,
       stock: product.stock,
+      imageUrl: mediaKey ? mediaPublicPath(mediaKey) : null,
       brand: brand ? { id: brand.id, slug: brand.slug, name: brand.name } : null,
     })),
   };
@@ -124,10 +130,12 @@ export async function getPublishedProductBySlug(
       product: products,
       brand: brands,
       seo: seoMeta,
+      mediaKey: media.key,
     })
     .from(products)
     .leftJoin(brands, eq(products.brandId, brands.id))
     .leftJoin(seoMeta, eq(products.seoId, seoMeta.id))
+    .leftJoin(media, eq(products.primaryMediaId, media.id))
     .where(and(eq(products.slug, slug), eq(products.status, 'published')))
     .limit(1);
 
@@ -161,6 +169,7 @@ export async function getPublishedProductBySlug(
     compareAtPrice: row.product.compareAtPrice,
     currency: row.product.currency,
     stock: row.product.stock,
+    imageUrl: row.mediaKey ? mediaPublicPath(row.mediaKey) : null,
     updatedAt: row.product.updatedAt,
     publishedAt: row.product.publishedAt,
     brand: row.brand
@@ -196,12 +205,20 @@ export async function getPublishedBrandBySlug(db: Db, slug: string): Promise<Bra
   };
 }
 
-export async function listPublishedBrands(db: Db): Promise<Brand[]> {
-  return db
-    .select()
+export async function listPublishedBrands(db: Db): Promise<(Brand & { logoUrl: string | null })[]> {
+  const rows = await db
+    .select({
+      brand: brands,
+      mediaKey: media.key,
+    })
     .from(brands)
+    .leftJoin(media, eq(brands.logoMediaId, media.id))
     .where(eq(brands.status, 'published'))
     .orderBy(asc(brands.name));
+  return rows.map(({ brand, mediaKey }) => ({
+    ...brand,
+    logoUrl: mediaKey ? mediaPublicPath(mediaKey) : null,
+  }));
 }
 
 export async function getPublishedCategoryBySlug(
@@ -259,12 +276,22 @@ export async function getPublishedCategoryBySlug(
   };
 }
 
-export async function listPublishedCategories(db: Db): Promise<Category[]> {
-  return db
-    .select()
+export async function listPublishedCategories(
+  db: Db,
+): Promise<(Category & { imageUrl: string | null })[]> {
+  const rows = await db
+    .select({
+      category: categories,
+      mediaKey: media.key,
+    })
     .from(categories)
+    .leftJoin(media, eq(categories.imageMediaId, media.id))
     .where(eq(categories.status, 'published'))
     .orderBy(asc(categories.position), asc(categories.name));
+  return rows.map(({ category, mediaKey }) => ({
+    ...category,
+    imageUrl: mediaKey ? mediaPublicPath(mediaKey) : null,
+  }));
 }
 
 export async function listSitemapEntries(db: Db) {

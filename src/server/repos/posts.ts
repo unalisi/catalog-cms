@@ -1,9 +1,11 @@
 import { and, asc, count, desc, eq, inArray, lte, ne, sql } from 'drizzle-orm';
-import { posts, postTags, seoMeta, type Post } from '../../../db/schema';
+import { media, posts, postTags, seoMeta, type Post } from '../../../db/schema';
 import type { Db } from '../db';
+import { mediaPublicPath } from '../../lib/media/urls';
 import { newId, nowIso } from '../../lib/utils/id';
 
 export type PostWithTags = Post & { tags: string[] };
+export type PostListItem = PostWithTags & { coverUrl: string | null };
 
 export type PostPublic = PostWithTags & {
   seo: typeof seoMeta.$inferSelect | null;
@@ -203,15 +205,30 @@ async function getSeoForPost(db: Db, seoId: string) {
   return row ?? null;
 }
 
-export async function listRecentPublishedPosts(db: Db, limit: number): Promise<PostWithTags[]> {
+export async function listRecentPublishedPosts(db: Db, limit: number): Promise<PostListItem[]> {
   const now = nowIso();
   const rows = await db
-    .select()
+    .select({
+      post: posts,
+      mediaKey: media.key,
+    })
     .from(posts)
+    .leftJoin(media, eq(posts.coverMediaId, media.id))
     .where(publicVisibilityWhere(now))
     .orderBy(desc(posts.publishedAt), desc(posts.createdAt))
     .limit(Math.min(20, Math.max(1, limit)));
-  return attachTags(db, rows);
+  const withTags = await attachTags(
+    db,
+    rows.map((r) => r.post),
+  );
+  const keyById = new Map(rows.map((r) => [r.post.id, r.mediaKey]));
+  return withTags.map((post) => {
+    const key = keyById.get(post.id);
+    return {
+      ...post,
+      coverUrl: key ? mediaPublicPath(key) : null,
+    };
+  });
 }
 
 export async function listPublishedPostsForFeed(db: Db, limit = 50): Promise<PostWithTags[]> {
