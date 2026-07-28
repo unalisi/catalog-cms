@@ -1,56 +1,106 @@
 ---
 import type { SectionConfigMap } from '../../lib/sections/registry';
+import HeroSlider from './HeroSlider';
 
 interface Props {
   config: SectionConfigMap['hero'];
 }
 
 const { config } = Astro.props;
+const variant = config.variant ?? 'static';
+const overlay = config.overlay ?? 'dark';
+const dark = overlay === 'dark';
+const slides = (config.slides ?? []).filter((s) => s.title?.trim());
 ---
 
-<section class="relative overflow-hidden border-b border-border">
-  <div
-    class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_oklch(0.88_0.18_95_/_0.25),_transparent_55%)]"
-    aria-hidden="true"
-  >
-  </div>
-  <div class="relative mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 md:px-6 md:py-28">
-    {
-      config.eyebrow && (
-        <p class="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          {config.eyebrow}
-        </p>
-      )
-    }
-    <h1 class="max-w-3xl font-display text-4xl font-bold tracking-tight md:text-5xl">
-      {config.title}
-    </h1>
-    {
-      config.subtitle && (
-        <p class="max-w-xl text-lg text-muted-foreground">{config.subtitle}</p>
-      )
-    }
-    {
-      (config.ctaLabel || config.secondaryCtaLabel) && (
-        <div class="flex flex-wrap gap-3">
-          {config.ctaLabel && config.ctaHref && (
-            <a
-              href={config.ctaHref}
-              class="inline-flex items-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+{
+  variant === 'slider' && slides.length > 0 ? (
+    <HeroSlider client:visible slides={slides} overlay={overlay} />
+  ) : (
+    <section class="relative min-h-[70vh] overflow-hidden border-b border-border md:min-h-[78vh]">
+      {config.imageUrl ? (
+        <img
+          src={config.imageUrl}
+          alt={config.imageAlt || ''}
+          class="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <div
+          class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_color-mix(in_oklab,#ffd700_28%,transparent),_transparent_55%)]"
+          aria-hidden="true"
+        />
+      )}
+      {config.imageUrl && (
+        <div
+          class:list={[
+            'absolute inset-0',
+            dark
+              ? 'bg-gradient-to-r from-foreground/80 via-foreground/55 to-foreground/20'
+              : 'bg-gradient-to-r from-background/92 via-background/75 to-background/40',
+          ]}
+        />
+      )}
+      <div class="relative mx-auto flex min-h-[70vh] max-w-6xl flex-col justify-end gap-5 px-4 py-20 md:min-h-[78vh] md:justify-center md:px-6 md:py-28">
+        {
+          config.eyebrow && (
+            <p
+              class:list={[
+                'font-display text-sm font-semibold uppercase tracking-widest',
+                config.imageUrl && dark ? 'text-primary' : 'text-muted-foreground',
+              ]}
             >
-              {config.ctaLabel}
-            </a>
-          )}
-          {config.secondaryCtaLabel && config.secondaryCtaHref && (
-            <a
-              href={config.secondaryCtaHref}
-              class="inline-flex items-center rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground hover:opacity-90"
+              {config.eyebrow}
+            </p>
+          )
+        }
+        <h1
+          class:list={[
+            'max-w-3xl font-display text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl',
+            config.imageUrl && dark ? 'text-background' : 'text-foreground',
+          ]}
+        >
+          {config.title}
+        </h1>
+        {
+          config.subtitle && (
+            <p
+              class:list={[
+                'max-w-xl text-lg',
+                config.imageUrl && dark ? 'text-background/85' : 'text-muted-foreground',
+              ]}
             >
-              {config.secondaryCtaLabel}
-            </a>
-          )}
-        </div>
-      )
-    }
-  </div>
-</section>
+              {config.subtitle}
+            </p>
+          )
+        }
+        {
+          (config.ctaLabel || config.secondaryCtaLabel) && (
+            <div class="flex flex-wrap gap-3">
+              {config.ctaLabel && config.ctaHref && (
+                <a
+                  href={config.ctaHref}
+                  class="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                >
+                  {config.ctaLabel}
+                </a>
+              )}
+              {config.secondaryCtaLabel && config.secondaryCtaHref && (
+                <a
+                  href={config.secondaryCtaHref}
+                  class:list={[
+                    'inline-flex items-center rounded-md border px-5 py-2.5 text-sm font-semibold',
+                    config.imageUrl && dark
+                      ? 'border-background/40 text-background hover:bg-background/10'
+                      : 'border-border text-foreground hover:bg-muted',
+                  ]}
+                >
+                  {config.secondaryCtaLabel}
+                </a>
+              )}
+            </div>
+          )
+        }
+      </div>
+    </section>
+  )
+}
