@@ -41,4 +41,7 @@ INSERT INTO page_sections (id, page_id, type, position, is_visible, config_json,
    '2026-07-27T00:00:00.000Z', '2026-07-27T00:00:00.000Z'),
   ('sec_home_faq', 'page_home', 'faq', 9, 1,
    '{"title":"Sık sorulan sorular","items":[{"question":"Ürün fiyatları güncel mi?","answer":"Yayınlanan ürün fiyatları panelden yönetilir ve anında yayınlanır."},{"question":"Teklif nasıl alırım?","answer":"İletişim kanallarından telefon, WhatsApp veya form üzerinden ulaşabilirsiniz."},{"question":"Katalog hangi ürünleri kapsar?","answer":"Marka ve kategori ağacındaki yayınlanmış ürünler public kataloğa düşer."}]}',
+   '2026-07-27T00:00:00.000Z', '2026-07-27T00:00:00.000Z'),
+  ('sec_home_wa', 'page_home', 'whatsapp-float', 10, 1,
+   '{"phone":"902120000000","position":"bottom-right","headline":"Bir Konuşma Başlatın","description":"Merhaba! WhatsApp’ta sohbet etmek için aşağıdaki üyemize tıklayın.","agentLabel":"Müşteri Hizmetleri","agentSubtitle":"Müşteri Hizmetleri","statusHint":"Ekip genellikle birkaç dakika içinde yanıt verir."}',
    '2026-07-27T00:00:00.000Z', '2026-07-27T00:00:00.000Z');

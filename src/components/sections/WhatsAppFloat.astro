@@ -1,0 +1,12 @@
+---
+import type { SectionConfigMap } from '../../lib/sections/registry';
+import WhatsAppFloat from './WhatsAppFloat';
+
+interface Props {
+  config: SectionConfigMap['whatsapp-float'];
+}
+
+const { config } = Astro.props;
+---
+
+<WhatsAppFloat client:load {...config} />
