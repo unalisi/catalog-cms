@@ -6,6 +6,7 @@ import {
   type SectionType,
 } from '../../lib/sections/registry';
 import MediaPicker, { type MediaItem } from './MediaPicker';
+
 type Status = 'draft' | 'published' | 'archived';
 
 type SectionRow = {
@@ -28,6 +29,50 @@ type PageEditorProps = {
   sectionTypes: { type: string; label: string }[];
   previewPath: string;
 };
+
+type FaqItem = { question: string; answer: string };
+type GalleryImage = { src: string; alt: string };
+type HeroSlide = {
+  imageUrl: string;
+  imageAlt: string;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+  ctaHref: string;
+};
+type WhyItem = { icon: string; title: string; body: string };
+type ChannelItem = {
+  type: 'phone' | 'whatsapp' | 'email' | 'form' | 'custom';
+  label: string;
+  value: string;
+};
+type LogoItem = { src: string; alt: string; href: string };
+
+type PickerTarget =
+  | { kind: 'media'; urlKey: string; altKey?: string }
+  | { kind: 'gallery'; index: number }
+  | { kind: 'slide'; index: number }
+  | { kind: 'logo'; index: number }
+  | null;
+
+const CHANNEL_TYPES: { value: ChannelItem['type']; label: string }[] = [
+  { value: 'phone', label: 'Telefon' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'email', label: 'E-posta' },
+  { value: 'form', label: 'Form' },
+  { value: 'custom', label: 'Özel' },
+];
+
+const emptySlide = (): HeroSlide => ({
+  imageUrl: '',
+  imageAlt: '',
+  eyebrow: '',
+  title: '',
+  subtitle: '',
+  ctaLabel: '',
+  ctaHref: '',
+});
 
 function parseConfig(configJson: string): Record<string, unknown> {
   try {
@@ -58,7 +103,7 @@ export default function PageEditor({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
-  const [galleryPickerIndex, setGalleryPickerIndex] = useState<number | null>(null);
+  const [pickerTarget, setPickerTarget] = useState<PickerTarget>(null);
   const dragId = useRef<string | null>(null);
 
   const selected = useMemo(
@@ -211,6 +256,52 @@ export default function PageEditor({
     setConfig((prev) => ({ ...prev, [key]: value }));
   }
 
+  function handleMediaSelect(media: MediaItem) {
+    if (!pickerTarget) return;
+
+    if (pickerTarget.kind === 'media') {
+      setConfig((prev) => {
+        const next = { ...prev, [pickerTarget.urlKey]: media.url };
+        if (pickerTarget.altKey) {
+          const currentAlt = String(prev[pickerTarget.altKey] ?? '');
+          next[pickerTarget.altKey] = currentAlt || media.alt;
+        }
+        return next;
+      });
+    } else if (pickerTarget.kind === 'gallery') {
+      const images = (config.images as GalleryImage[]) ?? [];
+      const next = [...images];
+      const current = next[pickerTarget.index] ?? { src: '', alt: '' };
+      next[pickerTarget.index] = {
+        src: media.url,
+        alt: current.alt || media.alt,
+      };
+      updateField('images', next);
+    } else if (pickerTarget.kind === 'slide') {
+      const slides = (config.slides as HeroSlide[]) ?? [];
+      const next = [...slides];
+      const current = next[pickerTarget.index] ?? emptySlide();
+      next[pickerTarget.index] = {
+        ...current,
+        imageUrl: media.url,
+        imageAlt: current.imageAlt || media.alt,
+      };
+      updateField('slides', next);
+    } else if (pickerTarget.kind === 'logo') {
+      const logos = (config.logos as LogoItem[]) ?? [];
+      const next = [...logos];
+      const current = next[pickerTarget.index] ?? { src: '', alt: '', href: '' };
+      next[pickerTarget.index] = {
+        ...current,
+        src: media.url,
+        alt: current.alt || media.alt,
+      };
+      updateField('logos', next);
+    }
+
+    setPickerTarget(null);
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {(message || error) && (
@@ -273,6 +364,27 @@ export default function PageEditor({
             <h2 className="font-display text-sm font-semibold">Section’lar</h2>
             <span className="text-xs text-muted-foreground">{sections.length}</span>
           </div>
+          <div className="flex gap-2 border-b border-border pb-3">
+            <select
+              className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+              value={addType}
+              onChange={(e) => setAddType(e.target.value)}
+            >
+              {sectionTypes.map((t) => (
+                <option key={t.type} value={t.type}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void addSection()}
+              className="rounded-md border border-border px-2.5 py-1.5 text-sm font-medium hover:bg-muted"
+            >
+              Ekle
+            </button>
+          </div>
           <ul className="flex flex-col gap-1">
             {sections.map((section) => (
               <li
@@ -314,27 +426,6 @@ export default function PageEditor({
               </li>
             ))}
           </ul>
-          <div className="mt-auto flex gap-2 border-t border-border pt-3">
-            <select
-              className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-              value={addType}
-              onChange={(e) => setAddType(e.target.value)}
-            >
-              {sectionTypes.map((t) => (
-                <option key={t.type} value={t.type}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void addSection()}
-              className="rounded-md border border-border px-2.5 py-1.5 text-sm font-medium hover:bg-muted"
-            >
-              Ekle
-            </button>
-          </div>
         </div>
 
         <div className="rounded-md border border-border p-4">
@@ -356,8 +447,12 @@ export default function PageEditor({
                 </button>
               </div>
               {fields.map((field) => {
+                if (field.showWhen && String(config[field.showWhen.key] ?? '') !== field.showWhen.equals) {
+                  return null;
+                }
+
                 if (field.kind === 'faq-list') {
-                  const items = (config.items as { question: string; answer: string }[]) ?? [];
+                  const items = (config.items as FaqItem[]) ?? [];
                   return (
                     <div key={field.key} className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">
@@ -408,7 +503,7 @@ export default function PageEditor({
                 }
 
                 if (field.kind === 'gallery-list') {
-                  const images = (config.images as { src: string; alt: string }[]) ?? [];
+                  const images = (config.images as GalleryImage[]) ?? [];
                   return (
                     <div key={field.key} className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">
@@ -447,7 +542,7 @@ export default function PageEditor({
                             <button
                               type="button"
                               className="text-xs hover:underline"
-                              onClick={() => setGalleryPickerIndex(index)}
+                              onClick={() => setPickerTarget({ kind: 'gallery', index })}
                             >
                               Medyadan seç
                             </button>
@@ -466,6 +561,385 @@ export default function PageEditor({
                           </div>
                         </div>
                       ))}
+                    </div>
+                  );
+                }
+
+                if (field.kind === 'slide-list') {
+                  const slides = (config.slides as HeroSlide[]) ?? [];
+                  return (
+                    <div key={field.key} className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{field.label}</span>
+                        <button
+                          type="button"
+                          className="text-xs font-medium hover:underline"
+                          onClick={() => updateField('slides', [...slides, emptySlide()])}
+                        >
+                          Slayt ekle
+                        </button>
+                      </div>
+                      {slides.map((slide, index) => (
+                        <div key={index} className="grid gap-2 rounded-md border border-border p-2">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            Slayt {index + 1}
+                          </div>
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 font-mono text-sm"
+                            placeholder="Görsel URL"
+                            value={slide.imageUrl}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[index] = { ...slide, imageUrl: e.target.value };
+                              updateField('slides', next);
+                            }}
+                          />
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Görsel alt metin"
+                            value={slide.imageAlt}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[index] = { ...slide, imageAlt: e.target.value };
+                              updateField('slides', next);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="justify-self-start text-xs hover:underline"
+                            onClick={() => setPickerTarget({ kind: 'slide', index })}
+                          >
+                            Medyadan seç
+                          </button>
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Üst etiket"
+                            value={slide.eyebrow}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[index] = { ...slide, eyebrow: e.target.value };
+                              updateField('slides', next);
+                            }}
+                          />
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Başlık"
+                            value={slide.title}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[index] = { ...slide, title: e.target.value };
+                              updateField('slides', next);
+                            }}
+                          />
+                          <textarea
+                            className="min-h-16 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Alt metin"
+                            value={slide.subtitle}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[index] = { ...slide, subtitle: e.target.value };
+                              updateField('slides', next);
+                            }}
+                          />
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="CTA metni"
+                            value={slide.ctaLabel}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[index] = { ...slide, ctaLabel: e.target.value };
+                              updateField('slides', next);
+                            }}
+                          />
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 font-mono text-sm"
+                            placeholder="CTA link"
+                            value={slide.ctaHref}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[index] = { ...slide, ctaHref: e.target.value };
+                              updateField('slides', next);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="justify-self-start text-xs text-destructive"
+                            onClick={() =>
+                              updateField(
+                                'slides',
+                                slides.filter((_, i) => i !== index),
+                              )
+                            }
+                          >
+                            Kaldır
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                if (field.kind === 'why-list') {
+                  const items = (config.items as WhyItem[]) ?? [];
+                  return (
+                    <div key={field.key} className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{field.label}</span>
+                        <button
+                          type="button"
+                          className="text-xs font-medium hover:underline"
+                          onClick={() =>
+                            updateField('items', [...items, { icon: '', title: '', body: '' }])
+                          }
+                        >
+                          Madde ekle
+                        </button>
+                      </div>
+                      {items.map((item, index) => (
+                        <div key={index} className="grid gap-2 rounded-md border border-border p-2">
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="İkon (örn. truck)"
+                            value={item.icon}
+                            onChange={(e) => {
+                              const next = [...items];
+                              next[index] = { ...item, icon: e.target.value };
+                              updateField('items', next);
+                            }}
+                          />
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Başlık"
+                            value={item.title}
+                            onChange={(e) => {
+                              const next = [...items];
+                              next[index] = { ...item, title: e.target.value };
+                              updateField('items', next);
+                            }}
+                          />
+                          <textarea
+                            className="min-h-16 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Açıklama"
+                            value={item.body}
+                            onChange={(e) => {
+                              const next = [...items];
+                              next[index] = { ...item, body: e.target.value };
+                              updateField('items', next);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="justify-self-start text-xs text-destructive"
+                            onClick={() => updateField('items', items.filter((_, i) => i !== index))}
+                          >
+                            Kaldır
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                if (field.kind === 'channel-list') {
+                  const items = (config.items as ChannelItem[]) ?? [];
+                  return (
+                    <div key={field.key} className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{field.label}</span>
+                        <button
+                          type="button"
+                          className="text-xs font-medium hover:underline"
+                          onClick={() =>
+                            updateField('items', [
+                              ...items,
+                              { type: 'phone', label: '', value: '' },
+                            ])
+                          }
+                        >
+                          Kanal ekle
+                        </button>
+                      </div>
+                      {items.map((item, index) => (
+                        <div key={index} className="grid gap-2 rounded-md border border-border p-2">
+                          <select
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            value={item.type}
+                            onChange={(e) => {
+                              const next = [...items];
+                              next[index] = {
+                                ...item,
+                                type: e.target.value as ChannelItem['type'],
+                              };
+                              updateField('items', next);
+                            }}
+                          >
+                            {CHANNEL_TYPES.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Etiket"
+                            value={item.label}
+                            onChange={(e) => {
+                              const next = [...items];
+                              next[index] = { ...item, label: e.target.value };
+                              updateField('items', next);
+                            }}
+                          />
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Değer"
+                            value={item.value}
+                            onChange={(e) => {
+                              const next = [...items];
+                              next[index] = { ...item, value: e.target.value };
+                              updateField('items', next);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="justify-self-start text-xs text-destructive"
+                            onClick={() => updateField('items', items.filter((_, i) => i !== index))}
+                          >
+                            Kaldır
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                if (field.kind === 'logo-list') {
+                  const logos = (config.logos as LogoItem[]) ?? [];
+                  return (
+                    <div key={field.key} className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{field.label}</span>
+                        <button
+                          type="button"
+                          className="text-xs font-medium hover:underline"
+                          onClick={() =>
+                            updateField('logos', [...logos, { src: '', alt: '', href: '' }])
+                          }
+                        >
+                          Logo ekle
+                        </button>
+                      </div>
+                      {logos.map((logo, index) => (
+                        <div key={index} className="grid gap-2 rounded-md border border-border p-2">
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 font-mono text-sm"
+                            placeholder="Görsel URL"
+                            value={logo.src}
+                            onChange={(e) => {
+                              const next = [...logos];
+                              next[index] = { ...logo, src: e.target.value };
+                              updateField('logos', next);
+                            }}
+                          />
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                            placeholder="Alt metin"
+                            value={logo.alt}
+                            onChange={(e) => {
+                              const next = [...logos];
+                              next[index] = { ...logo, alt: e.target.value };
+                              updateField('logos', next);
+                            }}
+                          />
+                          <input
+                            className="rounded-md border border-input bg-background px-2 py-1.5 font-mono text-sm"
+                            placeholder="Link (opsiyonel)"
+                            value={logo.href}
+                            onChange={(e) => {
+                              const next = [...logos];
+                              next[index] = { ...logo, href: e.target.value };
+                              updateField('logos', next);
+                            }}
+                          />
+                          <div className="flex gap-3">
+                            <button
+                              type="button"
+                              className="text-xs hover:underline"
+                              onClick={() => setPickerTarget({ kind: 'logo', index })}
+                            >
+                              Medyadan seç
+                            </button>
+                            <button
+                              type="button"
+                              className="text-xs text-destructive"
+                              onClick={() =>
+                                updateField(
+                                  'logos',
+                                  logos.filter((_, i) => i !== index),
+                                )
+                              }
+                            >
+                              Kaldır
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                if (field.kind === 'select') {
+                  const value = String(config[field.key] ?? '');
+                  return (
+                    <label key={field.key} className="flex flex-col gap-1.5 text-sm">
+                      <span className="font-medium">{field.label}</span>
+                      <select
+                        className="rounded-md border border-input bg-background px-3 py-2"
+                        value={value}
+                        onChange={(e) => updateField(field.key, e.target.value)}
+                      >
+                        {(field.options ?? []).map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  );
+                }
+
+                if (field.kind === 'media') {
+                  const urlValue = String(config[field.key] ?? '');
+                  const altValue = field.altKey ? String(config[field.altKey] ?? '') : '';
+                  return (
+                    <div key={field.key} className="flex flex-col gap-2">
+                      <span className="text-sm font-medium">{field.label}</span>
+                      <input
+                        className="rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
+                        placeholder="URL / path"
+                        value={urlValue}
+                        onChange={(e) => updateField(field.key, e.target.value)}
+                      />
+                      {field.altKey ? (
+                        <input
+                          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          placeholder="Alt metin"
+                          value={altValue}
+                          onChange={(e) => updateField(field.altKey!, e.target.value)}
+                        />
+                      ) : null}
+                      <button
+                        type="button"
+                        className="justify-self-start text-xs hover:underline"
+                        onClick={() =>
+                          setPickerTarget({
+                            kind: 'media',
+                            urlKey: field.key,
+                            altKey: field.altKey,
+                          })
+                        }
+                      >
+                        Medyadan seç
+                      </button>
                     </div>
                   );
                 }
@@ -530,21 +1004,10 @@ export default function PageEditor({
       </div>
 
       <MediaPicker
-        open={galleryPickerIndex != null}
-        onClose={() => setGalleryPickerIndex(null)}
-        onSelect={(media: MediaItem) => {
-          if (galleryPickerIndex == null) return;
-          const images = (config.images as { src: string; alt: string }[]) ?? [];
-          const next = [...images];
-          const current = next[galleryPickerIndex] ?? { src: '', alt: '' };
-          next[galleryPickerIndex] = {
-            src: media.url,
-            alt: current.alt || media.alt,
-          };
-          updateField('images', next);
-          setGalleryPickerIndex(null);
-        }}
-        title="Galeri görseli seç"
+        open={pickerTarget != null}
+        onClose={() => setPickerTarget(null)}
+        onSelect={handleMediaSelect}
+        title="Medya seç"
       />
     </div>
   );
