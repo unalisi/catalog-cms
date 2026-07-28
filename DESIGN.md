@@ -228,10 +228,13 @@ Anasayfa önerilen set (1–10). `banner-cta`, `rich-text`, `gallery` editor’d
 | **Harita + İletişim** (`map-contact`) | Sol adres/telefon/e-posta; sağ iframe (`mapEmbedUrl`) veya harita linki |
 | **SSS** | Ferah accordion; border ayraç |
 | **Banner / CTA** | `accent` zemin + `accent-foreground` + primary buton |
-| **Zengin Metin** | Prose = tipografi ölçeği |
+| **Zengin Metin** | HTML + opsiyonel scoped CSS; prose tipografi; `sanitizeCmsHtml` / `scopeCmsCss` |
 | **Galeri** | Grid; lightbox public island `client:visible` |
+| **İletişim layout** (`contact-layout`) | 4 varyant: map-form, form-info, info-map, stacked; form → `/api/public/contact` |
+| **Ürün listesi** (`product-list`) | Katalog grid + filtreler (CMS katalog sayfası) |
+| **Blog listesi** (`blog-list`) | Blog yazı listesi (CMS blog sayfası) |
 
-Mobile-first; `md:` / `lg:` kırılımları. Section padding: `py-16 md:py-24`, içerik `max-w-6xl`.
+Mobile-first; `md:` / `lg:` kırılımları. Section padding: `py-16 md:py-24`, içerik `max-w-6xl` (float hariç).
 
 ---
 

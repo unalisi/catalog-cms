@@ -10,12 +10,21 @@ const { config } = Astro.props;
 const variant = config.variant ?? 'static';
 const overlay = config.overlay ?? 'dark';
 const dark = overlay === 'dark';
+const showCta = (config.showCta ?? 'show') === 'show';
+const showNav = (config.showNav ?? 'show') === 'show';
 const slides = (config.slides ?? []).filter((s) => s.title?.trim());
 ---
 
 {
   variant === 'slider' && slides.length > 0 ? (
-    <HeroSlider client:visible slides={slides} overlay={overlay} />
+    <HeroSlider
+      client:visible
+      slides={slides}
+      overlay={overlay}
+      showCta={showCta}
+      showNav={showNav}
+      autoplayMs={3000}
+    />
   ) : (
     <section class="relative min-h-[70vh] overflow-hidden border-b border-border md:min-h-[78vh]">
       {config.imageUrl ? (
@@ -74,7 +83,7 @@ const slides = (config.slides ?? []).filter((s) => s.title?.trim());
           )
         }
         {
-          (config.ctaLabel || config.secondaryCtaLabel) && (
+          showCta && (config.ctaLabel || config.secondaryCtaLabel) && (
             <div class="flex flex-wrap gap-3">
               {config.ctaLabel && config.ctaHref && (
                 <a

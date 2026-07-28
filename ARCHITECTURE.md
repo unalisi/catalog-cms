@@ -94,6 +94,7 @@ Bootstrap sırası (FAZ 0): **Astro iskelet → Cloudflare binding kaynakları �
 | Import wizard | `client:load` | |
 | Public ürün kartı / static hero | **island yok** | Saf HTML |
 | Hero slider | `client:visible` | Autoplay / oklar / dots / klavye |
+| WhatsApp float | `client:load` | FAB + modal panel |
 
 Public sayfada gereksiz React mount edilmez. Admin’de React yoğunlaşır.
 
@@ -148,7 +149,8 @@ Public sayfada gereksiz React mount edilmez. Admin’de React yoğunlaşır.
     │   └── rss.xml.ts
     ├── layouts/
     │   ├── PublicLayout.astro
-    │   └── AdminLayout.astro
+    │   ├── AdminLayout.astro   # AdminShell (sidebar)
+    │   └── BuilderLayout.astro # fullscreen page builder (shell yok)
     ├── components/
     │   ├── public/             # .astro tercihen
     │   ├── sections/           # section registry bileşenleri
@@ -396,7 +398,10 @@ Invalidation `server/services/*` içinde, transaction başarısından **sonra** 
 /admin/brands
 /admin/categories
 /admin/pages
-/admin/pages/[slug]       section editor
+/admin/pages/[slug]       → redirect /admin/builder/[slug]
+/admin/builder/[slug]     fullscreen page builder (AdminShell dışı); Yeni sayfa dialog
+/admin/builder/view/[name] salt önizleme (catalog|blog)
+/{slug}                   published CMS pages (reserved slug’lar hariç; home → /)
 /admin/seo
 /admin/blog
 /admin/blog/[id]
@@ -495,9 +500,15 @@ Performans ile kesişen SEO kuralları:
 type SectionType =
   | 'hero' | 'featured-products' | 'brand-strip' | 'category-grid'
   | 'why-us' | 'contact-channels' | 'references' | 'blog-preview' | 'map-contact'
-  | 'faq' | 'banner-cta' | 'rich-text' | 'gallery'
+  | 'faq' | 'banner-cta' | 'rich-text' | 'gallery' | 'whatsapp-float'
+  | 'contact-layout' | 'product-list' | 'blog-list'
+// Core pages (auto-ensure): home, catalog, blog, iletisim, urun-sablon, yazi-sablon
+// contact-layout variants: map-form | form-info | info-map | stacked
 // hero config: variant 'static' | 'slider', overlay, image*, slides[]
-// Public islands: HeroSlider, GalleryLightbox (client:visible)
+// whatsapp-float: phone, position bottom-right|bottom-left, modal copy
+// rich-text: html + css (scoped to #cms-sec-{id}; sanitized)
+// Public islands: HeroSlider, GalleryLightbox (client:visible); WhatsAppFloat, ContactForm (client:load)
+// CMS pages: / for home, /catalog+/blog load CMS sections, /{slug} for other published pages
 
 type SectionDef = {
   type: SectionType

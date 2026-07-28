@@ -14,9 +14,18 @@ export type HeroSlide = {
 type Props = {
   slides: HeroSlide[];
   overlay?: 'dark' | 'light';
+  showCta?: boolean;
+  showNav?: boolean;
+  autoplayMs?: number;
 };
 
-export default function HeroSlider({ slides, overlay = 'dark' }: Props) {
+export default function HeroSlider({
+  slides,
+  overlay = 'dark',
+  showCta = true,
+  showNav = true,
+  autoplayMs = 3000,
+}: Props) {
   const [index, setIndex] = useState(0);
   const count = slides.length;
   const dark = overlay === 'dark';
@@ -33,9 +42,9 @@ export default function HeroSlider({ slides, overlay = 'dark' }: Props) {
     if (count <= 1) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) return;
-    const id = window.setInterval(() => go(index + 1), 5000);
+    const id = window.setInterval(() => go(index + 1), autoplayMs);
     return () => window.clearInterval(id);
-  }, [count, go, index]);
+  }, [autoplayMs, count, go, index]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -96,7 +105,7 @@ export default function HeroSlider({ slides, overlay = 'dark' }: Props) {
             {slide.subtitle}
           </p>
         ) : null}
-        {slide.ctaLabel && slide.ctaHref ? (
+        {showCta && slide.ctaLabel && slide.ctaHref ? (
           <div className="flex flex-wrap gap-3">
             <a
               href={slide.ctaHref}
@@ -108,7 +117,7 @@ export default function HeroSlider({ slides, overlay = 'dark' }: Props) {
         ) : null}
       </div>
 
-      {count > 1 ? (
+      {showNav && count > 1 ? (
         <>
           <button
             type="button"
