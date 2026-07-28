@@ -1,16 +1,22 @@
 ---
 import type { SectionConfigMap } from '../../lib/sections/registry';
+import { sanitizeCmsHtml, scopeCmsCss } from '../../lib/html/sanitize-cms';
 
 interface Props {
   config: SectionConfigMap['rich-text'];
+  sectionId: string;
 }
 
-const { config } = Astro.props;
+const { config, sectionId } = Astro.props;
+const scopeDomId = `cms-sec-${sectionId}`;
+const safeHtml = sanitizeCmsHtml(config.html ?? '');
+const scopedCss = scopeCmsCss(config.css ?? '', scopeDomId);
 ---
 
-<section class="mx-auto max-w-3xl px-4 py-16 md:px-6">
+<section id={scopeDomId} class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-24">
+  {scopedCss && <style set:html={scopedCss} />}
   <div
-    class="prose-cms space-y-4 text-base leading-relaxed [&_a]:underline [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_p]:text-foreground [&_ul]:list-disc [&_ul]:pl-5"
-    set:html={config.html}
+    class="prose-cms space-y-4 text-base leading-relaxed [&_a]:underline [&_h1]:font-display [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_p]:text-foreground [&_ul]:list-disc [&_ul]:pl-5"
+    set:html={safeHtml}
   />
 </section>
