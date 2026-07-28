@@ -1,0 +1,18 @@
+---
+import type { SectionConfigMap } from '../../lib/sections/registry';
+import ProductCatalog from '../public/ProductCatalog.astro';
+
+interface Props {
+  config: SectionConfigMap['product-list'];
+}
+
+const { config } = Astro.props;
+---
+
+<ProductCatalog
+  title={config.title}
+  showFilters={config.showFilters !== false}
+  pageSize={config.pageSize ?? 12}
+  layout={config.layout ?? 'grid'}
+  columns={config.columns ?? 3}
+/>

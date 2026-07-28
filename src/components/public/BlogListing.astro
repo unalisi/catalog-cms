@@ -1,0 +1,218 @@
+---
+import { getPublicPostList } from '../../server/services/posts';
+
+interface Props {
+  title?: string;
+  layout?: 'asymmetric' | 'row' | 'grid';
+  columns?: number;
+}
+
+const { title = 'Blog', layout = 'row', columns = 3 } = Astro.props;
+const page = Math.max(1, Number(Astro.url.searchParams.get('page') ?? '1') || 1);
+const tag = Astro.url.searchParams.get('tag') ?? undefined;
+const colClass = columns === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3';
+
+const { data: list, status } = await getPublicPostList({ page, tag });
+const items = list?.items ?? [];
+const total = list?.total ?? 0;
+const pageSize = 10;
+const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('tr-TR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+---
+
+<section class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16" data-cache={status}>
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="font-display text-3xl font-bold tracking-tight">{title}</h1>
+      <p class="mt-1 text-muted-foreground">
+        {total} yazı{tag ? ` · #${tag}` : ''}
+      </p>
+    </div>
+    <a href="/rss.xml" class="text-sm text-muted-foreground hover:text-foreground">
+      RSS
+    </a>
+  </div>
+
+  {
+    tag && (
+      <p class="mt-4 text-sm">
+        <a href="/blog" class="text-muted-foreground hover:text-foreground">
+          ← Tüm yazılar
+        </a>
+      </p>
+    )
+  }
+
+  {
+    items.length === 0 ? (
+      <p class="mt-12 text-muted-foreground">Henüz yayınlanmış yazı yok.</p>
+    ) : layout === 'row' ? (
+      <ul class="mt-10 flex flex-col gap-8">
+        {items.map((post) => (
+          <li>
+            <article class="flex flex-col gap-5 border border-border sm:flex-row sm:items-stretch">
+              <a
+                href={`/blog/${post.slug}`}
+                class="block aspect-[16/10] shrink-0 overflow-hidden bg-muted sm:aspect-auto sm:w-56 md:w-72"
+              >
+                {post.coverUrl ? (
+                  <img
+                    src={post.coverUrl}
+                    alt=""
+                    class="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="flex h-full min-h-36 items-center justify-center text-sm text-muted-foreground">
+                    —
+                  </div>
+                )}
+              </a>
+              <div class="flex flex-1 flex-col gap-3 p-4 sm:py-5 sm:pr-5 sm:pl-0">
+                <p class="text-xs uppercase tracking-wide text-muted-foreground">
+                  {formatDate(post.publishedAt)}
+                </p>
+                <h2 class="font-display text-xl font-bold md:text-2xl">
+                  <a href={`/blog/${post.slug}`} class="hover:underline">
+                    {post.title}
+                  </a>
+                </h2>
+                {post.excerpt && (
+                  <p class="line-clamp-3 text-muted-foreground">{post.excerpt}</p>
+                )}
+                <a
+                  href={`/blog/${post.slug}`}
+                  class="mt-auto inline-flex w-fit text-sm font-semibold text-foreground underline-offset-4 hover:underline"
+                >
+                  Devamını oku →
+                </a>
+              </div>
+            </article>
+          </li>
+        ))}
+      </ul>
+    ) : layout === 'asymmetric' ? (
+      <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((post, i) => (
+          <li class:list={[i === 0 && 'sm:col-span-2 lg:row-span-2']}>
+            <a
+              href={`/blog/${post.slug}`}
+              class:list={[
+                'group flex h-full flex-col overflow-hidden border border-border transition-colors hover:border-primary',
+                i === 0 && 'lg:min-h-full',
+              ]}
+            >
+              <div
+                class:list={[
+                  'overflow-hidden bg-muted',
+                  i === 0 ? 'aspect-[16/10] lg:aspect-auto lg:min-h-64 lg:flex-1' : 'aspect-[16/10]',
+                ]}
+              >
+                {post.coverUrl ? (
+                  <img
+                    src={post.coverUrl}
+                    alt=""
+                    class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="flex h-full min-h-32 items-center justify-center" />
+                )}
+              </div>
+              <div class:list={['flex flex-col gap-2 p-4', i === 0 && 'md:p-6']}>
+                <p class="text-xs uppercase tracking-wide text-muted-foreground">
+                  {formatDate(post.publishedAt)}
+                </p>
+                <h2
+                  class:list={[
+                    'font-display font-semibold tracking-tight group-hover:underline',
+                    i === 0 ? 'text-xl md:text-2xl' : 'text-base',
+                  ]}
+                >
+                  {post.title}
+                </h2>
+                {post.excerpt && i === 0 && (
+                  <p class="line-clamp-3 text-sm text-muted-foreground">{post.excerpt}</p>
+                )}
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <ul class:list={['mt-10 grid gap-6 sm:grid-cols-2', colClass]}>
+        {items.map((post) => (
+          <li>
+            <a
+              href={`/blog/${post.slug}`}
+              class="group flex h-full flex-col overflow-hidden border border-border transition-colors hover:border-primary"
+            >
+              <div class="aspect-[16/10] overflow-hidden bg-muted">
+                {post.coverUrl ? (
+                  <img
+                    src={post.coverUrl}
+                    alt=""
+                    class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="flex h-full items-center justify-center bg-muted" />
+                )}
+              </div>
+              <div class="flex flex-1 flex-col gap-2 p-4">
+                <p class="text-xs uppercase tracking-wide text-muted-foreground">
+                  {formatDate(post.publishedAt)}
+                </p>
+                <h2 class="font-display text-lg font-semibold tracking-tight group-hover:underline">
+                  {post.title}
+                </h2>
+                {post.excerpt && (
+                  <p class="line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
+                )}
+                <span class="mt-auto pt-2 text-sm font-semibold">Devamını oku →</span>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  {
+    totalPages > 1 && (
+      <nav class="mt-10 flex items-center justify-between text-sm" aria-label="Sayfalama">
+        {page > 1 ? (
+          <a
+            href={`/blog?page=${page - 1}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`}
+            class="hover:underline"
+          >
+            ← Önceki
+          </a>
+        ) : (
+          <span />
+        )}
+        <span class="text-muted-foreground">
+          {page} / {totalPages}
+        </span>
+        {page < totalPages ? (
+          <a
+            href={`/blog?page=${page + 1}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`}
+            class="hover:underline"
+          >
+            Sonraki →
+          </a>
+        ) : (
+          <span />
+        )}
+      </nav>
+    )
+  }
+</section>

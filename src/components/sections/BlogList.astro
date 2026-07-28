@@ -1,0 +1,16 @@
+---
+import type { SectionConfigMap } from '../../lib/sections/registry';
+import BlogListing from '../public/BlogListing.astro';
+
+interface Props {
+  config: SectionConfigMap['blog-list'];
+}
+
+const { config } = Astro.props;
+---
+
+<BlogListing
+  title={config.title}
+  layout={config.layout ?? 'row'}
+  columns={config.columns ?? 3}
+/>
