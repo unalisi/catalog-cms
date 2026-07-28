@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import EmptyState from '../../../components/admin/EmptyState.astro';
 import DeleteButton from '../../../components/admin/DeleteButton';
+import { StatusDot } from '../../../components/admin/StatusDot';
 import { getDb } from '../../../server/db';
 import { listAllBrands } from '../../../server/repos/admin';
 import type { Brand } from '../../../../db/schema';
@@ -11,19 +12,17 @@ const brands: Brand[] = await listAllBrands(getDb());
 
 <AdminLayout
   title="Markalar"
-  breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'Markalar' }]}
+  breadcrumbs={[{ href: '/admin', label: 'Panel' }, { label: 'Markalar' }]}
 >
-  <div class="flex flex-col gap-4">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight">Markalar</h1>
-        <p class="mt-1 text-sm text-muted-foreground">{brands.length} kayıt</p>
-      </div>
+  <div class="flex flex-col gap-5">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <p class="text-sm text-muted-foreground">{brands.length} marka listeleniyor</p>
       <a
         href="/admin/brands/new"
-        class="inline-flex rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+        class="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:opacity-90"
       >
-        Yeni marka
+        <span aria-hidden="true">+</span>
+        Marka Ekle
       </a>
     </div>
 
@@ -38,36 +37,28 @@ const brands: Brand[] = await listAllBrands(getDb());
           />
         </div>
       ) : (
-        <div class="overflow-hidden rounded-lg border border-border bg-background">
-          <div class="overflow-x-auto">
-            <table class="w-full min-w-[40rem] text-left text-sm">
-              <thead class="bg-muted">
-                <tr>
-                  <th class="px-3 py-2 font-medium">Ad</th>
-                  <th class="px-3 py-2 font-medium">Slug</th>
-                  <th class="px-3 py-2 font-medium">Durum</th>
-                  <th class="px-3 py-2 font-medium">İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
-                {brands.map((brand) => (
-                  <tr class="border-t border-border hover:bg-muted/40">
-                    <td class="px-3 py-2 font-medium">{brand.name}</td>
-                    <td class="px-3 py-2 font-mono text-muted-foreground">{brand.slug}</td>
-                    <td class="px-3 py-2">{brand.status}</td>
-                    <td class="px-3 py-2">
-                      <div class="flex items-center gap-3">
-                        <a href={`/admin/brands/${brand.id}`} class="hover:underline">
-                          Düzenle
-                        </a>
-                        <DeleteButton client:load endpoint={`/api/admin/brands/${brand.id}`} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {brands.map((brand) => (
+            <div class="rounded-lg border border-border bg-background p-4">
+              <div class="mb-3 flex items-start justify-between gap-3">
+                <div class="flex size-10 items-center justify-center rounded-md bg-primary-soft text-sm font-semibold text-primary">
+                  {brand.name.slice(0, 2).toUpperCase()}
+                </div>
+                <StatusDot status={brand.status} />
+              </div>
+              <div class="text-sm font-semibold text-foreground">{brand.name}</div>
+              <div class="mt-0.5 font-mono text-xs text-faint">{brand.slug}</div>
+              <div class="mt-3 flex items-center gap-3 border-t border-border pt-3">
+                <a
+                  href={`/admin/brands/${brand.id}`}
+                  class="text-xs font-medium text-primary hover:underline"
+                >
+                  Düzenle
+                </a>
+                <DeleteButton client:load endpoint={`/api/admin/brands/${brand.id}`} />
+              </div>
+            </div>
+          ))}
         </div>
       )
     }

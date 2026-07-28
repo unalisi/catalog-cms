@@ -28,11 +28,11 @@ export function AdminShell({
     <TooltipProvider delayDuration={200}>
       <SidebarProvider>
         <AppSidebar pathname={pathname} />
-        <SidebarInset className="bg-muted/40">
-          <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
+        <SidebarInset className="bg-background">
+          <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background px-4 sm:px-6">
             <TopNav breadcrumbs={crumbs} user={user} />
           </header>
-          <main id="admin-main" className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-6" tabIndex={-1}>
+          <main id="admin-main" className="flex flex-1 flex-col gap-6 overflow-auto p-6" tabIndex={-1}>
             <ToastFromQuery />
             {children}
           </main>

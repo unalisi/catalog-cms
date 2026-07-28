@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, ChevronsUpDown, ExternalLink, LogOut, Search } from 'lucide-react';
+import { Bell, ChevronRight, ExternalLink, LogOut, Search } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,7 +20,6 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminCommand } from '@/components/admin/AdminCommand';
-import { Separator } from '@/components/ui/separator';
 
 export type AdminBreadcrumb = { href?: string; label: string };
 
@@ -60,26 +59,38 @@ export function TopNav({ breadcrumbs, user }: Props) {
     }
   }
 
-  const initials = (user?.email ?? 'A').slice(0, 1).toUpperCase();
+  const initials = (user?.email ?? 'Ü').slice(0, 1).toUpperCase();
+  const crumbTrail =
+    breadcrumbs.length > 0
+      ? breadcrumbs
+      : [{ label: 'Genel Bakış' as string, href: undefined as string | undefined }];
 
   return (
     <>
       <div className="flex w-full items-center gap-3">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-1 hidden h-5 sm:block" />
+        <SidebarTrigger className="-ml-1 md:hidden" />
 
         <Breadcrumb className="min-w-0 flex-1">
-          <BreadcrumbList>
-            {breadcrumbs.map((item, index) => {
-              const isLast = index === breadcrumbs.length - 1;
+          <BreadcrumbList className="text-sm text-faint">
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin" className="text-faint hover:text-foreground">
+                Panel
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {crumbTrail.map((item, index) => {
+              const isLast = index === crumbTrail.length - 1;
               return (
                 <span key={`${item.label}-${index}`} className="contents">
-                  {index > 0 && <BreadcrumbSeparator />}
+                  <BreadcrumbSeparator>
+                    <ChevronRight className="size-3.5" />
+                  </BreadcrumbSeparator>
                   <BreadcrumbItem>
                     {isLast || !item.href ? (
-                      <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
+                      <BreadcrumbPage className="truncate font-medium text-foreground">
+                        {item.label}
+                      </BreadcrumbPage>
                     ) : (
-                      <BreadcrumbLink href={item.href} className="truncate">
+                      <BreadcrumbLink href={item.href} className="truncate text-faint hover:text-foreground">
                         {item.label}
                       </BreadcrumbLink>
                     )}
@@ -90,20 +101,18 @@ export function TopNav({ breadcrumbs, user }: Props) {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
-          <Button
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="hidden gap-2 md:inline-flex"
             onClick={() => setCommandOpen(true)}
+            className="hidden h-9 w-[220px] items-center gap-2 rounded-md border border-border bg-background px-3 text-sm text-faint transition-colors hover:bg-muted md:flex"
           >
-            <Search className="size-4" />
-            <span className="text-muted-foreground">Ara…</span>
-            <kbd className="pointer-events-none ml-1 hidden rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-block">
+            <Search className="size-3.5 shrink-0" />
+            <span className="truncate">Ürün, marka ara…</span>
+            <kbd className="ml-auto hidden rounded border border-border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground lg:inline">
               ⌘K
             </kbd>
-          </Button>
+          </button>
           <Button
             type="button"
             variant="ghost"
@@ -117,8 +126,15 @@ export function TopNav({ breadcrumbs, user }: Props) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" aria-label="Bildirimler">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="relative text-muted-foreground"
+                aria-label="Bildirimler"
+              >
                 <Bell className="size-4" />
+                <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72">
@@ -132,30 +148,23 @@ export function TopNav({ breadcrumbs, user }: Props) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                className="h-9 gap-2 px-2"
+                className="flex size-8 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Kullanıcı menüsü"
               >
-                <Avatar className="size-6">
-                  <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
+                <Avatar className="size-8">
+                  <AvatarFallback className="bg-primary-soft text-xs font-semibold text-primary">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden max-w-[10rem] truncate text-sm md:inline">
-                  {user?.email ?? 'Admin'}
-                </span>
-                <ChevronsUpDown className="hidden size-3.5 text-muted-foreground md:block" />
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium">{user?.email ?? 'Admin'}</span>
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {user?.role ?? 'admin'}
-                  </span>
+                  <span className="text-xs capitalize text-muted-foreground">{user?.role ?? 'admin'}</span>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
