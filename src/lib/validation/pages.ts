@@ -1,17 +1,28 @@
 import { z } from 'zod';
 import { SECTION_TYPES, isSectionType, parseSectionConfig, sectionDefaults, type SectionType } from '../sections/registry';
+import { isReservedPageSlug } from '../pages/reserved-slugs';
 import { seoFieldsSchema } from './seo';
 
-export const pageUpsertSchema = z.object({
-  title: z.string().min(1, 'Başlık zorunlu').max(160),
-  slug: z
-    .string()
-    .min(1, 'Slug zorunlu')
-    .max(120)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug yalnızca küçük harf, rakam ve tire'),
-  status: z.enum(['draft', 'published', 'archived']),
-  seo: seoFieldsSchema.optional().nullable(),
-});
+export const pageUpsertSchema = z
+  .object({
+    title: z.string().min(1, 'Başlık zorunlu').max(160),
+    slug: z
+      .string()
+      .min(1, 'Slug zorunlu')
+      .max(120)
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug yalnızca küçük harf, rakam ve tire'),
+    status: z.enum(['draft', 'published', 'archived']),
+    seo: seoFieldsSchema.optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    if (isReservedPageSlug(data.slug)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['slug'],
+        message: 'Bu slug sistem rotası için ayrılmıştır',
+      });
+    }
+  });
 
 export const sectionCreateSchema = z.object({
   type: z.enum(SECTION_TYPES as unknown as [SectionType, ...SectionType[]]),

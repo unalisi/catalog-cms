@@ -14,6 +14,12 @@ export const SECTION_TYPES = [
   'banner-cta',
   'rich-text',
   'gallery',
+  'whatsapp-float',
+  'contact-layout',
+  'product-list',
+  'blog-list',
+  'related-products',
+  'related-posts',
 ] as const;
 
 export type SectionType = (typeof SECTION_TYPES)[number];
@@ -35,6 +41,8 @@ const heroSlideSchema = z.object({
 export const heroSchema = z.object({
   variant: z.enum(['static', 'slider']).default('static'),
   overlay: z.enum(['dark', 'light']).default('dark'),
+  showCta: z.enum(['show', 'hide']).default('show'),
+  showNav: z.enum(['show', 'hide']).default('show'),
   eyebrow: z.string().max(80).default(''),
   title: z.string().min(1).max(200),
   subtitle: z.string().max(500).default(''),
@@ -142,6 +150,7 @@ export const bannerCtaSchema = z.object({
 
 export const richTextSchema = z.object({
   html: z.string().max(20000).default(''),
+  css: z.string().max(20000).default(''),
 });
 
 export const gallerySchema = z.object({
@@ -155,6 +164,69 @@ export const gallerySchema = z.object({
     )
     .max(24)
     .default([]),
+});
+
+export const whatsappFloatSchema = z.object({
+  phone: z.string().min(1).max(40),
+  position: z.enum(['bottom-right', 'bottom-left']).default('bottom-right'),
+  headline: z.string().max(120).default('Bir Konuşma Başlatın'),
+  description: z
+    .string()
+    .max(300)
+    .default('Merhaba! WhatsApp’ta sohbet etmek için aşağıdaki üyemize tıklayın.'),
+  agentLabel: z.string().max(80).default('Müşteri Hizmetleri'),
+  agentSubtitle: z.string().max(120).default('Müşteri Hizmetleri'),
+  statusHint: z.string().max(160).default('Ekip genellikle birkaç dakika içinde yanıt verir.'),
+});
+
+export const contactLayoutSchema = z.object({
+  variant: z.preprocess((v) => {
+    if (v === 'info-map' || v === 'stacked') return 'map-form';
+    return v;
+  }, z.enum(['map-form', 'form-map', 'info-form', 'form-info']).default('map-form')),
+  title: z.string().max(120).default('İletişim'),
+  subtitle: z.string().max(300).default(''),
+  address: z.string().max(500).default(''),
+  phone: z.string().max(80).default(''),
+  email: z.string().max(120).default(''),
+  hours: z.string().max(200).default(''),
+  mapEmbedUrl: z.string().max(2000).default(''),
+  formTitle: z.string().max(120).default('Mesaj gönderin'),
+  formSubmitLabel: z.string().max(80).default('Gönder'),
+  successMessage: z
+    .string()
+    .max(300)
+    .default('Mesajınız alındı. En kısa sürede dönüş yapacağız.'),
+});
+
+export const productListSchema = z.object({
+  title: z.string().max(120).default('Katalog'),
+  layout: z.enum(['grid', 'row', 'compact']).default('grid'),
+  columns: z.coerce.number().int().min(3).max(4).default(3),
+  showFilters: z.preprocess((v) => {
+    if (v === 'true' || v === true || v === 'show') return true;
+    if (v === 'false' || v === false || v === 'hide') return false;
+    return v;
+  }, z.boolean().default(true)),
+  pageSize: z.coerce.number().int().min(4).max(48).default(12),
+});
+
+export const blogListSchema = z.object({
+  title: z.string().max(120).default('Blog'),
+  layout: z.enum(['asymmetric', 'row', 'grid']).default('row'),
+  columns: z.coerce.number().int().min(3).max(4).default(3),
+});
+
+export const relatedProductsSchema = z.object({
+  title: z.string().max(120).default('Benzer ürünler'),
+  limit: z.coerce.number().int().min(2).max(12).default(4),
+  layout: z.enum(['grid', 'row']).default('grid'),
+});
+
+export const relatedPostsSchema = z.object({
+  title: z.string().max(120).default('İlgili yazılar'),
+  limit: z.coerce.number().int().min(2).max(12).default(3),
+  layout: z.enum(['row', 'grid']).default('row'),
 });
 
 export const sectionSchemas = {
@@ -171,6 +243,12 @@ export const sectionSchemas = {
   'banner-cta': bannerCtaSchema,
   'rich-text': richTextSchema,
   gallery: gallerySchema,
+  'whatsapp-float': whatsappFloatSchema,
+  'contact-layout': contactLayoutSchema,
+  'product-list': productListSchema,
+  'blog-list': blogListSchema,
+  'related-products': relatedProductsSchema,
+  'related-posts': relatedPostsSchema,
 } as const;
 
 export type SectionConfigMap = {
@@ -181,6 +259,8 @@ export const sectionDefaults: { [K in SectionType]: SectionConfigMap[K] } = {
   hero: {
     variant: 'static',
     overlay: 'dark',
+    showCta: 'show',
+    showNav: 'show',
     eyebrow: 'Catalog CMS',
     title: 'Endüstriyel otomasyon ürünleri',
     subtitle: 'Hızlı tedarik, geniş stok ve güvenilir teknik destek.',
@@ -258,11 +338,43 @@ export const sectionDefaults: { [K in SectionType]: SectionConfigMap[K] } = {
     ctaLabel: 'Kataloğa git',
     ctaHref: '/catalog',
   },
-  'rich-text': { html: '<p>Zengin metin içeriği.</p>' },
+  'rich-text': { html: '<p>Zengin metin içeriği.</p>', css: '' },
   gallery: {
     title: 'Galeri',
     images: [{ src: '/favicon.svg', alt: 'Örnek görsel' }],
   },
+  'whatsapp-float': {
+    phone: '902120000000',
+    position: 'bottom-right',
+    headline: 'Bir Konuşma Başlatın',
+    description: 'Merhaba! WhatsApp’ta sohbet etmek için aşağıdaki üyemize tıklayın.',
+    agentLabel: 'Müşteri Hizmetleri',
+    agentSubtitle: 'Müşteri Hizmetleri',
+    statusHint: 'Ekip genellikle birkaç dakika içinde yanıt verir.',
+  },
+  'contact-layout': {
+    variant: 'map-form',
+    title: 'İletişim',
+    subtitle: 'Bize ulaşın — form, telefon veya ziyaret.',
+    address: 'Örnek Mah. Sanayi Cad. No:1, İstanbul',
+    phone: '+90 212 000 00 00',
+    email: 'info@example.com',
+    hours: 'Pzt–Cum 09:00–18:00',
+    mapEmbedUrl: '',
+    formTitle: 'Mesaj gönderin',
+    formSubmitLabel: 'Gönder',
+    successMessage: 'Mesajınız alındı. En kısa sürede dönüş yapacağız.',
+  },
+  'product-list': {
+    title: 'Katalog',
+    layout: 'grid',
+    columns: 3,
+    showFilters: true,
+    pageSize: 12,
+  },
+  'blog-list': { title: 'Blog', layout: 'row', columns: 3 },
+  'related-products': { title: 'Benzer ürünler', limit: 4, layout: 'grid' },
+  'related-posts': { title: 'İlgili yazılar', limit: 3, layout: 'row' },
 };
 
 export const sectionLabels: Record<SectionType, string> = {
@@ -279,6 +391,12 @@ export const sectionLabels: Record<SectionType, string> = {
   'banner-cta': 'Banner / CTA',
   'rich-text': 'Zengin metin',
   gallery: 'Galeri',
+  'whatsapp-float': 'WhatsApp İletişim Butonu',
+  'contact-layout': 'İletişim layout',
+  'product-list': 'Ürün listesi',
+  'blog-list': 'Blog listesi',
+  'related-products': 'Benzer ürünler',
+  'related-posts': 'İlgili yazılar',
 };
 
 export type FieldKind =
@@ -294,7 +412,8 @@ export type FieldKind =
   | 'slide-list'
   | 'why-list'
   | 'channel-list'
-  | 'logo-list';
+  | 'logo-list'
+  | 'css';
 
 export type FieldDef = {
   key: string;
@@ -303,7 +422,9 @@ export type FieldDef = {
   options?: { value: string; label: string }[];
   /** For media: companion alt field key */
   altKey?: string;
-  showWhen?: { key: string; equals: string };
+  showWhen?:
+    | { key: string; equals: string }
+    | Array<{ key: string; equals: string }>;
 };
 
 export const sectionFields: Record<SectionType, FieldDef[]> = {
@@ -326,13 +447,64 @@ export const sectionFields: Record<SectionType, FieldDef[]> = {
         { value: 'light', label: 'Açık (koyu metin)' },
       ],
     },
+    {
+      key: 'showCta',
+      label: 'Butonlar',
+      kind: 'select',
+      options: [
+        { value: 'show', label: 'Göster' },
+        { value: 'hide', label: 'Gizle' },
+      ],
+    },
+    {
+      key: 'showNav',
+      label: 'Ok / nokta kontrolleri',
+      kind: 'select',
+      options: [
+        { value: 'show', label: 'Göster' },
+        { value: 'hide', label: 'Gizle' },
+      ],
+      showWhen: { key: 'variant', equals: 'slider' },
+    },
     { key: 'eyebrow', label: 'Üst etiket', kind: 'text', showWhen: { key: 'variant', equals: 'static' } },
     { key: 'title', label: 'Başlık', kind: 'text', showWhen: { key: 'variant', equals: 'static' } },
     { key: 'subtitle', label: 'Alt metin', kind: 'textarea', showWhen: { key: 'variant', equals: 'static' } },
-    { key: 'ctaLabel', label: 'Birincil CTA metni', kind: 'text', showWhen: { key: 'variant', equals: 'static' } },
-    { key: 'ctaHref', label: 'Birincil CTA link', kind: 'url', showWhen: { key: 'variant', equals: 'static' } },
-    { key: 'secondaryCtaLabel', label: 'İkincil CTA metni', kind: 'text', showWhen: { key: 'variant', equals: 'static' } },
-    { key: 'secondaryCtaHref', label: 'İkincil CTA link', kind: 'url', showWhen: { key: 'variant', equals: 'static' } },
+    {
+      key: 'ctaLabel',
+      label: 'Birincil CTA metni',
+      kind: 'text',
+      showWhen: [
+        { key: 'variant', equals: 'static' },
+        { key: 'showCta', equals: 'show' },
+      ],
+    },
+    {
+      key: 'ctaHref',
+      label: 'Birincil CTA link',
+      kind: 'url',
+      showWhen: [
+        { key: 'variant', equals: 'static' },
+        { key: 'showCta', equals: 'show' },
+      ],
+    },
+    {
+      key: 'secondaryCtaLabel',
+      label: 'İkincil CTA metni',
+      kind: 'text',
+      showWhen: [
+        { key: 'variant', equals: 'static' },
+        { key: 'showCta', equals: 'show' },
+      ],
+    },
+    {
+      key: 'secondaryCtaHref',
+      label: 'İkincil CTA link',
+      kind: 'url',
+      showWhen: [
+        { key: 'variant', equals: 'static' },
+        { key: 'showCta', equals: 'show' },
+      ],
+    },
     {
       key: 'imageUrl',
       label: 'Arka plan görseli',
@@ -387,10 +559,135 @@ export const sectionFields: Record<SectionType, FieldDef[]> = {
     { key: 'ctaLabel', label: 'CTA metni', kind: 'text' },
     { key: 'ctaHref', label: 'CTA link', kind: 'url' },
   ],
-  'rich-text': [{ key: 'html', label: 'HTML içerik', kind: 'html' }],
+  'rich-text': [
+    { key: 'html', label: 'HTML içerik', kind: 'html' },
+    { key: 'css', label: 'CSS (bu section’a scope edilir)', kind: 'css' },
+  ],
   gallery: [
     { key: 'title', label: 'Başlık', kind: 'text' },
     { key: 'images', label: 'Görseller', kind: 'gallery-list' },
+  ],
+  'whatsapp-float': [
+    { key: 'phone', label: 'WhatsApp numarası', kind: 'text' },
+    {
+      key: 'position',
+      label: 'Konum',
+      kind: 'select',
+      options: [
+        { value: 'bottom-right', label: 'Sağ alt' },
+        { value: 'bottom-left', label: 'Sol alt' },
+      ],
+    },
+    { key: 'headline', label: 'Modal başlık', kind: 'text' },
+    { key: 'description', label: 'Modal açıklama', kind: 'textarea' },
+    { key: 'agentLabel', label: 'Temsilci adı', kind: 'text' },
+    { key: 'agentSubtitle', label: 'Temsilci alt metin', kind: 'text' },
+    { key: 'statusHint', label: 'Yanıt süresi notu', kind: 'text' },
+  ],
+  'contact-layout': [
+    {
+      key: 'variant',
+      label: 'Yerleşim',
+      kind: 'select',
+      options: [
+        { value: 'map-form', label: 'Harita | Form' },
+        { value: 'form-map', label: 'Form | Harita' },
+        { value: 'info-form', label: 'Bilgi | Form' },
+        { value: 'form-info', label: 'Form | Bilgi' },
+      ],
+    },
+    { key: 'title', label: 'Başlık', kind: 'text' },
+    { key: 'subtitle', label: 'Alt metin', kind: 'textarea' },
+    { key: 'address', label: 'Adres', kind: 'textarea' },
+    { key: 'phone', label: 'Telefon', kind: 'text' },
+    { key: 'email', label: 'E-posta', kind: 'text' },
+    { key: 'hours', label: 'Çalışma saatleri', kind: 'text' },
+    { key: 'mapEmbedUrl', label: 'Harita embed URL', kind: 'url' },
+    { key: 'formTitle', label: 'Form başlığı', kind: 'text' },
+    { key: 'formSubmitLabel', label: 'Gönder butonu', kind: 'text' },
+    { key: 'successMessage', label: 'Başarı mesajı', kind: 'textarea' },
+  ],
+  'product-list': [
+    { key: 'title', label: 'Başlık', kind: 'text' },
+    {
+      key: 'layout',
+      label: 'Layout',
+      kind: 'select',
+      options: [
+        { value: 'grid', label: 'Kart grid (filtreli)' },
+        { value: 'row', label: 'Satır listesi' },
+        { value: 'compact', label: 'Kompakt kartlar' },
+      ],
+    },
+    {
+      key: 'columns',
+      label: 'Kolon sayısı',
+      kind: 'select',
+      options: [
+        { value: '3', label: '3 kolon' },
+        { value: '4', label: '4 kolon' },
+      ],
+    },
+    {
+      key: 'showFilters',
+      label: 'Filtreler',
+      kind: 'select',
+      options: [
+        { value: 'true', label: 'Göster' },
+        { value: 'false', label: 'Gizle' },
+      ],
+      showWhen: { key: 'layout', equals: 'grid' },
+    },
+    { key: 'pageSize', label: 'Sayfa boyutu', kind: 'number' },
+  ],
+  'blog-list': [
+    { key: 'title', label: 'Başlık', kind: 'text' },
+    {
+      key: 'layout',
+      label: 'Layout',
+      kind: 'select',
+      options: [
+        { value: 'asymmetric', label: 'Asimetrik grid' },
+        { value: 'row', label: 'Satır kartları' },
+        { value: 'grid', label: 'Simetrik kart grid' },
+      ],
+    },
+    {
+      key: 'columns',
+      label: 'Kolon sayısı',
+      kind: 'select',
+      options: [
+        { value: '3', label: '3 kolon' },
+        { value: '4', label: '4 kolon' },
+      ],
+      showWhen: { key: 'layout', equals: 'grid' },
+    },
+  ],
+  'related-products': [
+    { key: 'title', label: 'Başlık', kind: 'text' },
+    { key: 'limit', label: 'Ürün sayısı', kind: 'number' },
+    {
+      key: 'layout',
+      label: 'Layout',
+      kind: 'select',
+      options: [
+        { value: 'grid', label: 'Kart grid' },
+        { value: 'row', label: 'Satır' },
+      ],
+    },
+  ],
+  'related-posts': [
+    { key: 'title', label: 'Başlık', kind: 'text' },
+    { key: 'limit', label: 'Yazı sayısı', kind: 'number' },
+    {
+      key: 'layout',
+      label: 'Layout',
+      kind: 'select',
+      options: [
+        { value: 'row', label: 'Satır' },
+        { value: 'grid', label: 'Kart grid' },
+      ],
+    },
   ],
 };
 
