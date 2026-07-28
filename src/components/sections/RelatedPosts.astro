@@ -1,0 +1,119 @@
+---
+import type { SectionConfigMap } from '../../lib/sections/registry';
+import { getRecentPosts } from '../../server/services/posts';
+
+interface Props {
+  config: SectionConfigMap['related-posts'];
+}
+
+const { config } = Astro.props;
+const limit = Math.min(12, Math.max(2, config.limit ?? 3));
+const layout = config.layout ?? 'row';
+const { data: posts, status } = await getRecentPosts(limit);
+const items = posts ?? [];
+---
+
+<section class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16" data-cache={status}>
+  <div class="flex items-end justify-between gap-4">
+    <h2 class="font-display text-2xl font-bold tracking-tight md:text-3xl">{config.title}</h2>
+    <a href="/blog" class="text-sm text-muted-foreground hover:text-foreground">
+      Tüm yazılar
+    </a>
+  </div>
+
+  {
+    items.length === 0 ? (
+      <p class="mt-10 text-sm text-muted-foreground">Henüz yayınlanmış yazı yok.</p>
+    ) : layout === 'grid' ? (
+      <ul class="mt-10 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+        {items.map((post) => (
+          <li>
+            <a
+              href={`/blog/${post.slug}`}
+              class="group flex h-full flex-col overflow-hidden border border-border transition-colors hover:border-primary"
+            >
+              <div class="aspect-[16/10] overflow-hidden bg-muted">
+                {post.coverUrl ? (
+                  <img
+                    src={post.coverUrl}
+                    alt=""
+                    class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="flex h-full items-center justify-center bg-muted" />
+                )}
+              </div>
+              <div class="flex flex-1 flex-col gap-2 p-4">
+                <p class="text-xs uppercase tracking-wide text-muted-foreground">
+                  {post.publishedAt
+                    ? new Date(post.publishedAt).toLocaleDateString('tr-TR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    : ''}
+                </p>
+                <h3 class="font-display text-lg font-semibold tracking-tight group-hover:underline">
+                  {post.title}
+                </h3>
+                {post.excerpt && (
+                  <p class="line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
+                )}
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <ul class="mt-10 flex flex-col gap-6">
+        {items.map((post) => (
+          <li>
+            <article class="flex flex-col gap-4 border border-border sm:flex-row">
+              <a
+                href={`/blog/${post.slug}`}
+                class="block aspect-[16/10] shrink-0 overflow-hidden bg-muted sm:aspect-auto sm:w-48"
+              >
+                {post.coverUrl ? (
+                  <img
+                    src={post.coverUrl}
+                    alt=""
+                    class="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="flex h-full min-h-28 items-center justify-center" />
+                )}
+              </a>
+              <div class="flex flex-1 flex-col gap-2 p-4 sm:py-4 sm:pr-4 sm:pl-0">
+                <p class="text-xs uppercase tracking-wide text-muted-foreground">
+                  {post.publishedAt
+                    ? new Date(post.publishedAt).toLocaleDateString('tr-TR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    : ''}
+                </p>
+                <h3 class="font-display text-lg font-semibold">
+                  <a href={`/blog/${post.slug}`} class="hover:underline">
+                    {post.title}
+                  </a>
+                </h3>
+                {post.excerpt && (
+                  <p class="line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
+                )}
+                <a
+                  href={`/blog/${post.slug}`}
+                  class="mt-auto inline-flex w-fit text-sm font-semibold underline-offset-4 hover:underline"
+                >
+                  Devamını oku →
+                </a>
+              </div>
+            </article>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</section>
