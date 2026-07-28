@@ -25,21 +25,25 @@ if (!brand) {
     !brand ? (
       <p>Marka bulunamadı.</p>
     ) : (
-      <>
-        <h1 class="mb-6 font-display text-2xl font-bold">{brand.name}</h1>
-        <BrandForm
-          client:load
-          mode="edit"
-          brandId={brand.id}
-          initial={{
-            name: brand.name,
-            slug: brand.slug,
-            description: brand.description ?? '',
-            status: brand.status,
-            seo,
-          }}
-        />
-      </>
+      <div class="flex flex-col gap-4">
+        <div>
+          <h1 class="font-display text-2xl font-bold tracking-tight">{brand.name}</h1>
+        </div>
+        <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+          <BrandForm
+            client:load
+            mode="edit"
+            brandId={brand.id}
+            initial={{
+              name: brand.name,
+              slug: brand.slug,
+              description: brand.description ?? '',
+              status: brand.status,
+              seo,
+            }}
+          />
+        </div>
+      </div>
     )
   }
 </AdminLayout>

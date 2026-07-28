@@ -11,13 +11,19 @@ const [{ data: defaults }, redirects] = await Promise.all([getSeoDefaults(), lis
   title="SEO"
   breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'SEO' }]}
 >
-  <h1 class="mb-2 font-display text-2xl font-bold">SEO</h1>
-  <p class="mb-8 text-sm text-muted-foreground">
-    Global varsayılanlar, SERP/OG önizleme varlık formlarında; burada yönlendirme listesi.
-  </p>
-  <SeoAdminPanel
-    client:load
-    initialDefaults={defaults ?? DEFAULT_SEO_SETTINGS}
-    initialRedirects={redirects}
-  />
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">SEO</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Global varsayılanlar, SERP/OG önizleme varlık formlarında; burada yönlendirme listesi.
+      </p>
+    </div>
+    <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+      <SeoAdminPanel
+        client:load
+        initialDefaults={defaults ?? DEFAULT_SEO_SETTINGS}
+        initialRedirects={redirects}
+      />
+    </div>
+  </div>
 </AdminLayout>

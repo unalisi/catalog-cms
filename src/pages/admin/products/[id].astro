@@ -13,7 +13,6 @@ const product = await getAdminProduct(id);
 if (!product) return Astro.redirect('/admin/products');
 
 const brands = (await listAllBrands(getDb())).map((b) => ({ id: b.id, name: b.name }));
-const toast = Astro.url.searchParams.get('toast');
 ---
 
 <AdminLayout
@@ -24,46 +23,48 @@ const toast = Astro.url.searchParams.get('toast');
     { label: product.name },
   ]}
 >
-  <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-    <h1 class="font-display text-2xl font-bold">{product.name}</h1>
-    <DeleteButton client:load endpoint={`/api/admin/products/${product.id}`} redirectTo="/admin/products" />
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="font-display text-2xl font-bold tracking-tight">{product.name}</h1>
+      </div>
+      <DeleteButton
+        client:load
+        endpoint={`/api/admin/products/${product.id}`}
+        redirectTo="/admin/products"
+      />
+    </div>
+
+    <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+      <ProductForm
+        client:load
+        mode="edit"
+        productId={product.id}
+        brands={brands}
+        initial={{
+          name: product.name,
+          slug: product.slug,
+          sku: product.sku ?? '',
+          description: product.description ?? '',
+          price: product.price,
+          stock: product.stock,
+          status: product.status,
+          brandId: product.brandId ?? '',
+          compareAtPrice: product.compareAtPrice,
+          currency: product.currency,
+          primaryMediaId: product.primaryMediaId,
+          primaryMediaUrl: product.primaryMedia?.url ?? null,
+          primaryMediaKey: product.primaryMedia?.key ?? null,
+          seo: product.seo,
+        }}
+        variants={product.variants.map((v) => ({
+          id: v.id,
+          sku: v.sku,
+          name: v.name,
+          price: v.price,
+          stock: v.stock,
+        }))}
+      />
+    </div>
   </div>
-
-  {
-    toast === 'saved' && (
-      <p class="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
-        Ürün kaydedildi.
-      </p>
-    )
-  }
-
-  <ProductForm
-    client:load
-    mode="edit"
-    productId={product.id}
-    brands={brands}
-    initial={{
-      name: product.name,
-      slug: product.slug,
-      sku: product.sku ?? '',
-      description: product.description ?? '',
-      price: product.price,
-      stock: product.stock,
-      status: product.status,
-      brandId: product.brandId ?? '',
-      compareAtPrice: product.compareAtPrice,
-      currency: product.currency,
-      primaryMediaId: product.primaryMediaId,
-      primaryMediaUrl: product.primaryMedia?.url ?? null,
-      primaryMediaKey: product.primaryMedia?.key ?? null,
-      seo: product.seo,
-    }}
-    variants={product.variants.map((v) => ({
-      id: v.id,
-      sku: v.sku,
-      name: v.name,
-      price: v.price,
-      stock: v.stock,
-    }))}
-  />
 </AdminLayout>

@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import { AdminShell } from '../components/admin/AdminShell';
+import { Toaster } from '../components/ui/sonner';
 
 interface Props {
   title?: string;
@@ -8,29 +10,11 @@ interface Props {
 
 const { title = 'Admin', breadcrumbs = [] } = Astro.props;
 const pathname = Astro.url.pathname;
-const user = Astro.locals.user;
-
-const nav = [
-  { href: '/admin', label: 'Dashboard', exact: true },
-  { href: '/admin/products', label: 'Ürünler' },
-  { href: '/admin/brands', label: 'Markalar' },
-  { href: '/admin/categories', label: 'Kategoriler' },
-  { href: '/admin/pages', label: 'Sayfalar' },
-  { href: '/admin/seo', label: 'SEO' },
-  { href: '/admin/blog', label: 'Blog' },
-  { href: '/admin/import', label: 'İçe aktarım' },
-  { href: '/admin/media', label: 'Medya' },
-  { href: '/admin/settings', label: 'Ayarlar' },
-];
-
-function isActive(href: string, exact = false) {
-  if (exact) return pathname === href;
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
+const user = Astro.locals.user ?? null;
 ---
 
 <!doctype html>
-<html lang="tr">
+<html lang="tr" class="antialiased">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -45,83 +29,16 @@ function isActive(href: string, exact = false) {
     />
     <title>{title} · Admin</title>
   </head>
-  <body class="min-h-dvh bg-background text-foreground antialiased">
+  <body class="min-h-dvh bg-background font-sans text-foreground">
     <a
       href="#admin-main"
       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
     >
       İçeriğe geç
     </a>
-    <div class="flex min-h-dvh">
-      <aside class="hidden w-64 shrink-0 border-r border-border bg-muted/40 md:block">
-        <div class="border-b border-border px-4 py-4">
-          <a href="/admin" class="font-display text-lg font-bold">Catalog Admin</a>
-        </div>
-        <nav aria-label="Admin menü" class="flex flex-col gap-1 p-3">
-          {
-            nav.map((item) => {
-              const active = isActive(item.href, item.exact);
-              return (
-                <a
-                  href={item.href}
-                  class:list={[
-                    'rounded-md px-3 py-2 text-sm font-medium',
-                    active
-                      ? 'border-l-2 border-primary bg-primary/10 text-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                  ]}
-                  aria-current={active ? 'page' : undefined}
-                >
-                  {item.label}
-                </a>
-              );
-            })
-          }
-        </nav>
-      </aside>
-      <div class="flex min-w-0 flex-1 flex-col">
-        <header class="border-b border-border px-4 py-3 md:px-6">
-          <div class="flex items-center justify-between gap-4">
-            <div class="min-w-0">
-              {
-                breadcrumbs.length > 0 && (
-                  <nav aria-label="Breadcrumb" class="mb-1">
-                    <ol class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      {breadcrumbs.map((item, index) => (
-                        <li class="flex items-center gap-2">
-                          {index > 0 && <span aria-hidden="true">/</span>}
-                          {item.href ? (
-                            <a href={item.href} class="hover:text-foreground">
-                              {item.label}
-                            </a>
-                          ) : (
-                            <span class="text-foreground">{item.label}</span>
-                          )}
-                        </li>
-                      ))}
-                    </ol>
-                  </nav>
-                )
-              }
-              <p class="truncate text-sm text-muted-foreground">{user?.email ?? 'Admin'}</p>
-            </div>
-            <div class="flex items-center gap-3">
-              <a href="/" class="text-sm text-muted-foreground hover:text-foreground">Siteye dön</a>
-              <form method="POST" action="/api/admin/auth/logout">
-                <button
-                  type="submit"
-                  class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
-                >
-                  Çıkış
-                </button>
-              </form>
-            </div>
-          </div>
-        </header>
-        <main id="admin-main" class="flex-1 p-4 md:p-6" tabindex="-1">
-          <slot />
-        </main>
-      </div>
-    </div>
+    <AdminShell client:load pathname={pathname} title={title} breadcrumbs={breadcrumbs} user={user}>
+      <slot />
+    </AdminShell>
+    <Toaster client:idle />
   </body>
 </html>

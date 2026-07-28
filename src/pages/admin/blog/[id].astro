@@ -25,27 +25,31 @@ const cover = data?.cover;
     !post ? (
       <p>Yazı bulunamadı.</p>
     ) : (
-      <>
-        <h1 class="mb-6 font-display text-2xl font-bold">{post.title}</h1>
-        <PostForm
-          client:load
-          mode="edit"
-          postId={post.id}
-          initial={{
-            title: post.title,
-            slug: post.slug,
-            excerpt: post.excerpt ?? '',
-            content: post.content,
-            status: post.status,
-            publishedAt: post.publishedAt ?? '',
-            tags: post.tags.join(', '),
-            coverMediaId: post.coverMediaId,
-            coverMediaUrl: cover?.url ?? null,
-            coverMediaKey: cover?.key ?? null,
-            seo,
-          }}
-        />
-      </>
+      <div class="flex flex-col gap-4">
+        <div>
+          <h1 class="font-display text-2xl font-bold tracking-tight">{post.title}</h1>
+        </div>
+        <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+          <PostForm
+            client:load
+            mode="edit"
+            postId={post.id}
+            initial={{
+              title: post.title,
+              slug: post.slug,
+              excerpt: post.excerpt ?? '',
+              content: post.content,
+              status: post.status,
+              publishedAt: post.publishedAt ?? '',
+              tags: post.tags.join(', '),
+              coverMediaId: post.coverMediaId,
+              coverMediaUrl: cover?.url ?? null,
+              coverMediaKey: cover?.key ?? null,
+              seo,
+            }}
+          />
+        </div>
+      </div>
     )
   }
 </AdminLayout>

@@ -7,11 +7,15 @@ import MediaLibrary from '../../../components/admin/MediaLibrary';
   title="Medya"
   breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'Medya' }]}
 >
-  <div class="mb-6">
-    <h1 class="font-display text-2xl font-bold">Medya</h1>
-    <p class="mt-1 text-sm text-muted-foreground">
-      R2 depolama · Images transform genişlikleri: 64–1920 · Alt metin zorunlu
-    </p>
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">Medya</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        R2 depolama · Images transform genişlikleri: 64–1920 · Alt metin zorunlu
+      </p>
+    </div>
+    <div class="overflow-hidden rounded-lg border border-border bg-background">
+      <MediaLibrary client:load />
+    </div>
   </div>
-  <MediaLibrary client:load />
 </AdminLayout>

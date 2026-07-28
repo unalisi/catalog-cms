@@ -1,5 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import type { ApiResult } from '../../../lib/api';
 import { buildRangeKeys, colAt, colIndex, parseTsv } from './selection';
 import {
@@ -24,8 +25,6 @@ type ProductGridProps = {
   brands: BrandOption[];
 };
 
-type Toast = { type: 'ok' | 'err'; message: string } | null;
-
 export default function ProductGrid({ initialProducts, brands }: ProductGridProps) {
   const [rows, setRows] = useState<GridProduct[]>(initialProducts);
   const [dirty, setDirty] = useState<Record<string, DirtyFields>>({});
@@ -39,7 +38,6 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
   const [editing, setEditing] = useState(false);
   const [editDraft, setEditDraft] = useState('');
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<Toast>(null);
   const [dragging, setDragging] = useState(false);
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -109,7 +107,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
     if (!active || !editing) return;
     const coerced = coerceEditValue(active.colId, editDraft, brands);
     if (!coerced.ok) {
-      setToast({ type: 'err', message: coerced.message });
+      toast.error(coerced.message );
       return;
     }
     applyLocalField(active.rowId, active.colId, coerced.value);
@@ -228,7 +226,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
     for (const t of targets) {
       applyLocalField(t.rowId, t.colId, value as DirtyFields[keyof DirtyFields]);
     }
-    setToast({ type: 'ok', message: `Aşağı dolduruldu (${targets.length})` });
+    toast.success(`Aşağı dolduruldu (${targets.length})`);
   }
 
   function fillRight() {
@@ -242,7 +240,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
       const coerced = coerceEditValue(colId, raw, brands);
       if (coerced.ok) applyLocalField(active.rowId, colId, coerced.value);
     }
-    setToast({ type: 'ok', message: 'Sağa dolduruldu' });
+    toast.success('Sağa dolduruldu' );
   }
 
   async function handlePaste(text: string) {
@@ -266,14 +264,14 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
         }
       }
     }
-    setToast({ type: 'ok', message: `Yapıştırıldı (${applied} hücre)` });
+    toast.success(`Yapıştırıldı (${applied} hücre)`);
   }
 
   async function saveDirty() {
     const changes = Object.entries(dirty).map(([id, fields]) => ({ id, fields }));
     if (changes.length === 0) return;
     setSaving(true);
-    setToast({ type: 'ok', message: 'Kaydediliyor…' });
+    toast.success('Kaydediliyor…' );
 
     const res = await fetch('/api/admin/products/bulk', {
       method: 'PATCH',
@@ -290,7 +288,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
 
     if (!json.ok) {
       setRows(baselineRef.current.map((r) => ({ ...r })));
-      setToast({ type: 'err', message: json.error.message || 'Kayıt başarısız — geri alındı' });
+      toast.error(json.error.message || 'Kayıt başarısız — geri alındı' );
       return;
     }
 
@@ -314,19 +312,18 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
     });
 
     if (json.data.errorCount > 0) {
-      setToast({
-        type: 'err',
-        message: `${json.data.successCount} kayıt OK, ${json.data.errorCount} hata (geri alındı)`,
-      });
+      toast.error(
+        `${json.data.successCount} kayıt OK, ${json.data.errorCount} hata (geri alındı)`,
+      );
     } else {
-      setToast({ type: 'ok', message: `${json.data.successCount} ürün kaydedildi` });
+      toast.success(`${json.data.successCount} ürün kaydedildi`);
     }
   }
 
   function discardDirty() {
     setRows(baselineRef.current.map((r) => ({ ...r })));
     setDirty({});
-    setToast({ type: 'ok', message: 'Değişiklikler iptal edildi' });
+    toast.success('Değişiklikler iptal edildi' );
   }
 
   useEffect(() => {
@@ -477,19 +474,6 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
 
   return (
     <div className="flex flex-col gap-3">
-      {toast && (
-        <p
-          className={`rounded-md border px-3 py-2 text-sm ${
-            toast.type === 'err'
-              ? 'border-destructive/30 bg-destructive/10 text-destructive'
-              : 'border-border bg-muted/40'
-          }`}
-          role="status"
-        >
-          {toast.message}
-        </p>
-      )}
-
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
         <div className="text-muted-foreground">
           {selectedCellCount > 0 && <span>{selectedCellCount} hücre</span>}

@@ -21,27 +21,33 @@ const previewPath = page.slug === 'home' ? '/' : `/${page.slug}`;
     { label: page.title },
   ]}
 >
-  <h1 class="mb-4 font-display text-2xl font-bold">{page.title}</h1>
-  <p class="mb-6 text-sm text-muted-foreground">
-    Sürükle-bırak ile sıralayın · görünürlük · tip formları · sağda iframe önizleme
-  </p>
-  <PageEditor
-    client:load
-    slug={page.slug}
-    previewPath={previewPath}
-    sectionTypes={sectionTypes}
-    initialPage={{
-      id: page.id,
-      slug: page.slug,
-      title: page.title,
-      status: page.status,
-      sections: page.sections.map((s) => ({
-        id: s.id,
-        type: s.type,
-        position: s.position,
-        isVisible: s.isVisible,
-        configJson: s.configJson,
-      })),
-    }}
-  />
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">{page.title}</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Sürükle-bırak ile sıralayın · görünürlük · tip formları · sağda iframe önizleme
+      </p>
+    </div>
+    <div class="overflow-hidden rounded-lg border border-border bg-background">
+      <PageEditor
+        client:load
+        slug={page.slug}
+        previewPath={previewPath}
+        sectionTypes={sectionTypes}
+        initialPage={{
+          id: page.id,
+          slug: page.slug,
+          title: page.title,
+          status: page.status,
+          sections: page.sections.map((s) => ({
+            id: s.id,
+            type: s.type,
+            position: s.position,
+            isVisible: s.isVisible,
+            configJson: s.configJson,
+          })),
+        }}
+      />
+    </div>
+  </div>
 </AdminLayout>

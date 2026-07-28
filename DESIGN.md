@@ -175,10 +175,12 @@ Her bileşen: default / hover / focus / disabled / error / empty.
 - İlk viewport bütçesi: marka sinyali + bir başlık + bir destek cümlesi + CTA grubu + bir baskın görsel. İstatistik şeridi / promo chip yığını yok.
 
 ### Admin
-- Kompakt; sidebar + topbar.
-- Primary: aktif nav, primary buton, grid seçim.
-- Her ekran: breadcrumb + başlık + birincil aksiyon (sağ üst).
+- Kompakt; **F-pattern**: collapsible sidebar (ikonlu) + sticky topbar (breadcrumb, global arama ⌘K, bildirim iskeleti, profil) + main.
+- Canvas: `bg-muted/40`; içerik panelleri `bg-background` + border (derinlik). Kart kuralının admin istisnası: etkileşimli listeler/formlar panel kartında.
+- Primary: aktif nav (sol primary şerit + `primary/10`), primary buton, grid seçim.
+- Her ekran: breadcrumb (topbar) + başlık + birincil aksiyon (sağ üst).
 - Yoğun veri: tablo/grid; pazarlama süsleri yok.
+- Toast: sağ-alt (Sonner); `?toast=` flash köprüsü.
 
 ---
 

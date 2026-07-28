@@ -15,6 +15,12 @@ const parents = (await listAllCategories(getDb())).map((c) => ({ id: c.id, name:
     { label: 'Yeni' },
   ]}
 >
-  <h1 class="mb-6 font-display text-2xl font-bold">Yeni kategori</h1>
-  <CategoryForm client:load mode="create" parents={parents} />
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">Yeni kategori</h1>
+    </div>
+    <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+      <CategoryForm client:load mode="create" parents={parents} />
+    </div>
+  </div>
 </AdminLayout>

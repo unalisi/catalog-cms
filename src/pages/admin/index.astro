@@ -7,23 +7,26 @@ const counts = await getDashboardCounts(getDb());
 ---
 
 <AdminLayout title="Dashboard" breadcrumbs={[{ label: 'Dashboard' }]}>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4">
     <div>
-      <h1 class="font-display text-2xl font-bold">Dashboard</h1>
+      <h1 class="font-display text-2xl font-bold tracking-tight">Dashboard</h1>
       <p class="mt-1 text-sm text-muted-foreground">Katalog özeti</p>
     </div>
     <div class="grid gap-4 sm:grid-cols-3">
-      <div class="rounded-md border border-border bg-muted/30 p-4">
+      <div class="rounded-lg border border-border bg-background p-4 md:p-6">
         <p class="text-sm text-muted-foreground">Ürünler</p>
         <p class="font-display text-2xl font-bold">{counts.products}</p>
       </div>
-      <a href="/admin/brands" class="rounded-md border border-border bg-muted/30 p-4 hover:border-primary">
+      <a
+        href="/admin/brands"
+        class="rounded-lg border border-border bg-background p-4 md:p-6 hover:border-primary"
+      >
         <p class="text-sm text-muted-foreground">Markalar</p>
         <p class="font-display text-2xl font-bold">{counts.brands}</p>
       </a>
       <a
         href="/admin/categories"
-        class="rounded-md border border-border bg-muted/30 p-4 hover:border-primary"
+        class="rounded-lg border border-border bg-background p-4 md:p-6 hover:border-primary"
       >
         <p class="text-sm text-muted-foreground">Kategoriler</p>
         <p class="font-display text-2xl font-bold">{counts.categories}</p>

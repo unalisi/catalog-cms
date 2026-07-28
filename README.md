@@ -192,3 +192,9 @@ Sonraki adım: **FAZ 7 — WordPress / katalog içe aktarımı**.
 
 Sonraki: Lighthouse skorlarını production URL üzerinde [`docs/QA.md`](./docs/QA.md) ile doğrula; gerekirse custom domain bağla.
 
+## Admin UI (Enterprise shell)
+
+- Shadcn Registry (`components.json`) + light-only DESIGN token’ları
+- `AdminLayout.astro` → `AdminShell` (Sidebar + TopNav + Main)
+- ⌘K command palette (nav + ürün arama), Sonner toast, collapsible sidebar
+

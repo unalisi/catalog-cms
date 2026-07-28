@@ -7,11 +7,15 @@ import ImportWizard from '../../../components/admin/ImportWizard';
   title="İçe aktarım"
   breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'İçe aktarım' }]}
 >
-  <div class="mb-6">
-    <h1 class="font-display text-2xl font-bold">Katalog içe aktarım</h1>
-    <p class="mt-1 text-sm text-muted-foreground">
-      CSV · WooCommerce JSON · WXR → dry-run → Queue apply (SKU/slug upsert, medya R2)
-    </p>
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">Katalog içe aktarım</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        CSV · WooCommerce JSON · WXR → dry-run → Queue apply (SKU/slug upsert, medya R2)
+      </p>
+    </div>
+    <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+      <ImportWizard client:load />
+    </div>
   </div>
-  <ImportWizard client:load />
 </AdminLayout>
