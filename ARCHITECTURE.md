@@ -92,7 +92,8 @@ Bootstrap sırası (FAZ 0): **Astro iskelet → Cloudflare binding kaynakları �
 | Product grid (admin) | `client:load` | Kritik etkileşim |
 | Section builder DnD | `client:load` | |
 | Import wizard | `client:load` | |
-| Public ürün kartı / hero | **island yok** | Saf HTML |
+| Public ürün kartı / static hero | **island yok** | Saf HTML |
+| Hero slider | `client:visible` | Autoplay / oklar / dots / klavye |
 
 Public sayfada gereksiz React mount edilmez. Admin’de React yoğunlaşır.
 
@@ -491,8 +492,12 @@ Performans ile kesişen SEO kuralları:
 
 ```ts
 // Kavramsal sözleşme
-type SectionType = 'hero' | 'featured-products' | 'brand-strip' | 'category-grid'
-  | 'banner-cta' | 'blog-preview' | 'faq' | 'rich-text' | 'gallery'
+type SectionType =
+  | 'hero' | 'featured-products' | 'brand-strip' | 'category-grid'
+  | 'why-us' | 'contact-channels' | 'references' | 'blog-preview' | 'map-contact'
+  | 'faq' | 'banner-cta' | 'rich-text' | 'gallery'
+// hero config: variant 'static' | 'slider', overlay, image*, slides[]
+// Public islands: HeroSlider, GalleryLightbox (client:visible)
 
 type SectionDef = {
   type: SectionType

@@ -31,7 +31,7 @@ Renk uzayı: **OKLCH** (tutarsız HSL kaçınılır). Aşağıdaki değerler ba�
 |---|---|---|---|
 | `--background` | `oklch(1 0 0)` | `#FFFFFF` | Sayfa zemini |
 | `--foreground` | `oklch(0.18 0 0)` | `#1A1A1A` | Ana metin (near-black) |
-| `--primary` | `oklch(0.88 0.18 95)` | `#F5C518` | Sarı aksan / CTA |
+| `--primary` | — (hex sabit) | `#FFD700` | Sarı aksan / CTA / aktif nav |
 | `--primary-foreground` | `oklch(0.18 0 0)` | `#1A1A1A` | Sarı üzeri metin |
 | `--accent` | `oklch(0.18 0 0)` | `#1A1A1A` | Koyu blok / secondary güçlü |
 | `--accent-foreground` | `oklch(0.99 0 0)` | `#FAFAFA` | Koyu blok metni |
@@ -175,12 +175,13 @@ Her bileşen: default / hover / focus / disabled / error / empty.
 - İlk viewport bütçesi: marka sinyali + bir başlık + bir destek cümlesi + CTA grubu + bir baskın görsel. İstatistik şeridi / promo chip yığını yok.
 
 ### Admin
-- Kompakt; **F-pattern**: collapsible sidebar (ikonlu) + sticky topbar (breadcrumb, global arama ⌘K, bildirim iskeleti, profil) + main.
-- Canvas: `bg-muted/40`; içerik panelleri `bg-background` + border (derinlik). Kart kuralının admin istisnası: etkileşimli listeler/formlar panel kartında.
-- Primary: aktif nav (sol primary şerit + `primary/10`), primary buton, grid seçim.
-- Her ekran: breadcrumb (topbar) + başlık + birincil aksiyon (sağ üst).
+- Kompakt; **F-pattern**: collapsible sidebar (ikonlu, İçerik/Sistem grupları) + sticky topbar (Panel › crumb, arama, bildirim, profil) + main.
+- Canvas: beyaz zemin (`bg-background`); paneller border’lı yüzey. Primary sarı sinyal + `primary-soft` aktif nav.
+- Primary: aktif nav (sol primary şerit + soft fill), CTA’da siyah `accent` butonlar, grid seçim.
+- Her ekran: breadcrumb (topbar) + içerik; Genel Bakış’ta StatStrip + hızlı aksiyonlar.
 - Yoğun veri: tablo/grid; pazarlama süsleri yok.
 - Toast: sağ-alt (Sonner); `?toast=` flash köprüsü.
+- Durum: `StatusDot` — Yayında / Taslak / Gizli.
 
 ---
 
@@ -210,21 +211,27 @@ Her bileşen: default / hover / focus / disabled / error / empty.
 
 ---
 
-## 10. Section Görsel Spesifikasyonları (FAZ 4)
+## 10. Section Görsel Spesifikasyonları (FAZ 4+)
+
+Anasayfa önerilen set (1–10). `banner-cta`, `rich-text`, `gallery` editor’da kalır.
 
 | Section | Görsel |
 |---|---|
-| **Hero** | Büyük başlık + alt metin + primary CTA; görsel full-bleed veya sağ/sol split — kart içinde değil |
-| **Öne Çıkan Ürünler** | Grid; fiyat primary vurgu; hover sınırlı |
-| **Marka Şeridi** | Logo sırası; nötr |
-| **Kategori Grid** | Görsel + etiket; 2–4 kolon |
+| **Hero** (`static` \| `slider`) | Full-bleed görsel + koyu/açık overlay; display tipografi; primary + outline CTA. Slider: React island (`HeroSlider`, `client:visible`) — autoplay ~5s, oklar, dots, klavye; `prefers-reduced-motion` → autoplay kapalı. Variant yoksa static; görsel yoksa mevcut radial gradient. Hero’da kart/chip yok. |
+| **Kategori Grid** | Görsel tile + isim; 2–4 kolon; hover border |
+| **Marka Şeridi** | Logo grid/şerit; `logoMediaId` → gerçek logo; yoksa monogram metin; gri → hover normal |
+| **Neden Biz** (`why-us`) | 3–4 sütun değer bloğu; ikon monogram + başlık + metin; üst border ayraç |
+| **Öne Çıkan Ürünler** | Ürün görseli + ad + fiyat mono; hover border tile |
+| **İletişim Kanalları** (`contact-channels`) | Tel / WhatsApp / e-posta / form link; 2–3 kolon border tile |
+| **Referanslar** (`references`) | Müşteri logo grid (medya listesi) |
+| **Blog Önizleme** | Kapak + başlık + tarih; border tile grid |
+| **Harita + İletişim** (`map-contact`) | Sol adres/telefon/e-posta; sağ iframe (`mapEmbedUrl`) veya harita linki |
+| **SSS** | Ferah accordion; border ayraç |
 | **Banner / CTA** | `accent` zemin + `accent-foreground` + primary buton |
-| **Blog Önizleme** | Yazı listesi / basit grid |
-| **SSS** | Accordion; border ayraç |
 | **Zengin Metin** | Prose = tipografi ölçeği |
-| **Galeri** | Grid; lightbox admin değil public island `client:visible` |
+| **Galeri** | Grid; lightbox public island `client:visible` |
 
-Mobile-first; `md:` / `lg:` kırılımları.
+Mobile-first; `md:` / `lg:` kırılımları. Section padding: `py-16 md:py-24`, içerik `max-w-6xl`.
 
 ---
 

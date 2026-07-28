@@ -8,23 +8,39 @@ interface Props {
 
 const { config } = Astro.props;
 const { data: brands } = await getBrands();
+const items = brands ?? [];
 ---
 
-<section class="border-t border-border bg-muted/30">
-  <div class="mx-auto max-w-6xl px-4 py-14 md:px-6">
-    {config.title && <h2 class="font-display text-xl font-bold">{config.title}</h2>}
-    <ul class="mt-6 flex flex-wrap gap-x-8 gap-y-3">
+<section class="border-y border-border bg-muted/40">
+  <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-20">
+    {
+      config.title && (
+        <h2 class="font-display text-2xl font-bold tracking-tight md:text-3xl">{config.title}</h2>
+      )
+    }
+    <ul class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
       {
-        (brands ?? []).length === 0 ? (
-          <li class="text-sm text-muted-foreground">Marka yok.</li>
+        items.length === 0 ? (
+          <li class="col-span-full text-sm text-muted-foreground">Marka yok.</li>
         ) : (
-          (brands ?? []).map((brand) => (
+          items.map((brand) => (
             <li>
               <a
                 href={`/brand/${brand.slug}`}
-                class="text-base font-medium text-muted-foreground hover:text-foreground"
+                class="flex h-24 items-center justify-center border border-border bg-background px-3 transition-colors hover:border-primary"
               >
-                {brand.name}
+                {brand.logoUrl ? (
+                  <img
+                    src={brand.logoUrl}
+                    alt={brand.name}
+                    class="max-h-12 max-w-full object-contain opacity-80 grayscale transition hover:opacity-100 hover:grayscale-0"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span class="font-display text-sm font-semibold tracking-tight text-muted-foreground">
+                    {brand.name}
+                  </span>
+                )}
               </a>
             </li>
           ))

@@ -1,0 +1,53 @@
+---
+import { channelHref, type SectionConfigMap } from '../../lib/sections/registry';
+
+interface Props {
+  config: SectionConfigMap['contact-channels'];
+}
+
+const { config } = Astro.props;
+const items = config.items ?? [];
+
+const typeHint: Record<string, string> = {
+  phone: 'Telefon',
+  whatsapp: 'WhatsApp',
+  email: 'E-posta',
+  form: 'Form',
+  custom: 'Bağlantı',
+};
+---
+
+<section class="border-y border-border bg-muted/30">
+  <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
+    {
+      config.title && (
+        <h2 class="font-display text-2xl font-bold tracking-tight md:text-3xl">{config.title}</h2>
+      )
+    }
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        items.length === 0 ? (
+          <li class="text-sm text-muted-foreground">Kanal tanımlı değil.</li>
+        ) : (
+          items.map((item) => (
+            <li>
+              <a
+                href={channelHref(item.type, item.value)}
+                class="flex h-full flex-col gap-2 border border-border bg-background px-5 py-6 transition-colors hover:border-primary"
+                {...(item.type === 'whatsapp' || item.type === 'custom'
+                  ? { rel: 'noopener noreferrer', target: '_blank' }
+                  : {})}
+              >
+                <span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {typeHint[item.type] ?? item.type}
+                </span>
+                <span class="font-display text-lg font-semibold tracking-tight">{item.label}</span>
+                <span class="text-sm text-muted-foreground">{item.value}</span>
+              </a>
+            </li>
+          ))
+        )
+      }
+    </ul>
+  </div>
+</section>

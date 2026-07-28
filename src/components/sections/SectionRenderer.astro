@@ -3,8 +3,12 @@ import Hero from './Hero.astro';
 import FeaturedProducts from './FeaturedProducts.astro';
 import BrandStrip from './BrandStrip.astro';
 import CategoryGrid from './CategoryGrid.astro';
+import WhyUs from './WhyUs.astro';
+import ContactChannels from './ContactChannels.astro';
+import References from './References.astro';
 import BannerCta from './BannerCta.astro';
 import BlogPreview from './BlogPreview.astro';
+import MapContact from './MapContact.astro';
 import Faq from './Faq.astro';
 import RichText from './RichText.astro';
 import Gallery from './Gallery.astro';
@@ -46,10 +50,18 @@ function typedConfig<T extends SectionType>(type: T, configJson: string): Sectio
         return <BrandStrip config={typedConfig('brand-strip', section.configJson)} />;
       case 'category-grid':
         return <CategoryGrid config={typedConfig('category-grid', section.configJson)} />;
+      case 'why-us':
+        return <WhyUs config={typedConfig('why-us', section.configJson)} />;
+      case 'contact-channels':
+        return <ContactChannels config={typedConfig('contact-channels', section.configJson)} />;
+      case 'references':
+        return <References config={typedConfig('references', section.configJson)} />;
       case 'banner-cta':
         return <BannerCta config={typedConfig('banner-cta', section.configJson)} />;
       case 'blog-preview':
         return <BlogPreview config={typedConfig('blog-preview', section.configJson)} />;
+      case 'map-contact':
+        return <MapContact config={typedConfig('map-contact', section.configJson)} />;
       case 'faq':
         return <Faq config={typedConfig('faq', section.configJson)} />;
       case 'rich-text':

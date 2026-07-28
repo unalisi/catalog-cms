@@ -1,0 +1,89 @@
+---
+import type { SectionConfigMap } from '../../lib/sections/registry';
+
+interface Props {
+  config: SectionConfigMap['map-contact'];
+}
+
+const { config } = Astro.props;
+const mapsSearch = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.address)}`;
+---
+
+<section class="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
+  {
+    config.title && (
+      <h2 class="font-display text-2xl font-bold tracking-tight md:text-3xl">{config.title}</h2>
+    )
+  }
+  <div class="mt-10 grid gap-8 lg:grid-cols-2">
+    <div class="flex flex-col gap-6">
+      <div>
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Adres</p>
+        <p class="mt-2 text-base leading-relaxed text-foreground">{config.address}</p>
+      </div>
+      {
+        config.phone && (
+          <div>
+            <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Telefon</p>
+            <a
+              href={`tel:${config.phone.replace(/[^\d+]/g, '')}`}
+              class="mt-2 inline-block text-base hover:underline"
+            >
+              {config.phone}
+            </a>
+          </div>
+        )
+      }
+      {
+        config.email && (
+          <div>
+            <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">E-posta</p>
+            <a href={`mailto:${config.email}`} class="mt-2 inline-block text-base hover:underline">
+              {config.email}
+            </a>
+          </div>
+        )
+      }
+      {
+        config.ctaLabel && config.ctaHref && (
+          <a
+            href={config.ctaHref}
+            class="inline-flex w-fit items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            {config.ctaLabel}
+          </a>
+        )
+      }
+      {
+        !config.mapEmbedUrl && (
+          <a
+            href={mapsSearch}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            Haritada aç →
+          </a>
+        )
+      }
+    </div>
+    <div class="min-h-72 overflow-hidden border border-border bg-muted">
+      {
+        config.mapEmbedUrl ? (
+          <iframe
+            src={config.mapEmbedUrl}
+            title="Harita"
+            class="h-full min-h-72 w-full"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          />
+        ) : (
+          <div class="flex h-full min-h-72 items-center justify-center p-6 text-center text-sm text-muted-foreground">
+            Harita gömülü URL tanımlı değil. Adres üzerinden haritada açabilirsiniz.
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>
