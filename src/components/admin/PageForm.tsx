@@ -42,7 +42,7 @@ export default function PageForm() {
       if (json.error.fields) setFields(json.error.fields);
       return;
     }
-    window.location.href = `/admin/pages/${json.data.page.slug}`;
+    window.location.href = `/admin/builder/${json.data.page.slug}`;
   }
 
   return (

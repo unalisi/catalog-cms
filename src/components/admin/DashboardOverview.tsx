@@ -44,7 +44,7 @@ export function DashboardOverview({
   const actions = [
     { label: 'Ürün Ekle', href: '/admin/products/new' },
     { label: 'Marka Ekle', href: '/admin/brands/new' },
-    { label: 'Bölüm Düzenle', href: `/admin/pages/${homePageSlug}` },
+    { label: 'Bölüm Düzenle', href: `/admin/builder/${homePageSlug}` },
   ];
 
   return (
@@ -114,7 +114,7 @@ export function DashboardOverview({
           <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <h2 className="text-sm font-semibold text-foreground">Anasayfa Bölüm Durumu</h2>
             <a
-              href={`/admin/pages/${homePageSlug}`}
+              href={`/admin/builder/${homePageSlug}`}
               className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
             >
               Düzenle <ChevronRight className="size-3" />

@@ -35,7 +35,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { href: '/admin/products', label: 'Ürünler', icon: Package },
       { href: '/admin/brands', label: 'Markalar', icon: Tag },
       { href: '/admin/categories', label: 'Kategoriler', icon: FolderTree },
-      { href: '/admin/pages', label: 'Sayfa Bölümleri', icon: FileStack },
+      { href: '/admin/pages', label: 'Sayfalar', icon: FileStack },
       { href: '/admin/blog', label: 'Blog', icon: Newspaper },
       { href: '/admin/media', label: 'Medya', icon: Image },
     ],

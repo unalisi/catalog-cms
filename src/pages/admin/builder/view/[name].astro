@@ -1,0 +1,28 @@
+---
+import BuilderLayout from '../../../../layouts/BuilderLayout.astro';
+import PageBuilder from '../../../../components/admin/PageBuilder';
+import { listAdminPages } from '../../../../server/services/pages';
+
+const name = Astro.params.name;
+const allowed = new Set(['catalog', 'blog']);
+if (!name || !allowed.has(name)) {
+  return Astro.redirect('/admin/builder/home');
+}
+
+const pages = await listAdminPages();
+const previewPath = name === 'catalog' ? '/catalog' : '/blog';
+const title = name === 'catalog' ? 'Katalog' : 'Blog';
+---
+
+<BuilderLayout title={title}>
+  <PageBuilder
+    client:load
+    mode="preview"
+    previewView={name as 'catalog' | 'blog'}
+    previewPath={previewPath}
+    pages={pages.map((p) => ({ slug: p.slug, title: p.title, status: p.status }))}
+    sectionTypes={[]}
+    slug=""
+    initialPage={null}
+  />
+</BuilderLayout>
