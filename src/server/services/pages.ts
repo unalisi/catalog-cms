@@ -5,7 +5,11 @@ import {
   isSectionType,
   sectionDefaults,
   sectionLabels,
+  type SectionType,
 } from '../../lib/sections/registry';
+import { isCorePageSlug } from '../../lib/pages/core-pages';
+import { getAllowedSectionTypes, isSectionAllowedOnPage } from '../../lib/pages/page-sections';
+import { ensureCorePages } from './core-pages';
 import {
   pageUpsertSchema,
   sectionCreateSchema,
@@ -64,6 +68,7 @@ export async function getPublishedPage(slug: string) {
 }
 
 export async function listAdminPages() {
+  await ensureCorePages();
   return repo.listPages(getDb());
 }
 
@@ -96,6 +101,9 @@ export async function updateAdminPage(slug: string, input: unknown) {
   const db = getDb();
   const existing = await repo.getPageBySlug(db, slug);
   if (!existing) return { ok: false as const, notFound: true as const };
+  if (isCorePageSlug(existing.slug) && parsed.data.slug !== existing.slug) {
+    return { ok: false as const, fields: { slug: 'Temel sayfa slug’ı değiştirilemez' } };
+  }
   if (await repo.isPageSlugTaken(db, parsed.data.slug, existing.id)) {
     return { ok: false as const, fields: { slug: 'Bu slug zaten kullanılıyor' } };
   }
@@ -105,7 +113,6 @@ export async function updateAdminPage(slug: string, input: unknown) {
   const page = await repo.updatePage(db, existing.id, { ...rest, seoId });
   if (!page) return { ok: false as const, notFound: true as const };
   if (existing.slug !== page.slug && existing.slug !== 'home') {
-    // Non-home public routes not yet exposed; still record for future
     await seoRepo.upsertRedirect(db, {
       fromPath: `/${existing.slug}`,
       toPath: page.slug === 'home' ? '/' : `/${page.slug}`,
@@ -120,8 +127,8 @@ export async function removeAdminPage(slug: string) {
   const db = getDb();
   const existing = await repo.getPageBySlug(db, slug);
   if (!existing) return { ok: false as const, notFound: true as const };
-  if (existing.slug === 'home') {
-    return { ok: false as const, fields: { _form: 'Ana sayfa silinemez' } };
+  if (existing.slug === 'home' || isCorePageSlug(existing.slug)) {
+    return { ok: false as const, fields: { _form: 'Temel sayfalar silinemez' } };
   }
   const deleted = await repo.deletePage(db, existing.id);
   if (!deleted) return { ok: false as const, notFound: true as const };
@@ -135,6 +142,12 @@ export async function addSection(slug: string, input: unknown) {
   const db = getDb();
   const page = await repo.getPageBySlug(db, slug);
   if (!page) return { ok: false as const, notFound: true as const };
+  if (!isSectionAllowedOnPage(page.slug, parsed.data.type)) {
+    return {
+      ok: false as const,
+      fields: { type: 'Bu section tipi bu sayfada kullanılamaz' },
+    };
+  }
   const configJson = JSON.stringify(sectionDefaults[parsed.data.type]);
   const section = await repo.createSection(db, {
     pageId: page.id,
@@ -201,6 +214,11 @@ export async function reorderPageSections(slug: string, input: unknown) {
   return { ok: true as const, data: sections };
 }
 
-export function listSectionTypeOptions() {
-  return Object.entries(sectionLabels).map(([type, label]) => ({ type, label }));
+export function listSectionTypeOptions(slug?: string) {
+  const allowed = slug
+    ? new Set<string>(getAllowedSectionTypes(slug))
+    : null;
+  return (Object.entries(sectionLabels) as [SectionType, string][])
+    .filter(([type]) => (allowed ? allowed.has(type) : true))
+    .map(([type, label]) => ({ type, label }));
 }

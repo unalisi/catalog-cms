@@ -9,7 +9,7 @@ export const GET: APIRoute = async ({ params }) => {
   if (!slug) return jsonErr('bad_request', 'slug gerekli', 400);
   const page = await pagesService.getAdminPage(slug);
   if (!page) return jsonErr('not_found', 'Sayfa bulunamadı', 404);
-  return jsonOk({ page, sectionTypes: pagesService.listSectionTypeOptions() });
+  return jsonOk({ page, sectionTypes: pagesService.listSectionTypeOptions(slug) });
 };
 
 export const PATCH: APIRoute = async ({ params, request }) => {
