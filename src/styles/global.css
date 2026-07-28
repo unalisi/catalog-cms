@@ -6,10 +6,12 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -40,39 +42,41 @@
 }
 
 :root {
+  /* Concept: white base, black ink, signal yellow #FFD700 */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.18 0 0);
-  --primary: oklch(0.88 0.18 95);
-  --primary-foreground: oklch(0.18 0 0);
-  --accent: oklch(0.18 0 0);
+  --foreground: oklch(0.16 0 0);
+  --primary: #ffd700;
+  --primary-foreground: oklch(0.16 0 0);
+  --primary-soft: color-mix(in oklab, #ffd700 22%, white);
+  --accent: oklch(0.16 0 0);
   --accent-foreground: oklch(0.99 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.52 0 0);
-  --border: oklch(0.9 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.48 0 0);
+  --faint: oklch(0.68 0 0);
+  --border: oklch(0.915 0 0);
   --input: oklch(0.88 0 0);
-  --ring: oklch(0.88 0.18 95);
-  --success: oklch(0.62 0.17 145);
-  --warning: oklch(0.75 0.15 70);
+  --ring: #ffd700;
+  --success: oklch(0.55 0.12 155);
+  --warning: oklch(0.58 0.14 55);
   --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.99 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0 0);
+  --card-foreground: oklch(0.16 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0 0);
-  --secondary: oklch(0.96 0 0);
-  --secondary-foreground: oklch(0.18 0 0);
+  --popover-foreground: oklch(0.16 0 0);
+  --secondary: oklch(0.965 0 0);
+  --secondary-foreground: oklch(0.16 0 0);
   --radius: 0.5rem;
   --radius-sm: 0.25rem;
   --radius-lg: 0.75rem;
-  /* Sidebar = design tokens (light only) */
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.18 0 0);
-  --sidebar-primary: oklch(0.88 0.18 95);
-  --sidebar-primary-foreground: oklch(0.18 0 0);
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.18 0 0);
-  --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.88 0.18 95);
+  --sidebar: oklch(0.992 0 0);
+  --sidebar-foreground: oklch(0.16 0 0);
+  --sidebar-primary: #ffd700;
+  --sidebar-primary-foreground: oklch(0.16 0 0);
+  --sidebar-accent: color-mix(in oklab, #ffd700 22%, white);
+  --sidebar-accent-foreground: oklch(0.16 0 0);
+  --sidebar-border: oklch(0.915 0 0);
+  --sidebar-ring: #ffd700;
 }
 
 *,
@@ -111,6 +115,15 @@ a {
 :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+/* Command palette: no yellow focus ring on search field / dialog shell */
+[data-slot="command-input"]:focus,
+[data-slot="command-input"]:focus-visible,
+[data-slot="dialog-content"]:focus,
+[data-slot="dialog-content"]:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
