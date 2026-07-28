@@ -12,6 +12,12 @@ import MapContact from './MapContact.astro';
 import Faq from './Faq.astro';
 import RichText from './RichText.astro';
 import Gallery from './Gallery.astro';
+import WhatsAppFloatSection from './WhatsAppFloat.astro';
+import ContactLayout from './ContactLayout.astro';
+import ProductList from './ProductList.astro';
+import BlogList from './BlogList.astro';
+import RelatedProducts from './RelatedProducts.astro';
+import RelatedPosts from './RelatedPosts.astro';
 import {
   isSectionType,
   parseConfigJson,
@@ -65,9 +71,26 @@ function typedConfig<T extends SectionType>(type: T, configJson: string): Sectio
       case 'faq':
         return <Faq config={typedConfig('faq', section.configJson)} />;
       case 'rich-text':
-        return <RichText config={typedConfig('rich-text', section.configJson)} />;
+        return (
+          <RichText
+            sectionId={section.id}
+            config={typedConfig('rich-text', section.configJson)}
+          />
+        );
       case 'gallery':
         return <Gallery config={typedConfig('gallery', section.configJson)} />;
+      case 'whatsapp-float':
+        return <WhatsAppFloatSection config={typedConfig('whatsapp-float', section.configJson)} />;
+      case 'contact-layout':
+        return <ContactLayout config={typedConfig('contact-layout', section.configJson)} />;
+      case 'product-list':
+        return <ProductList config={typedConfig('product-list', section.configJson)} />;
+      case 'blog-list':
+        return <BlogList config={typedConfig('blog-list', section.configJson)} />;
+      case 'related-products':
+        return <RelatedProducts config={typedConfig('related-products', section.configJson)} />;
+      case 'related-posts':
+        return <RelatedPosts config={typedConfig('related-posts', section.configJson)} />;
       default:
         return null;
     }

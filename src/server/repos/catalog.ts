@@ -354,8 +354,6 @@ export async function listSitemapEntries(db: Db) {
     const seo = row.seoId ? seoById.get(row.seoId) : undefined;
     if (seo?.noindex) continue;
     const loc = row.slug === 'home' ? '/' : `/${row.slug}`;
-    // Only home is publicly routed in FAZ 4/5
-    if (row.slug !== 'home') continue;
     urls.unshift({ loc, lastmod: row.updatedAt });
   }
 

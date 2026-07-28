@@ -7,7 +7,9 @@ import {
   stringifyJsonLd,
 } from '../../lib/seo/jsonld';
 import { getPublicPostBySlug } from '../../server/services/posts';
+import { getPublishedPage } from '../../server/services/pages';
 import { getSeoDefaults } from '../../server/services/seo';
+import SectionRenderer from '../../components/sections/SectionRenderer.astro';
 
 export const prerender = false;
 
@@ -15,7 +17,10 @@ const { slug } = Astro.params;
 const result = slug ? await getPublicPostBySlug(slug) : { data: null, status: 'MISS' as const };
 const post = result.data;
 const status = result.status;
-const { data: defaults } = await getSeoDefaults();
+const [{ data: defaults }, { data: templatePage }] = await Promise.all([
+  getSeoDefaults(),
+  getPublishedPage('yazi-sablon'),
+]);
 const seoDefaults = defaults!;
 
 if (!post) {
@@ -86,6 +91,7 @@ if (post) {
         </p>
       </section>
     ) : (
+      <>
       <article class="mx-auto max-w-3xl px-4 py-12 md:px-6 md:py-16">
         <p class="text-xs uppercase tracking-wide text-muted-foreground">
           <a href="/blog" class="hover:text-foreground">
@@ -127,6 +133,10 @@ if (post) {
           set:html={post.content}
         />
       </article>
+      {templatePage && templatePage.sections.length > 0 && (
+        <SectionRenderer sections={templatePage.sections} />
+      )}
+      </>
     )
   }
 </PublicLayout>

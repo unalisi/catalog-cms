@@ -1,33 +1,28 @@
 ---
 import PublicLayout from '../../layouts/PublicLayout.astro';
-import ProductListItem from '../../components/public/ProductListItem.astro';
+import SectionRenderer from '../../components/sections/SectionRenderer.astro';
+import ProductCatalog from '../../components/public/ProductCatalog.astro';
 import { buildPageSeo } from '../../lib/seo/meta';
-import { getProductList, getCategories, getBrands } from '../../server/services/catalog';
+import { getPublishedPage } from '../../server/services/pages';
 import { getSeoDefaults } from '../../server/services/seo';
 
 const origin = Astro.url.origin;
-const page = Math.max(1, Number(Astro.url.searchParams.get('page') ?? '1') || 1);
-const brandSlug = Astro.url.searchParams.get('brand') ?? undefined;
-const categorySlug = Astro.url.searchParams.get('category') ?? undefined;
-
-const [{ data: list, status }, { data: categories }, { data: brands }, { data: defaults }] =
-  await Promise.all([
-    getProductList({ page, brandSlug, categorySlug }),
-    getCategories(),
-    getBrands(),
-    getSeoDefaults(),
-  ]);
-
-const items = list?.items ?? [];
-const total = list?.total ?? 0;
-const pageSize = 12;
-const totalPages = Math.max(1, Math.ceil(total / pageSize));
+const [{ data: page, status }, { data: defaults }] = await Promise.all([
+  getPublishedPage('catalog'),
+  getSeoDefaults(),
+]);
 
 const seo = buildPageSeo({
-  title: 'Katalog',
-  description: 'Yayınlanan ürünlerin listesi',
+  title: page?.seo?.title || page?.title || 'Katalog',
+  description: page?.seo?.description || 'Yayınlanan ürünlerin listesi',
   path: '/catalog',
   origin,
+  seoTitle: page?.seo?.title,
+  seoDescription: page?.seo?.description,
+  canonical: page?.seo?.canonical,
+  noindex: page?.seo?.noindex,
+  robotsExtra: page?.seo?.robotsExtra,
+  ogImageUrl: page?.seo?.ogImageUrl,
   defaults: defaults!,
 });
 
@@ -36,126 +31,11 @@ Astro.response.headers.set('X-Cache', status);
 ---
 
 <PublicLayout seo={seo} cacheStatus={status}>
-  <section class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
-    <div class="flex flex-col gap-3">
-      <h1 class="font-display text-3xl font-bold">Katalog</h1>
-      <p class="text-muted-foreground">{total} ürün · cache {status}</p>
-    </div>
-
-    <div class="mt-8 flex flex-col gap-8 lg:flex-row">
-      <aside class="w-full shrink-0 lg:w-56">
-        <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Filtreler
-        </h2>
-        <div class="mt-4 flex flex-col gap-6">
-          <div>
-            <p class="mb-2 text-sm font-medium">Kategori</p>
-            <ul class="flex flex-col gap-1 text-sm">
-              <li>
-                <a
-                  href="/catalog"
-                  class:list={[
-                    'hover:text-foreground',
-                    !categorySlug ? 'font-semibold text-foreground' : 'text-muted-foreground',
-                  ]}
-                >
-                  Tümü
-                </a>
-              </li>
-              {
-                (categories ?? []).map((cat) => (
-                  <li>
-                    <a
-                      href={`/catalog?category=${cat.slug}`}
-                      class:list={[
-                        'hover:text-foreground',
-                        categorySlug === cat.slug
-                          ? 'font-semibold text-foreground'
-                          : 'text-muted-foreground',
-                      ]}
-                    >
-                      {cat.name}
-                    </a>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
-          <div>
-            <p class="mb-2 text-sm font-medium">Marka</p>
-            <ul class="flex flex-col gap-1 text-sm">
-              {
-                (brands ?? []).map((brand) => (
-                  <li>
-                    <a
-                      href={`/catalog?brand=${brand.slug}`}
-                      class:list={[
-                        'hover:text-foreground',
-                        brandSlug === brand.slug
-                          ? 'font-semibold text-foreground'
-                          : 'text-muted-foreground',
-                      ]}
-                    >
-                      {brand.name}
-                    </a>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
-        </div>
-      </aside>
-
-      <div class="min-w-0 flex-1">
-        {
-          items.length === 0 ? (
-            <div class="rounded-md border border-dashed border-border bg-muted/30 px-6 py-16 text-center">
-              <p class="font-display text-lg font-semibold">Ürün bulunamadı</p>
-              <p class="mt-2 text-sm text-muted-foreground">
-                Filtreleri temizleyip tekrar deneyin.
-              </p>
-              <a
-                href="/catalog"
-                class="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-              >
-                Tüm ürünler
-              </a>
-            </div>
-          ) : (
-            <div class="divide-y divide-border border-t border-border">
-              {items.map((product) => (
-                <ProductListItem product={product} />
-              ))}
-            </div>
-          )
-        }
-
-        {
-          totalPages > 1 && (
-            <nav aria-label="Sayfalama" class="mt-10 flex items-center justify-center gap-3">
-              {page > 1 && (
-                <a
-                  href={`/catalog?page=${page - 1}${categorySlug ? `&category=${categorySlug}` : ''}${brandSlug ? `&brand=${brandSlug}` : ''}`}
-                  class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
-                >
-                  Önceki
-                </a>
-              )}
-              <span class="text-sm text-muted-foreground">
-                {page} / {totalPages}
-              </span>
-              {page < totalPages && (
-                <a
-                  href={`/catalog?page=${page + 1}${categorySlug ? `&category=${categorySlug}` : ''}${brandSlug ? `&brand=${brandSlug}` : ''}`}
-                  class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
-                >
-                  Sonraki
-                </a>
-              )}
-            </nav>
-          )
-        }
-      </div>
-    </div>
-  </section>
+  {
+    page && page.sections.length > 0 ? (
+      <SectionRenderer sections={page.sections} />
+    ) : (
+      <ProductCatalog title="Katalog" />
+    )
+  }
 </PublicLayout>

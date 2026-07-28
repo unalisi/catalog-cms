@@ -1,0 +1,55 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import SectionRenderer from '../components/sections/SectionRenderer.astro';
+import { buildPageSeo } from '../lib/seo/meta';
+import { isReservedPageSlug } from '../lib/pages/reserved-slugs';
+import { getPublishedPage } from '../server/services/pages';
+import { getSeoDefaults } from '../server/services/seo';
+
+const slug = Astro.params.slug;
+if (!slug || isReservedPageSlug(slug)) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+if (slug === 'home') {
+  return Astro.redirect('/');
+}
+if (slug === 'catalog') {
+  return Astro.redirect('/catalog');
+}
+if (slug === 'blog') {
+  return Astro.redirect('/blog');
+}
+
+const origin = Astro.url.origin;
+const [{ data: page, status }, { data: defaults }] = await Promise.all([
+  getPublishedPage(slug),
+  getSeoDefaults(),
+]);
+const seoDefaults = defaults!;
+
+if (!page) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const seo = buildPageSeo({
+  title: page.title,
+  description: seoDefaults.defaultDescription,
+  path: `/${page.slug}`,
+  origin,
+  seoTitle: page.seo?.title,
+  seoDescription: page.seo?.description,
+  canonical: page.seo?.canonical,
+  noindex: page.seo?.noindex,
+  robotsExtra: page.seo?.robotsExtra,
+  ogImageUrl: page.seo?.ogImageUrl,
+  defaults: seoDefaults,
+  isHome: false,
+});
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+Astro.response.headers.set('X-Cache', status);
+---
+
+<PublicLayout seo={seo} cacheStatus={status}>
+  <SectionRenderer sections={page.sections} />
+</PublicLayout>

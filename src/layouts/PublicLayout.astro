@@ -23,11 +23,12 @@ const {
 
 const { data: site } = await getCachedSiteSettings();
 const siteName = site?.name ?? 'Catalog CMS';
-const nav = site?.navigation?.length
+  const nav = site?.navigation?.length
   ? site.navigation
   : [
       { label: 'Katalog', href: '/catalog' },
       { label: 'Blog', href: '/blog' },
+      { label: 'İletişim', href: '/iletisim' },
     ];
 const favicon = site?.faviconUrl || '/favicon.svg';
 const logoUrl = site?.logoUrl;

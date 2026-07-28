@@ -8,7 +8,9 @@ import {
   stringifyJsonLd,
 } from '../../lib/seo/jsonld';
 import { getProductBySlug } from '../../server/services/catalog';
+import { getPublishedPage } from '../../server/services/pages';
 import { getSeoDefaults } from '../../server/services/seo';
+import SectionRenderer from '../../components/sections/SectionRenderer.astro';
 
 export const prerender = false;
 
@@ -16,7 +18,10 @@ const { slug } = Astro.params;
 const result = slug ? await getProductBySlug(slug) : { data: null, status: 'MISS' as const };
 const product = result.data;
 const status = result.status;
-const { data: defaults } = await getSeoDefaults();
+const [{ data: defaults }, { data: templatePage }] = await Promise.all([
+  getSeoDefaults(),
+  getPublishedPage('urun-sablon'),
+]);
 const seoDefaults = defaults!;
 
 if (!product) {
@@ -93,6 +98,7 @@ if (product) {
         </a>
       </section>
     ) : (
+      <>
       <article class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
         <nav aria-label="Breadcrumb" class="mb-6 text-sm text-muted-foreground">
           <ol class="flex flex-wrap gap-2">
@@ -183,6 +189,10 @@ if (product) {
 
         <p class="mt-10 text-xs text-muted-foreground">Cache: {status}</p>
       </article>
+      {templatePage && templatePage.sections.length > 0 && (
+        <SectionRenderer sections={templatePage.sections} />
+      )}
+    </>
     )
   }
 </PublicLayout>
