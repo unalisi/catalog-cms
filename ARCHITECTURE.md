@@ -251,7 +251,9 @@ Public sayfada gereksiz React mount edilmez. Admin’de React yoğunlaşır.
 ### 5.1 Şema (özet — bağlayıcı alanlar)
 
 ```
-users(id, email UNIQUE, password_hash, role, created_at, updated_at)
+users(id, email UNIQUE, password_hash, role_id→roles, must_change_password, created_at, updated_at)
+roles(id, name, slug UNIQUE, description, is_system, created_at, updated_at)
+role_permissions(role_id→roles, permission)  -- PK(role_id, permission)
 
 seo_meta(id, title, description, canonical, og_image_media_id→media,
          noindex INTEGER, robots_extra, created_at, updated_at)
@@ -439,14 +441,30 @@ type ApiErr = { ok: false; error: { code: string; message: string; fields?: Reco
 ## 9. Kimlik Doğrulama & Güvenlik
 
 - Admin: oturum tabanlı (Astro Sessions + `SESSION` KV); cookie `HttpOnly`, `Secure`, `SameSite=Lax`
-- Middleware: `/admin` (login hariç) ve `/api/admin` için sunucu guard
-- Rol: başlangıç `admin`; şema `role` alanıyla genişlemeye açık
+- Middleware: `/admin` (login hariç) ve `/api/admin` için sunucu guard + **RBAC path → permission** enforce
+- **RBAC (modül bazlı):** `roles` + `role_permissions`; permission anahtarları kod registry (`src/lib/auth/permissions.ts`)
+  - Örnekler: `dashboard.access`, `products.manage`, `blog.manage`, `pages.manage`, `users.manage`, …
+  - Seed sistem roller: Admin (tümü), Ürün Düzenleyici, Blog Yazarı, Site Tasarımcısı
+  - Custom rol: birden fazla permission atanabilir; Admin rolü silinemez / yetkileri kilitli
+  - UI: `/admin/users` — Kullanıcılar & Roller; nav permission’a göre filtrelenir
+- Bootstrap: `admin@catalog.local` + `ADMIN_BOOTSTRAP_PASSWORD` (yoksa `ChangeMeNow!`) → Admin rolü
 - Parola: Web Crypto / edge-uyumlu KDF (ör. PBKDF2); düz metin yok
+- **Hoş geldin e-postası (Resend):** yeni kullanıcı oluşturunca rol + yetkiler + geçici parola maili (`RESEND_API_KEY`, `CONTACT_FROM_EMAIL`)
+- **Zorunlu parola değişimi:** `users.must_change_password`; UI kullanıcıları `true` ile oluşur; ilk girişte kapatılamaz modal + middleware yalnızca `change-password` / `logout` API’sine izin verir
 - CSRF: same-origin check + mutasyonlarda origin/referer doğrulama (veya double-submit token)
 - Rate limit: login / import — KV sayaç (`rl:login:{ip}`, TTL 60s)
 - Security headers middleware: `X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy` (admin+public ayrı politika)
 - Secret’lar repoda yok; `.dev.vars` gitignore
 
+API (RBAC):
+| Method / path | Açıklama |
+|---------------|----------|
+| `GET/POST /api/admin/users` | Kullanıcı listesi / oluştur (+ welcome mail) |
+| `PATCH/DELETE /api/admin/users/[id]` | Güncelle / sil (+ rol değişince bilgilendirme maili) |
+| `GET/POST /api/admin/roles` | Rol listesi / oluştur |
+| `PATCH/DELETE /api/admin/roles/[id]` | Güncelle / sil |
+| `GET /api/admin/permissions` | Permission katalogu |
+| `POST /api/admin/auth/change-password` | Zorunlu / isteğe bağlı parola değişimi |
 ---
 
 ## 10. WordPress / Katalog Import (FAZ 7)
