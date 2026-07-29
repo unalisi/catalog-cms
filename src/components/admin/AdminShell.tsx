@@ -4,6 +4,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/admin/AppSidebar';
 import { TopNav, type AdminBreadcrumb, type AdminUser } from '@/components/admin/TopNav';
 import { ToastFromQuery } from '@/components/admin/ToastFromQuery';
+import ForcePasswordChangeModal from '@/components/admin/ForcePasswordChangeModal';
 
 type Props = {
   children?: ReactNode;
@@ -27,7 +28,7 @@ export function AdminShell({
   return (
     <TooltipProvider delayDuration={200}>
       <SidebarProvider>
-        <AppSidebar pathname={pathname} />
+        <AppSidebar pathname={pathname} permissions={user?.permissions ?? []} />
         <SidebarInset className="bg-background">
           <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background px-4 sm:px-6">
             <TopNav breadcrumbs={crumbs} user={user} />
@@ -37,6 +38,7 @@ export function AdminShell({
             {children}
           </main>
         </SidebarInset>
+        {user?.mustChangePassword ? <ForcePasswordChangeModal /> : null}
       </SidebarProvider>
     </TooltipProvider>
   );
