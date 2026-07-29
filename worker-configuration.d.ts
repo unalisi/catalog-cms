@@ -11,6 +11,8 @@ interface __BaseEnv_Env {
 	ASSETS: Fetcher;
 	SESSION_SECRET: string;
 	ADMIN_BOOTSTRAP_PASSWORD: string;
+	RESEND_API_KEY: string;
+	CONTACT_FROM_EMAIL: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
@@ -23,7 +25,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "SESSION_SECRET" | "ADMIN_BOOTSTRAP_PASSWORD">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "SESSION_SECRET" | "ADMIN_BOOTSTRAP_PASSWORD" | "RESEND_API_KEY" | "CONTACT_FROM_EMAIL">> {}
 }
 
 // Begin runtime types

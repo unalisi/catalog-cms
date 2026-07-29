@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { getSessionUser, isSameOrigin } from './server/auth/session';
+import { userCanAccessPath } from './server/auth/rbac';
 import { findRedirect } from './server/services/seo';
 import { adminCsp, publicCsp } from './lib/security/csp';
 import { clientIp, logEvent, newRequestId, rateLimit } from './lib/security/rate-limit';
@@ -28,7 +29,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isAdminArea = isProtectedAdminPath(pathname);
   const ip = clientIp(context.request, context.clientAddress || 'unknown');
 
-  // Public redirects (skip admin + api + assets + media)
   if (
     !isAdminArea &&
     !pathname.startsWith('/api/') &&
@@ -72,6 +72,39 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
     context.locals.user = user;
 
+    // Forced password change: only allow change-password + logout APIs;
+    // HTML routes redirect to /admin so the blocking modal can render.
+    if (user.mustChangePassword) {
+      const isChangePasswordApi = pathname === '/api/admin/auth/change-password';
+      const isLogoutApi = pathname === '/api/admin/auth/logout';
+      if (pathname.startsWith('/api/admin')) {
+        if (!isChangePasswordApi && !isLogoutApi) {
+          return Response.json(
+            {
+              ok: false,
+              error: {
+                code: 'password_change_required',
+                message: 'Devam etmeden önce parolanızı değiştirmelisiniz',
+              },
+            },
+            { status: 403, headers: { 'X-Request-Id': requestId } },
+          );
+        }
+      } else if (pathname.startsWith('/admin') && pathname !== '/admin') {
+        return context.redirect('/admin');
+      }
+    } else if (!userCanAccessPath(user, pathname)) {
+      if (pathname.startsWith('/api/admin')) {
+        return Response.json(
+          { ok: false, error: { code: 'forbidden', message: 'Bu işlem için yetkiniz yok' } },
+          { status: 403, headers: { 'X-Request-Id': requestId } },
+        );
+      }
+      const dest = new URL('/admin', context.url);
+      dest.searchParams.set('forbidden', '1');
+      return context.redirect(dest.toString());
+    }
+
     if (
       pathname.startsWith('/api/admin') &&
       method !== 'GET' &&
@@ -90,7 +123,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     headers.set(key, value);
   }
-  headers.set('Content-Security-Policy', isAdminArea || pathname.startsWith('/admin') ? adminCsp() : publicCsp());
+  headers.set(
+    'Content-Security-Policy',
+    isAdminArea || pathname.startsWith('/admin') ? adminCsp() : publicCsp(),
+  );
   headers.set('X-Request-Id', requestId);
   if (isAdminArea || pathname.startsWith('/admin')) {
     headers.set('Cache-Control', 'private, no-store');

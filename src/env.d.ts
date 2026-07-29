@@ -6,7 +6,11 @@ declare namespace App {
     user?: {
       id: string;
       email: string;
-      role: 'admin' | 'editor';
+      roleId: string;
+      roleSlug: string;
+      roleName: string;
+      permissions: string[];
+      mustChangePassword: boolean;
     };
   }
 }
