@@ -208,7 +208,7 @@ export default function SettingsForm() {
             <div className="flex gap-2">
               <button
                 type="button"
-                className="rounded-md border border-border px-3 py-1.5 hover:bg-muted"
+                className="rounded-md border border-border px-3 py-2 hover:bg-muted"
                 onClick={() => setPicker('logo')}
               >
                 Seç
@@ -232,7 +232,7 @@ export default function SettingsForm() {
             <div className="flex gap-2">
               <button
                 type="button"
-                className="rounded-md border border-border px-3 py-1.5 hover:bg-muted"
+                className="rounded-md border border-border px-3 py-2 hover:bg-muted"
                 onClick={() => setPicker('favicon')}
               >
                 Seç
@@ -437,7 +437,7 @@ export default function SettingsForm() {
       <button
         type="submit"
         disabled={saving}
-        className="w-fit rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+        className="w-fit rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
       >
         {saving ? 'Kaydediliyor…' : 'Kaydet'}
       </button>

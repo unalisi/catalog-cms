@@ -254,7 +254,7 @@ export default function ImportWizard() {
           </label>
           <button
             type="button"
-            className="w-fit rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            className="w-fit rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
             onClick={() => setStep(source === 'csv' ? 2 : 3)}
             disabled={!content.trim()}
           >
@@ -315,7 +315,7 @@ export default function ImportWizard() {
             </button>
             <button
               type="button"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
               disabled={busy}
               onClick={() => void runDryRun()}
             >
@@ -387,7 +387,7 @@ export default function ImportWizard() {
             {source !== 'csv' && !jobId && (
               <button
                 type="button"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
                 disabled={busy}
                 onClick={() => void runDryRun()}
               >
@@ -397,7 +397,7 @@ export default function ImportWizard() {
             {jobId && (
               <button
                 type="button"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+                className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
                 disabled={busy || !summary || summary.create + summary.update === 0}
                 onClick={() => void runApply()}
               >

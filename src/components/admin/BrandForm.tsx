@@ -152,11 +152,11 @@ export default function BrandForm({ mode, brandId, initial }: BrandFormProps) {
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+          className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
         >
           {saving ? 'Kaydediliyor…' : 'Kaydet'}
         </button>
-        <a href="/admin/brands" className="rounded-md border border-border px-4 py-2 text-sm hover:bg-muted">
+        <a href="/admin/brands" className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted">
           İptal
         </a>
       </div>

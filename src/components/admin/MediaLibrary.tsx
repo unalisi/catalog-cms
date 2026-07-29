@@ -69,9 +69,10 @@ export default function MediaLibrary() {
         </button>
         <button
           type="button"
-          className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           onClick={() => setPickerOpen(true)}
         >
+          <span aria-hidden="true">+</span>
           Yükle
         </button>
       </div>

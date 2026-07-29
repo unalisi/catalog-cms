@@ -298,7 +298,7 @@ export default function ProductForm({
         <div className="flex gap-3 text-sm">
           <button
             type="button"
-            className="rounded-md border border-border px-3 py-1.5 hover:bg-muted"
+            className="rounded-md border border-border px-3 py-2 hover:bg-muted"
             onClick={() => setPickerOpen(true)}
           >
             Medya seç
@@ -344,13 +344,13 @@ export default function ProductForm({
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
           {saving ? 'Kaydediliyor…' : mode === 'create' ? 'Oluştur' : 'Kaydet'}
         </button>
         <a
           href="/admin/products"
-          className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
+          className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
         >
           Geri
         </a>

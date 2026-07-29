@@ -127,7 +127,7 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Medya se
               placeholder="Görsel açıklaması"
             />
           </label>
-          <label className="inline-flex cursor-pointer items-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
+          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted">
             {uploading ? 'Yükleniyor…' : 'Dosya seç'}
             <input
               type="file"

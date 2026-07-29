@@ -456,7 +456,7 @@ export default function PageBuilder({
         <button
           type="button"
           onClick={() => navigateTo('/admin/pages')}
-          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           <span className="hidden sm:inline">Çıkış</span>
@@ -491,7 +491,7 @@ export default function PageBuilder({
         <button
           type="button"
           onClick={openCreateDialog}
-          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1.5 text-sm font-medium hover:bg-muted"
+          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
         >
           <Plus className="size-4" />
           <span className="hidden sm:inline">Yeni sayfa</span>
@@ -548,7 +548,7 @@ export default function PageBuilder({
           </div>
           <button
             type="button"
-            className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+            className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
             onClick={refreshPreview}
           >
             Yenile
@@ -558,7 +558,7 @@ export default function PageBuilder({
               type="button"
               disabled={saving || !dirty}
               onClick={() => void saveAll()}
-              className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
               Kaydet
             </button>
@@ -608,7 +608,7 @@ export default function PageBuilder({
                   type="button"
                   disabled={saving}
                   onClick={() => void addSection()}
-                  className="rounded-md border border-border px-2.5 py-1.5 text-sm font-medium hover:bg-muted"
+                  className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
                 >
                   Ekle
                 </button>
@@ -694,7 +694,7 @@ export default function PageBuilder({
                   type="button"
                   disabled={saving || !sectionDirty}
                   onClick={() => void saveSectionConfig().then((ok) => ok && refreshPreview())}
-                  className="rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                  className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                 >
                   Kaydet
                 </button>
