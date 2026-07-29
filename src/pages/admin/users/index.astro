@@ -1,0 +1,48 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import UsersRolesAdmin from '../../../components/admin/UsersRolesAdmin';
+import { ensureSystemRoles } from '../../../server/auth/session';
+import {
+  listAdminRoles,
+  listAdminUsers,
+  listPermissionCatalog,
+} from '../../../server/services/rbac-admin';
+
+export const prerender = false;
+
+let initialUsers: Awaited<ReturnType<typeof listAdminUsers>> = [];
+let initialRoles: Awaited<ReturnType<typeof listAdminRoles>> = [];
+let initialPermissions = listPermissionCatalog();
+
+try {
+  await ensureSystemRoles();
+  const [users, roles] = await Promise.all([listAdminUsers(), listAdminRoles()]);
+  initialUsers = users;
+  initialRoles = roles;
+} catch (err) {
+  console.error('[admin/users] failed to load initial data', err);
+}
+---
+
+<AdminLayout
+  title="Kullanıcılar & Roller"
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { label: 'Kullanıcılar & Roller' },
+  ]}
+>
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">Kullanıcılar & Roller</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Modül yetkileriyle kullanıcı ve özel roller yönetin.
+      </p>
+    </div>
+    <UsersRolesAdmin
+      client:load
+      initialUsers={initialUsers}
+      initialRoles={initialRoles}
+      initialPermissions={initialPermissions}
+    />
+  </div>
+</AdminLayout>

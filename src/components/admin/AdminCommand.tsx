@@ -20,14 +20,18 @@ type ProductHit = {
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  permissions?: string[];
 };
 
-export function AdminCommand({ open, onOpenChange }: Props) {
+export function AdminCommand({ open, onOpenChange, permissions = [] }: Props) {
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<ProductHit[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const navItems = useMemo(() => adminNav, []);
+  const navItems = useMemo(
+    () => adminNav.filter((item) => permissions.includes(item.permission)),
+    [permissions],
+  );
 
   useEffect(() => {
     if (!open) {

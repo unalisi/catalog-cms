@@ -1,4 +1,4 @@
-import { adminNavGroups, isNavActive } from '@/components/admin/nav';
+import { filterNavGroups, isNavActive } from '@/components/admin/nav';
 import {
   Sidebar,
   SidebarContent,
@@ -16,9 +16,12 @@ import { cn } from '@/lib/utils';
 
 type Props = {
   pathname: string;
+  permissions?: string[];
 };
 
-export function AppSidebar({ pathname }: Props) {
+export function AppSidebar({ pathname, permissions = [] }: Props) {
+  const groups = filterNavGroups(permissions);
+
   return (
     <Sidebar collapsible="icon" variant="sidebar" className="border-sidebar-border">
       <SidebarHeader className="h-16 justify-center border-b border-sidebar-border px-3">
@@ -40,7 +43,7 @@ export function AppSidebar({ pathname }: Props) {
       </SidebarHeader>
 
       <SidebarContent className="px-1 py-3">
-        {adminNavGroups.map((group) => (
+        {groups.map((group) => (
           <SidebarGroup key={group.id} className="px-2 py-0">
             <SidebarGroupLabel className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-faint">
               {group.label}

@@ -26,7 +26,11 @@ export type AdminBreadcrumb = { href?: string; label: string };
 export type AdminUser = {
   id: string;
   email: string;
-  role: 'admin' | 'editor';
+  roleId: string;
+  roleSlug: string;
+  roleName: string;
+  permissions: string[];
+  mustChangePassword?: boolean;
 };
 
 type Props = {
@@ -164,7 +168,7 @@ export function TopNav({ breadcrumbs, user }: Props) {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium">{user?.email ?? 'Admin'}</span>
-                  <span className="text-xs capitalize text-muted-foreground">{user?.role ?? 'admin'}</span>
+                  <span className="text-xs text-muted-foreground">{user?.roleName ?? '—'}</span>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -184,7 +188,11 @@ export function TopNav({ breadcrumbs, user }: Props) {
         </div>
       </div>
 
-      <AdminCommand open={commandOpen} onOpenChange={setCommandOpen} />
+      <AdminCommand
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        permissions={user?.permissions ?? []}
+      />
     </>
   );
 }
