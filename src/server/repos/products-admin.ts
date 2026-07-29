@@ -1,6 +1,7 @@
 import { and, asc, count, eq, ne } from 'drizzle-orm';
 import {
   brands,
+  media,
   productVariants,
   products,
   type Product,
@@ -8,6 +9,7 @@ import {
 } from '../../../db/schema';
 import type { Db } from '../db';
 import { newId, nowIso } from '../../lib/utils/id';
+import { mediaPublicPath, mediaTransformPath } from '../../lib/media/urls';
 
 export type GridProduct = {
   id: string;
@@ -20,6 +22,7 @@ export type GridProduct = {
   status: Product['status'];
   brandId: string | null;
   brandName: string | null;
+  imageUrl: string | null;
   updatedAt: string;
 };
 
@@ -36,15 +39,32 @@ export async function listProductsForGrid(db: Db): Promise<GridProduct[]> {
       status: products.status,
       brandId: products.brandId,
       brandName: brands.name,
+      mediaKey: media.key,
+      mediaMime: media.mime,
       updatedAt: products.updatedAt,
     })
     .from(products)
     .leftJoin(brands, eq(products.brandId, brands.id))
+    .leftJoin(media, eq(products.primaryMediaId, media.id))
     .orderBy(asc(products.name));
 
   return rows.map((r) => ({
-    ...r,
+    id: r.id,
+    slug: r.slug,
+    sku: r.sku,
+    name: r.name,
+    description: r.description,
+    price: r.price,
+    stock: r.stock,
+    status: r.status,
+    brandId: r.brandId,
     brandName: r.brandName ?? null,
+    imageUrl: r.mediaKey
+      ? r.mediaMime === 'image/svg+xml'
+        ? mediaPublicPath(r.mediaKey)
+        : mediaTransformPath(r.mediaKey, 128)
+      : null,
+    updatedAt: r.updatedAt,
   }));
 }
 

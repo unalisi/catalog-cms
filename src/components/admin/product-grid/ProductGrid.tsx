@@ -298,7 +298,9 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
       if (failedIds.has(row.id)) {
         return { ...(baselineRef.current.find((s) => s.id === row.id) ?? row) };
       }
-      return updatedMap.get(row.id) ? { ...updatedMap.get(row.id)! } : row;
+      const updated = updatedMap.get(row.id);
+      if (!updated) return row;
+      return { ...row, ...updated, imageUrl: row.imageUrl ?? updated.imageUrl ?? null };
     });
     setRows(nextRows);
     baselineRef.current = nextRows.map((r) => ({ ...r }));
@@ -464,8 +466,9 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
         <p className="mt-1 text-sm text-muted-foreground">İlk ürünü ekleyerek grid’i doldurun.</p>
         <a
           href="/admin/products/new"
-          className="mt-4 inline-flex rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+          className="mt-4 inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
         >
+          <span aria-hidden="true">+</span>
           Ürün ekle
         </a>
       </div>
@@ -491,7 +494,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-40"
+            className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40"
             disabled={!active || saving}
             onClick={fillDown}
           >
@@ -499,7 +502,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
           </button>
           <button
             type="button"
-            className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-40"
+            className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40"
             disabled={!active || saving}
             onClick={fillRight}
           >
@@ -507,7 +510,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
           </button>
           <button
             type="button"
-            className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-40"
+            className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40"
             disabled={dirtyCount === 0 || saving}
             onClick={discardDirty}
           >
@@ -515,7 +518,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
           </button>
           <button
             type="button"
-            className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
+            className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
             disabled={dirtyCount === 0 || saving}
             onClick={() => void saveDirty()}
           >
@@ -526,7 +529,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
 
       <div
         ref={parentRef}
-        className="max-h-[min(70vh,40rem)] overflow-auto rounded-md border border-border bg-background"
+        className="max-h-[min(calc(100dvh-8rem),48rem)] overflow-auto rounded-md border border-border bg-background"
         tabIndex={0}
         role="grid"
         aria-rowcount={rows.length}

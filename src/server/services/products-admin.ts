@@ -145,6 +145,7 @@ export async function bulkUpdateProducts(input: unknown) {
         status: product.status,
         brandId: product.brandId,
         brandName,
+        imageUrl: null,
         updatedAt: product.updatedAt,
       });
     } catch (err) {

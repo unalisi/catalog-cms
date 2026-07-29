@@ -11,6 +11,7 @@ export type GridProduct = {
   status: ProductStatus;
   brandId: string | null;
   brandName: string | null;
+  imageUrl?: string | null;
   updatedAt: string;
 };
 
