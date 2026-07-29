@@ -27,8 +27,9 @@ function statusLabel(status: string, publishedAt: string | null) {
       </div>
       <a
         href="/admin/blog/new"
-        class="inline-flex rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+        class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
       >
+        <span aria-hidden="true">+</span>
         Yeni yazı
       </a>
     </div>
@@ -44,42 +45,46 @@ function statusLabel(status: string, publishedAt: string | null) {
           />
         </div>
       ) : (
-        <div class="rounded-lg border border-border bg-background p-4 md:p-6">
-          <div class="overflow-x-auto">
-            <table class="w-full min-w-[48rem] text-left text-sm">
-              <thead class="bg-muted">
-                <tr>
-                  <th class="px-3 py-2 font-medium">Başlık</th>
-                  <th class="px-3 py-2 font-medium">Slug</th>
-                  <th class="px-3 py-2 font-medium">Durum</th>
-                  <th class="px-3 py-2 font-medium">Yayın</th>
-                  <th class="px-3 py-2 font-medium">Etiket</th>
-                  <th class="px-3 py-2 font-medium">İşlem</th>
+        <div class="overflow-x-auto rounded-md border border-border bg-background">
+          <table class="w-full min-w-[48rem] border-collapse text-left text-sm">
+            <thead class="bg-muted text-xs font-medium">
+              <tr>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Başlık</th>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Slug</th>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Durum</th>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Yayın</th>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Etiket</th>
+                <th class="border-b border-border px-3 py-2.5 font-medium">İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {posts.map((post) => (
+                <tr class="bg-background hover:bg-muted/40">
+                  <td class="border-b border-r border-border px-3 py-2 font-medium">{post.title}</td>
+                  <td class="border-b border-r border-border px-3 py-2 font-mono text-muted-foreground">
+                    {post.slug}
+                  </td>
+                  <td class="border-b border-r border-border px-3 py-2">
+                    {statusLabel(post.status, post.publishedAt)}
+                  </td>
+                  <td class="border-b border-r border-border px-3 py-2 text-muted-foreground">
+                    {post.publishedAt ? new Date(post.publishedAt).toLocaleString('tr-TR') : '—'}
+                  </td>
+                  <td class="border-b border-r border-border px-3 py-2 text-muted-foreground">
+                    {post.tags.join(', ') || '—'}
+                  </td>
+                  <td class="border-b border-border px-3 py-2">
+                    <div class="flex items-center gap-3">
+                      <a href={`/admin/blog/${post.id}`} class="hover:underline">
+                        Düzenle
+                      </a>
+                      <DeleteButton client:load endpoint={`/api/admin/posts/${post.id}`} />
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {posts.map((post) => (
-                  <tr class="border-t border-border hover:bg-muted/40">
-                    <td class="px-3 py-2 font-medium">{post.title}</td>
-                    <td class="px-3 py-2 font-mono text-muted-foreground">{post.slug}</td>
-                    <td class="px-3 py-2">{statusLabel(post.status, post.publishedAt)}</td>
-                    <td class="px-3 py-2 text-muted-foreground">
-                      {post.publishedAt ? new Date(post.publishedAt).toLocaleString('tr-TR') : '—'}
-                    </td>
-                    <td class="px-3 py-2 text-muted-foreground">{post.tags.join(', ') || '—'}</td>
-                    <td class="px-3 py-2">
-                      <div class="flex items-center gap-3">
-                        <a href={`/admin/blog/${post.id}`} class="hover:underline">
-                          Düzenle
-                        </a>
-                        <DeleteButton client:load endpoint={`/api/admin/posts/${post.id}`} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       )
     }

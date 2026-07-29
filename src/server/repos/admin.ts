@@ -2,6 +2,7 @@ import { and, asc, count, desc, eq, ne } from 'drizzle-orm';
 import {
   brands,
   categories,
+  media,
   pageSections,
   pages,
   products,
@@ -10,10 +11,33 @@ import {
 } from '../../../db/schema';
 import type { Db } from '../db';
 import { newId, nowIso } from '../../lib/utils/id';
+import { mediaPublicPath, mediaTransformPath } from '../../lib/media/urls';
 import { isSectionType, sectionLabels } from '../../lib/sections/registry';
+
+export type BrandListItem = Brand & { logoUrl: string | null };
 
 export async function listAllBrands(db: Db): Promise<Brand[]> {
   return db.select().from(brands).orderBy(asc(brands.name));
+}
+
+export async function listAllBrandsWithLogos(db: Db): Promise<BrandListItem[]> {
+  const rows = await db
+    .select({
+      brand: brands,
+      mediaKey: media.key,
+      mediaMime: media.mime,
+    })
+    .from(brands)
+    .leftJoin(media, eq(brands.logoMediaId, media.id))
+    .orderBy(asc(brands.name));
+  return rows.map(({ brand, mediaKey, mediaMime }) => ({
+    ...brand,
+    logoUrl: mediaKey
+      ? mediaMime === 'image/svg+xml'
+        ? mediaPublicPath(mediaKey)
+        : mediaTransformPath(mediaKey, 128)
+      : null,
+  }));
 }
 
 export async function getBrandById(db: Db, id: string): Promise<Brand | null> {

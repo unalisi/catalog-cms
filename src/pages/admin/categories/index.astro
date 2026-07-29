@@ -22,8 +22,9 @@ const byId = new Map<string, Category>(categories.map((c) => [c.id, c]));
       </div>
       <a
         href="/admin/categories/new"
-        class="inline-flex rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+        class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
       >
+        <span aria-hidden="true">+</span>
         Yeni kategori
       </a>
     </div>
@@ -39,42 +40,42 @@ const byId = new Map<string, Category>(categories.map((c) => [c.id, c]));
           />
         </div>
       ) : (
-        <div class="rounded-lg border border-border bg-background p-4 md:p-6">
-          <div class="overflow-x-auto">
-            <table class="w-full min-w-[44rem] text-left text-sm">
-              <thead class="bg-muted">
-                <tr>
-                  <th class="px-3 py-2 font-medium">Ad</th>
-                  <th class="px-3 py-2 font-medium">Slug</th>
-                  <th class="px-3 py-2 font-medium">Üst</th>
-                  <th class="px-3 py-2 font-medium">Sıra</th>
-                  <th class="px-3 py-2 font-medium">Durum</th>
-                  <th class="px-3 py-2 font-medium">İşlem</th>
+        <div class="overflow-x-auto rounded-md border border-border bg-background">
+          <table class="w-full min-w-[44rem] border-collapse text-left text-sm">
+            <thead class="bg-muted text-xs font-medium">
+              <tr>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Ad</th>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Slug</th>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Üst</th>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Sıra</th>
+                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Durum</th>
+                <th class="border-b border-border px-3 py-2.5 font-medium">İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map((category) => (
+                <tr class="bg-background hover:bg-muted/40">
+                  <td class="border-b border-r border-border px-3 py-2 font-medium">{category.name}</td>
+                  <td class="border-b border-r border-border px-3 py-2 font-mono text-muted-foreground">
+                    {category.slug}
+                  </td>
+                  <td class="border-b border-r border-border px-3 py-2 text-muted-foreground">
+                    {category.parentId ? (byId.get(category.parentId)?.name ?? '—') : '—'}
+                  </td>
+                  <td class="border-b border-r border-border px-3 py-2 font-mono">{category.position}</td>
+                  <td class="border-b border-r border-border px-3 py-2">{category.status}</td>
+                  <td class="border-b border-border px-3 py-2">
+                    <div class="flex items-center gap-3">
+                      <a href={`/admin/categories/${category.id}`} class="hover:underline">
+                        Düzenle
+                      </a>
+                      <DeleteButton client:load endpoint={`/api/admin/categories/${category.id}`} />
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {categories.map((category) => (
-                  <tr class="border-t border-border hover:bg-muted/40">
-                    <td class="px-3 py-2 font-medium">{category.name}</td>
-                    <td class="px-3 py-2 font-mono text-muted-foreground">{category.slug}</td>
-                    <td class="px-3 py-2 text-muted-foreground">
-                      {category.parentId ? (byId.get(category.parentId)?.name ?? '—') : '—'}
-                    </td>
-                    <td class="px-3 py-2 font-mono">{category.position}</td>
-                    <td class="px-3 py-2">{category.status}</td>
-                    <td class="px-3 py-2">
-                      <div class="flex items-center gap-3">
-                        <a href={`/admin/categories/${category.id}`} class="hover:underline">
-                          Düzenle
-                        </a>
-                        <DeleteButton client:load endpoint={`/api/admin/categories/${category.id}`} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       )
     }
