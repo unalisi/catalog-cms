@@ -16,8 +16,9 @@ const { title, description, actionHref, actionLabel } = Astro.props;
     actionHref && actionLabel && (
       <a
         href={actionHref}
-        class="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        class="mt-6 inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
       >
+        <span aria-hidden="true">+</span>
         {actionLabel}
       </a>
     )
