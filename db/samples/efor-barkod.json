@@ -1,0 +1,187 @@
+{
+  "scrapedAt": "2026-07-30T19:57:35.259Z",
+  "category": {
+    "id": 222,
+    "name": "Barkod Okuyucular",
+    "slug": "barkod-okuyucular",
+    "count": 9
+  },
+  "prefix": "efor-barkod",
+  "count": 9,
+  "published": 8,
+  "archived": 1,
+  "products": [
+    {
+      "sourceId": 7115,
+      "sourceUrl": "https://www.efortelekom.com/urunler/7115/",
+      "name": "Perkon FG1200 Fiyat Gör Barkod Cihazı",
+      "slug": "efor-barkod-7115-perkon-fg1200-fiyat-gor-barkod-cihazi",
+      "sku": "EFOR-BARKOD-01",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Perkon",
+      "categories": [
+        "Barkod Okuyucular",
+        "Fiyat Gör"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/11/perkon-fg1200-fiyat-gor-cihazi.png",
+      "description": "Perkon FG1200 Fiyat Gör Barkod Cihazı Özellikler\n&nbsp;\n\nTeknik Özellikler:\n\n• Boyutlar:140 x 180 x 120 mm\n\n• Ağırlık: 5 kg\n\n• Işık Kaynağı:650 Nm Görünebilir Lazer Diyot (VLD)\n\n• Okuma Derinliği:0 – 200 mm (UPC / EAN %100)\n\n• Tarama Hızı Çift Yönlü:1400 Tarama / sn –\n\n• Tarama Hızı Tek Yönlü:74 Tarama / sn\n\n• Tarama Çizgi Sayısı: 20\n\n• Minimum Bar Genişliği:5 Mil @ PCS %90\n\n• Lazer Sınıfı:CDRH Klas IIa : IEC 60825 Klas 2\n\n• Işık Seviyesi: 4500 Lux\n\n• Barkod Türleri:Bilinen tüm lineer barkod türleri",
+      "incompleteReason": null
+    },
+    {
+      "sourceId": 5944,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5944/",
+      "name": "ZEBRA DS2208 2D KABLOLU BARKOD OKUYUCU",
+      "slug": "efor-barkod-5944-zebra-ds2208-2d-kablolu-barkod-okuyucu",
+      "sku": "EFOR-BARKOD-02",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Zebra",
+      "categories": [
+        "Barkod Okuyucular"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/ZEBRA-DS2208-BARKOD-OKUYUCU-5.png",
+      "description": "ZEBRA DS2208 2D KABLOLU BARKOD OKUYUCU ÖZELLİKLERİ\n\n• Bir boyutlu (1D) ve iki boyutlu-karekod (2D) barkod okuma\n\n• 1 Megapiksel (640×480) görüntü\n\n• Seri, PS/2 ve USB ve bağlantı\n\n• 1.5 metreden betona düşme dayanıklılığı\n\n• Stand ünitesi dahil",
+      "incompleteReason": null
+    },
+    {
+      "sourceId": 5903,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5903/",
+      "name": "RS232 SERİ PORT HABERLEŞMELİ HAT TİPİ BARKOD OKUYUCU NEWLAND ADAPTÖRÜ İLE BİRLİKTE FM 431 PRO",
+      "slug": "efor-barkod-5903-rs232-seri-port-haberlesmeli-hat-tipi-barkod-okuyucu-newland-ad",
+      "sku": "EFOR-BARKOD-03",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "archived",
+      "brand": "Newland",
+      "categories": [
+        "Barkod Okuyucular"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/NEWLAND-FM431-CBL025R-Seri-RJ-KABLO-1.png",
+      "description": "",
+      "incompleteReason": "missing_description"
+    },
+    {
+      "sourceId": 5895,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5895/",
+      "name": "HONEYWELL 1472G 2D KABLOSUZ BARKOD OKUYUCU",
+      "slug": "efor-barkod-5895-honeywell-1472g-2d-kablosuz-barkod-okuyucu",
+      "sku": "EFOR-BARKOD-04",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Honeywell",
+      "categories": [
+        "Barkod Okuyucular"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/HONEYWELL-KABLOSUZ-BARKOD-OKUYUCU-1.png",
+      "description": "HONEYWELL 1472G 2D KABLOSUZ BARKOD OKUYUCU ÖZELLİKLER\n\n• Marka: Honeywell\n\n• Model: 1472G\n\n• Beyaz ışık teknolojisi\n\n• Çözünürlük: 1040 X 720 pixel\n\n• Dayanıklılık: Suya ve toza karşı IP42 standartlarında ve 1.8 Metre düşme dayanıklılığı\n\n• Okuma mesafesi: 400 mm\n\n• Yıpranmış barkodları okuyabilme özelliği\n\n• 30 Metre Haberleşme Mesafesi\n\n• 14 Saat Çalışma Süresi",
+      "incompleteReason": null
+    },
+    {
+      "sourceId": 5886,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5886/",
+      "name": "NEWLAND FM431 FIXED MOUNT HAT TİPİ BARKOD OKUYUCU",
+      "slug": "efor-barkod-5886-newland-fm431-fixed-mount-hat-tipi-barkod-okuyucu",
+      "sku": "EFOR-BARKOD-05",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Newland",
+      "categories": [
+        "Barkod Okuyucular"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/NEWLAND-FM431-HAT-Tipi-BARKOD-OKUYUCU.png",
+      "description": "NEWLAND FM431 FIXED MOUNT HAT TİPİ BARKOD OKUYUCU ÖZELLİKLER\n● 2D Karekod Okuyucu\n\n● 1280 x 800 Piksel CMOS Sensor\n\n● 3 mil çözünürlük\n\n● 56 Gram Ağırlık\n\n● Kolay Monte / Demonte edebilme\n\n● Seri Port ve USB Bağlantı Seçenekleri",
+      "incompleteReason": null
+    },
+    {
+      "sourceId": 5645,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5645/",
+      "name": "NEWLAND FR 80 MASAÜSTÜ BARKOD OKUYUCU",
+      "slug": "efor-barkod-5645-newland-fr-80-masaustu-barkod-okuyucu",
+      "sku": "EFOR-BARKOD-06",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Newland",
+      "categories": [
+        "Barkod Okuyucular"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/NEWLAND-FR80-DESKTOP-BARKOD-OKUYUCU.png",
+      "description": "NEWLAND FR 80 MASAÜSTÜ BARKOD OKUYUCU ÖZELLİKLERİ\nTEKNİK ÖZELLİKLER:\n\n• 2D Karekod Okuyucu\n\n• 1280 x 1080 Piksel CMOS Sensor\n\n• LCD Ekrandan Okuyabilme\n\n• RS-232 ve USB Bağlantı Seçenekleri",
+      "incompleteReason": null
+    },
+    {
+      "sourceId": 5641,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5641/",
+      "name": "NEWLAND BS80 KABLOSUZ BARKOD OKUYUCU (EL TİPİ)",
+      "slug": "efor-barkod-5641-newland-bs80-kablosuz-barkod-okuyucu-el-tipi",
+      "sku": "EFOR-BARKOD-07",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Newland",
+      "categories": [
+        "Barkod Okuyucular"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/NEWLAND-BS80-KABLOSUZ-EL-TiPi-BARKOD-OKUYUCU.png",
+      "description": "NEWLAND BS80 KABLOSUZ BARKOD OKUYUCU (EL TİPİ) ÖZELLİKLERİ\nTEKNİK ÖZELLİKLER:\n● 1D ve 2D Barkod Okuyucu\n\n● Kablosuz (Bluetooth) iletişim\n\n● Max. 50 metre aktarma mesafesi\n\n● 63 gram ağırlık\n\n● Max. 6 veya 11 saat kullanım ömrü\n\n● IP42 Endüstriyel Standartı\n\n● Windows, Android ve iOS Cihazlar ile Uyumlu",
+      "incompleteReason": null
+    },
+    {
+      "sourceId": 5631,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5631/",
+      "name": "NEWLAND HR 23 BT / HR 33 ВТ KABLOSUZ KAREKOD OKUYUCU USB BAĞLANTILI",
+      "slug": "efor-barkod-5631-newland-hr-23-bt-hr-33-kablosuz-karekod-okuyucu-usb-baglantili",
+      "sku": "EFOR-BARKOD-08",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Newland",
+      "categories": [
+        "Barkod Okuyucular"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/NEWLAND-HR23BT-KABLOSUZ-BARKOD-OKUYUCU.png",
+      "description": "NEWLAND HR 23 BT / HR 33 ВТ KABLOSUZ KAREKOD OKUYUCU ÖZELLİKLERİ\n&nbsp;\n\nTEKNİK ÖZELLİKLER:\n\n• 2D Karekod Okuyucu\n\n• 640 x 480 Piksel Imager Sensor\n\n• Kablosuz (Bluetooth) iletişim\n\n• 100 metre aktarma mesafesi\n\n• IP52 Koruma Standardı\n\n• 1,5 Metreden düşmeye dayanıklı",
+      "incompleteReason": null
+    },
+    {
+      "sourceId": 5264,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5264/",
+      "name": "NEWLAND HR 23 / HR 33 KABLOLU KAREKOD OKUYUCU + AYAK",
+      "slug": "efor-barkod-5264-newland-hr-23-hr-33-kablolu-karekod-okuyucu-ayak",
+      "sku": "EFOR-BARKOD-09",
+      "price": 295000,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Newland",
+      "categories": [
+        "Barkod Okuyucular"
+      ],
+      "primaryCategory": "Barkod Okuyucular",
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/07/efor-newland-hr2300-qrkod-okuyucu.png",
+      "description": "NEWLAND HR 23 / HR 33 Karekod Okuyucu USB Bağlantılı 2D Kablolu Okuyucu Usb + Stand (Ayaklı) Özellikler\nTEKNİK ÖZELLİKLER:\n\n• 2D Karekod Okuyucu\n\n• 640 x 480 Piksel Imager Sensör\n\n• 1D Barkodlarda 3 mil çözünürlük\n\n• 30 ~ 280 mm okuma mesafesi\n\n• 1,5 Metreden düşmeye dayanıklı\n\n• IP52 Koruma Standartı\n\n• USB Kablolu Bağlantı",
+      "incompleteReason": null
+    }
+  ]
+}
