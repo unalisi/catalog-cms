@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ApiResult } from '../../lib/api';
 import { mediaTransformPath } from '../../lib/media/urls';
+import { AdminFormStickyBar } from './AdminFormStickyBar';
 import MediaPicker, { type MediaItem } from './MediaPicker';
 import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
 
@@ -14,6 +15,14 @@ type Variant = {
   name: string;
   price: number;
   stock: number;
+};
+
+type GalleryItem = {
+  id: string;
+  key: string;
+  url: string;
+  alt: string;
+  mime: string | null;
 };
 
 type ProductFormProps = {
@@ -34,6 +43,7 @@ type ProductFormProps = {
     primaryMediaId?: string | null;
     primaryMediaUrl?: string | null;
     primaryMediaKey?: string | null;
+    gallery?: GalleryItem[];
     seo?: {
       title?: string | null;
       description?: string | null;
@@ -69,6 +79,28 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+function previewUrl(item: Pick<GalleryItem, 'key' | 'url' | 'mime'>): string {
+  if (item.mime === 'image/svg+xml') return item.url;
+  if (item.key) return mediaTransformPath(item.key, 320);
+  return item.url;
+}
+
+function initialGallery(initial?: ProductFormProps['initial']): GalleryItem[] {
+  if (initial?.gallery && initial.gallery.length > 0) return initial.gallery;
+  if (initial?.primaryMediaId) {
+    return [
+      {
+        id: initial.primaryMediaId,
+        key: initial.primaryMediaKey ?? '',
+        url: initial.primaryMediaUrl ?? '',
+        alt: '',
+        mime: null,
+      },
+    ];
+  }
+  return [];
+}
+
 export default function ProductForm({
   mode,
   productId,
@@ -84,11 +116,7 @@ export default function ProductForm({
   const [stock, setStock] = useState(String(initial?.stock ?? 0));
   const [status, setStatus] = useState<Status>(initial?.status ?? 'draft');
   const [brandId, setBrandId] = useState(initial?.brandId ?? '');
-  const [primaryMediaId, setPrimaryMediaId] = useState(initial?.primaryMediaId ?? '');
-  const [primaryMediaPreview, setPrimaryMediaPreview] = useState(
-    initial?.primaryMediaUrl ??
-      (initial?.primaryMediaKey ? mediaTransformPath(initial.primaryMediaKey, 320) : ''),
-  );
+  const [gallery, setGallery] = useState<GalleryItem[]>(() => initialGallery(initial));
   const [pickerOpen, setPickerOpen] = useState(false);
   const [seo, setSeo] = useState<SeoFormValue>(
     initial?.seo ? seoFormFromMeta(initial.seo) : emptySeoForm(),
@@ -101,11 +129,44 @@ export default function ProductForm({
     if (!slug && name) setSlug(slugify(name));
   }
 
+  function moveGalleryItem(index: number, dir: -1 | 1) {
+    setGallery((prev) => {
+      const next = [...prev];
+      const target = index + dir;
+      if (target < 0 || target >= next.length) return prev;
+      const tmp = next[index]!;
+      next[index] = next[target]!;
+      next[target] = tmp;
+      return next;
+    });
+  }
+
+  function removeGalleryItem(id: string) {
+    setGallery((prev) => prev.filter((g) => g.id !== id));
+  }
+
+  function addGalleryItem(media: MediaItem) {
+    setGallery((prev) => {
+      if (prev.some((g) => g.id === media.id)) return prev;
+      return [
+        ...prev,
+        {
+          id: media.id,
+          key: media.key,
+          url: media.url,
+          alt: media.alt,
+          mime: media.mime,
+        },
+      ];
+    });
+  }
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError(null);
     setFields({});
+    const mediaIds = gallery.map((g) => g.id);
     const payload = {
       name,
       slug,
@@ -115,7 +176,8 @@ export default function ProductForm({
       stock: Number.parseInt(stock, 10) || 0,
       status,
       brandId: brandId || null,
-      primaryMediaId: primaryMediaId || null,
+      primaryMediaId: mediaIds[0] ?? null,
+      mediaIds,
       currency: initial?.currency ?? 'TRY',
       compareAtPrice: initial?.compareAtPrice ?? null,
       seo: {
@@ -239,13 +301,14 @@ export default function ProductForm({
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">Durum</span>
             <select
-              className="rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+              className="min-h-11 rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
               value={status}
               onChange={(e) => setStatus(e.target.value as Status)}
+              aria-label="Ürün durumu"
             >
-              <option value="draft">draft</option>
-              <option value="published">published</option>
-              <option value="archived">archived</option>
+              <option value="published">Yayında</option>
+              <option value="draft">Taslak</option>
+              <option value="archived">Listedışı</option>
             </select>
           </label>
         </div>
@@ -259,73 +322,124 @@ export default function ProductForm({
         {variants.length === 0 ? (
           <p className="text-sm text-muted-foreground">Varyant yok.</p>
         ) : (
-          <div className="overflow-x-auto rounded-md border border-border">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-3 py-2 font-medium">Ad</th>
-                  <th className="px-3 py-2 font-medium">SKU</th>
-                  <th className="px-3 py-2 font-medium">Fiyat</th>
-                  <th className="px-3 py-2 font-medium">Stok</th>
-                </tr>
-              </thead>
-              <tbody>
-                {variants.map((v) => (
-                  <tr key={v.id} className="border-t border-border">
-                    <td className="px-3 py-2">{v.name}</td>
-                    <td className="px-3 py-2 font-mono text-muted-foreground">{v.sku ?? '—'}</td>
-                    <td className="px-3 py-2 font-mono">{majorFromMinor(v.price)}</td>
-                    <td className="px-3 py-2 font-mono">{v.stock}</td>
+          <>
+            <div className="flex flex-col gap-2 md:hidden">
+              {variants.map((v) => (
+                <article key={v.id} className="rounded-md border border-border p-3 text-sm">
+                  <p className="font-semibold">{v.name}</p>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">{v.sku ?? '—'}</p>
+                  <div className="mt-2 flex gap-4 text-xs">
+                    <span>
+                      Fiyat: <span className="font-mono">{majorFromMinor(v.price)}</span>
+                    </span>
+                    <span>
+                      Stok: <span className="font-mono">{v.stock}</span>
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto rounded-md border border-border md:block">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Ad</th>
+                    <th className="px-3 py-2 font-medium">SKU</th>
+                    <th className="px-3 py-2 font-medium">Fiyat</th>
+                    <th className="px-3 py-2 font-medium">Stok</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {variants.map((v) => (
+                    <tr key={v.id} className="border-t border-border">
+                      <td className="px-3 py-2">{v.name}</td>
+                      <td className="px-3 py-2 font-mono text-muted-foreground">{v.sku ?? '—'}</td>
+                      <td className="px-3 py-2 font-mono">{majorFromMinor(v.price)}</td>
+                      <td className="px-3 py-2 font-mono">{v.stock}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
 
       <section className="flex flex-col gap-3 border-t border-border pt-6">
-        <h2 className="font-display text-lg font-semibold">Medya</h2>
-        {primaryMediaPreview ? (
-          <img
-            src={primaryMediaPreview}
-            alt="Ürün görseli"
-            className="h-40 w-40 rounded-md border border-border object-cover"
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">Birincil görsel seçilmedi.</p>
-        )}
-        <div className="flex gap-3 text-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Ürün görselleri</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              İlk görsel birincil görseldir. Sıralama ürün detay slider’ında kullanılır.
+            </p>
+          </div>
           <button
             type="button"
-            className="rounded-md border border-border px-3 py-2 hover:bg-muted"
+            className="min-h-11 rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
             onClick={() => setPickerOpen(true)}
           >
-            Medya seç
+            Görsel ekle
           </button>
-          {primaryMediaId && (
-            <button
-              type="button"
-              className="text-destructive hover:underline"
-              onClick={() => {
-                setPrimaryMediaId('');
-                setPrimaryMediaPreview('');
-              }}
-            >
-              Kaldır
-            </button>
-          )}
         </div>
+        {gallery.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Henüz görsel yok.</p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {gallery.map((item, index) => (
+              <li
+                key={item.id}
+                className="flex flex-wrap items-center gap-3 rounded-md border border-border p-3"
+              >
+                <img
+                  src={previewUrl(item)}
+                  alt={item.alt || 'Ürün görseli'}
+                  className="h-20 w-20 rounded-md border border-border object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">
+                    {index === 0 ? 'Birincil görsel' : `Görsel ${index + 1}`}
+                  </p>
+                  <p className="truncate font-mono text-xs text-muted-foreground">{item.id}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="min-h-10 rounded-md border border-border px-2 text-sm hover:bg-muted disabled:opacity-40"
+                    disabled={index === 0}
+                    onClick={() => moveGalleryItem(index, -1)}
+                    aria-label="Yukarı taşı"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-10 rounded-md border border-border px-2 text-sm hover:bg-muted disabled:opacity-40"
+                    disabled={index === gallery.length - 1}
+                    onClick={() => moveGalleryItem(index, 1)}
+                    aria-label="Aşağı taşı"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-10 text-sm text-destructive hover:underline"
+                    onClick={() => removeGalleryItem(item.id)}
+                  >
+                    Kaldır
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
         <MediaPicker
           open={pickerOpen}
           onClose={() => setPickerOpen(false)}
           onSelect={(media: MediaItem) => {
-            setPrimaryMediaId(media.id);
-            setPrimaryMediaPreview(
-              media.mime === 'image/svg+xml' ? media.url : mediaTransformPath(media.key, 320),
-            );
+            addGalleryItem(media);
+            setPickerOpen(false);
           }}
-          title="Ürün görseli seç"
+          title="Ürün görseli ekle"
         />
       </section>
 
@@ -340,21 +454,21 @@ export default function ProductForm({
         />
       </section>
 
-      <div className="flex gap-3 border-t border-border pt-6">
+      <AdminFormStickyBar>
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 md:flex-none"
         >
           {saving ? 'Kaydediliyor…' : mode === 'create' ? 'Oluştur' : 'Kaydet'}
         </button>
         <a
           href="/admin/products"
-          className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
+          className="inline-flex min-h-11 items-center rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
         >
           Geri
         </a>
-      </div>
+      </AdminFormStickyBar>
     </form>
   );
 }

@@ -55,6 +55,13 @@ const brands = (await listAllBrands(getDb())).map((b) => ({ id: b.id, name: b.na
           primaryMediaId: product.primaryMediaId,
           primaryMediaUrl: product.primaryMedia?.url ?? null,
           primaryMediaKey: product.primaryMedia?.key ?? null,
+          gallery: product.gallery.map((g) => ({
+            id: g.id,
+            key: g.key,
+            url: g.url,
+            alt: g.alt,
+            mime: g.mime,
+          })),
           seo: product.seo,
         }}
         variants={product.variants.map((v) => ({
