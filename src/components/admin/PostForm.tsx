@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ApiResult } from '../../lib/api';
 import { mediaTransformPath } from '../../lib/media/urls';
+import { AdminFormStickyBar } from './AdminFormStickyBar';
 import MediaPicker, { type MediaItem } from './MediaPicker';
 import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
 
@@ -285,15 +286,18 @@ export default function PostForm({ mode, postId, initial }: PostFormProps) {
         />
       </section>
 
-      <div className="flex gap-3 border-t border-border pt-6">
+      <AdminFormStickyBar>
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+          className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60 md:flex-none"
         >
           {saving ? 'Kaydediliyor…' : 'Kaydet'}
         </button>
-        <a href="/admin/blog" className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted">
+        <a
+          href="/admin/blog"
+          className="inline-flex min-h-11 items-center rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+        >
           İptal
         </a>
         {mode === 'edit' && slug && (
@@ -301,12 +305,12 @@ export default function PostForm({ mode, postId, initial }: PostFormProps) {
             href={`/blog/${slug}`}
             target="_blank"
             rel="noreferrer"
-            className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+            className="hidden min-h-11 items-center rounded-md border border-border px-3 py-2 text-sm hover:bg-muted sm:inline-flex"
           >
             Önizle
           </a>
         )}
-      </div>
+      </AdminFormStickyBar>
     </form>
   );
 }

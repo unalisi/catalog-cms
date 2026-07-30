@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ApiResult } from '../../lib/api';
+import { AdminFormStickyBar } from './AdminFormStickyBar';
 import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
 
 type Status = 'draft' | 'published' | 'archived';
@@ -189,21 +190,21 @@ export default function CategoryForm({ mode, categoryId, parents, initial }: Cat
         />
       </section>
 
-      <div className="flex gap-3 border-t border-border pt-6">
+      <AdminFormStickyBar>
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+          className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60 md:flex-none"
         >
           {saving ? 'Kaydediliyor…' : 'Kaydet'}
         </button>
         <a
           href="/admin/categories"
-          className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+          className="inline-flex min-h-11 items-center rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
         >
           İptal
         </a>
-      </div>
+      </AdminFormStickyBar>
     </form>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ApiResult } from '../../lib/api';
+import { AdminFormStickyBar } from './AdminFormStickyBar';
 import MediaPicker, { type MediaItem } from './MediaPicker';
 import { mediaTransformPath } from '../../lib/media/urls';
 
@@ -434,13 +435,15 @@ export default function SettingsForm() {
         </label>
       </section>
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="w-fit rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-      >
-        {saving ? 'Kaydediliyor…' : 'Kaydet'}
-      </button>
+      <AdminFormStickyBar>
+        <button
+          type="submit"
+          disabled={saving}
+          className="min-h-11 w-full rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60 md:w-fit"
+        >
+          {saving ? 'Kaydediliyor…' : 'Kaydet'}
+        </button>
+      </AdminFormStickyBar>
 
       <MediaPicker
         open={picker != null}

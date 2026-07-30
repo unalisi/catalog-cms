@@ -180,36 +180,59 @@ export default function SeoAdminPanel({ initialDefaults, initialRedirects }: Pro
         {redirects.length === 0 ? (
           <p className="text-sm text-muted-foreground">Henüz yönlendirme yok.</p>
         ) : (
-          <div className="overflow-x-auto rounded-md border border-border">
-            <table className="w-full min-w-[36rem] text-left text-sm">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-3 py-2 font-medium">Kaynak</th>
-                  <th className="px-3 py-2 font-medium">Hedef</th>
-                  <th className="px-3 py-2 font-medium">Kod</th>
-                  <th className="px-3 py-2 font-medium">İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
-                {redirects.map((r) => (
-                  <tr key={r.id} className="border-t border-border">
-                    <td className="px-3 py-2 font-mono text-xs">{r.fromPath}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{r.toPath}</td>
-                    <td className="px-3 py-2">{r.statusCode}</td>
-                    <td className="px-3 py-2">
-                      <button
-                        type="button"
-                        className="text-destructive hover:underline"
-                        onClick={() => void removeRedirect(r.id)}
-                      >
-                        Sil
-                      </button>
-                    </td>
+          <>
+            <div className="flex flex-col gap-2 md:hidden">
+              {redirects.map((r) => (
+                <article
+                  key={r.id}
+                  className="rounded-md border border-border bg-background p-3"
+                >
+                  <p className="truncate font-mono text-xs text-foreground">{r.fromPath}</p>
+                  <p className="mt-1 truncate font-mono text-xs text-muted-foreground">→ {r.toPath}</p>
+                  <div className="mt-3 flex min-h-11 items-center justify-between gap-3">
+                    <span className="text-xs text-muted-foreground">{r.statusCode}</span>
+                    <button
+                      type="button"
+                      className="text-sm text-destructive hover:underline"
+                      onClick={() => void removeRedirect(r.id)}
+                    >
+                      Sil
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto rounded-md border border-border md:block">
+              <table className="w-full min-w-[36rem] text-left text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Kaynak</th>
+                    <th className="px-3 py-2 font-medium">Hedef</th>
+                    <th className="px-3 py-2 font-medium">Kod</th>
+                    <th className="px-3 py-2 font-medium">İşlem</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {redirects.map((r) => (
+                    <tr key={r.id} className="border-t border-border">
+                      <td className="px-3 py-2 font-mono text-xs">{r.fromPath}</td>
+                      <td className="px-3 py-2 font-mono text-xs">{r.toPath}</td>
+                      <td className="px-3 py-2">{r.statusCode}</td>
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          className="text-destructive hover:underline"
+                          onClick={() => void removeRedirect(r.id)}
+                        >
+                          Sil
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
     </div>

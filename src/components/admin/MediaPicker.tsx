@@ -83,18 +83,18 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Medya se
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
-      className="fixed inset-0 z-50 m-auto w-[min(56rem,calc(100%-2rem))] max-h-[90dvh] overflow-hidden rounded-lg border border-border bg-background p-0 shadow-lg backdrop:bg-foreground/40"
+      className="fixed z-50 max-h-[90dvh] overflow-hidden border border-border bg-background p-0 shadow-lg backdrop:bg-foreground/40 max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:m-0 max-md:w-full max-md:rounded-t-xl max-md:rounded-b-none md:inset-0 md:m-auto md:w-[min(56rem,calc(100%-2rem))] md:rounded-lg"
       onClose={onClose}
       onClick={(e) => {
         if (e.target === dialogRef.current) onClose();
       }}
     >
-      <div className="flex max-h-[90dvh] flex-col">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="flex max-h-[90dvh] flex-col pb-[env(safe-area-inset-bottom)] md:pb-0">
+        <div className="flex min-h-11 items-center justify-between border-b border-border px-4 py-3">
           <h2 id={titleId} className="font-display text-lg font-semibold">
             {title}
           </h2>
-          <button type="button" className="text-sm hover:underline" onClick={onClose}>
+          <button type="button" className="min-h-11 px-2 text-sm hover:underline" onClick={onClose}>
             Kapat
           </button>
         </div>
@@ -103,7 +103,7 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Medya se
           <label className="flex flex-1 flex-col gap-1 text-sm">
             <span className="font-medium">Ara</span>
             <input
-              className="rounded-md border border-input bg-background px-3 py-2"
+              className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => {
@@ -113,7 +113,7 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Medya se
           </label>
           <button
             type="button"
-            className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+            className="min-h-11 rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
             onClick={() => void load(q)}
           >
             Ara
@@ -121,13 +121,13 @@ export default function MediaPicker({ open, onClose, onSelect, title = 'Medya se
           <label className="flex flex-1 flex-col gap-1 text-sm">
             <span className="font-medium">Yükle · alt metin</span>
             <input
-              className="rounded-md border border-input bg-background px-3 py-2"
+              className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
               value={alt}
               onChange={(e) => setAlt(e.target.value)}
               placeholder="Görsel açıklaması"
             />
           </label>
-          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted">
+          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted">
             {uploading ? 'Yükleniyor…' : 'Dosya seç'}
             <input
               type="file"

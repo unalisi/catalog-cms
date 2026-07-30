@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ApiResult } from '../../lib/api';
+import { AdminFormStickyBar } from './AdminFormStickyBar';
 
 export default function PageForm() {
   const [title, setTitle] = useState('');
@@ -85,13 +86,21 @@ export default function PageForm() {
           <option value="archived">archived</option>
         </select>
       </label>
-      <button
-        type="submit"
-        disabled={saving}
-        className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
-      >
-        {saving ? 'Oluşturuluyor…' : 'Oluştur'}
-      </button>
+      <AdminFormStickyBar>
+        <button
+          type="submit"
+          disabled={saving}
+          className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 md:flex-none"
+        >
+          {saving ? 'Oluşturuluyor…' : 'Oluştur'}
+        </button>
+        <a
+          href="/admin/pages"
+          className="inline-flex min-h-11 items-center rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+        >
+          İptal
+        </a>
+      </AdminFormStickyBar>
     </form>
   );
 }
