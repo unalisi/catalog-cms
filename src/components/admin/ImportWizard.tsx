@@ -67,6 +67,14 @@ Demo Mouse,demo-mouse,IMP-MSE-01,899.00,40,Ergonomik mouse,Nord Teknik,Elektroni
 
 const PROFILES_KEY = 'catalog-import-mapping-profiles';
 
+function itemName(mappedJson: string | null): string {
+  try {
+    return mappedJson ? (JSON.parse(mappedJson) as { name?: string }).name ?? '—' : '—';
+  } catch {
+    return '—';
+  }
+}
+
 function loadProfiles(): Record<string, Mapping> {
   try {
     const raw = localStorage.getItem(PROFILES_KEY);
@@ -176,7 +184,7 @@ export default function ImportWizard() {
 
   return (
     <div className="flex max-w-4xl flex-col gap-8">
-      <ol className="flex flex-wrap gap-3 text-sm">
+      <ol className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border border-border p-3 text-sm sm:flex sm:flex-wrap sm:gap-3 sm:border-0 sm:p-0">
         {[
           '1. Kaynak',
           '2. Eşleme',
@@ -185,7 +193,11 @@ export default function ImportWizard() {
         ].map((label, i) => (
           <li
             key={label}
-            className={step === i + 1 ? 'font-semibold text-foreground' : 'text-muted-foreground'}
+            className={
+              step === i + 1
+                ? 'font-semibold text-foreground'
+                : 'text-muted-foreground'
+            }
           >
             {label}
           </li>
@@ -212,7 +224,7 @@ export default function ImportWizard() {
               <button
                 key={value}
                 type="button"
-                className={`rounded-md border px-3 py-2 text-sm ${
+                className={`min-h-11 rounded-md border px-3 py-2 text-sm ${
                   source === value ? 'border-foreground bg-muted' : 'border-border hover:bg-muted'
                 }`}
                 onClick={() => {
@@ -243,7 +255,7 @@ export default function ImportWizard() {
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">Çakışma politikası</span>
             <select
-              className="rounded-md border border-input bg-background px-3 py-2"
+              className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
               value={conflictPolicy}
               onChange={(e) => setConflictPolicy(e.target.value as ConflictPolicy)}
             >
@@ -254,7 +266,7 @@ export default function ImportWizard() {
           </label>
           <button
             type="button"
-            className="w-fit rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+            className="min-h-11 w-full rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground sm:w-fit"
             onClick={() => setStep(source === 'csv' ? 2 : 3)}
             disabled={!content.trim()}
           >
@@ -278,21 +290,25 @@ export default function ImportWizard() {
               </label>
             ))}
           </div>
-          <div className="flex flex-wrap items-end gap-2 border-t border-border pt-4">
-            <label className="flex flex-col gap-1 text-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm sm:min-w-[12rem] sm:flex-none">
               <span className="font-medium">Profil adı</span>
               <input
-                className="rounded-md border border-input bg-background px-3 py-2"
+                className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
                 placeholder="varsayılan-csv"
               />
             </label>
-            <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={saveProfile}>
+            <button
+              type="button"
+              className="min-h-11 rounded-md border border-border px-3 py-2 text-sm"
+              onClick={saveProfile}
+            >
               Profil kaydet
             </button>
             <select
-              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="min-h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"
               defaultValue=""
               onChange={(e) => {
                 const p = profiles[e.target.value];
@@ -309,13 +325,17 @@ export default function ImportWizard() {
               ))}
             </select>
           </div>
-          <div className="flex gap-2">
-            <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={() => setStep(1)}>
+          <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+            <button
+              type="button"
+              className="min-h-11 flex-1 rounded-md border border-border px-3 py-2 text-sm sm:flex-none"
+              onClick={() => setStep(1)}
+            >
               Geri
             </button>
             <button
               type="button"
-              className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:flex-none"
               disabled={busy}
               onClick={() => void runDryRun()}
             >
@@ -342,52 +362,78 @@ export default function ImportWizard() {
             </ul>
           )}
           {job && (
-            <div className="overflow-x-auto rounded-md border border-border">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="px-3 py-2">#</th>
-                    <th className="px-3 py-2">Ad</th>
-                    <th className="px-3 py-2">Aksiyon</th>
-                    <th className="px-3 py-2">Durum</th>
-                    <th className="px-3 py-2">Hata</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {job.items.slice(0, 50).map((item) => {
-                    let name = '—';
-                    try {
-                      name = item.mappedJson ? (JSON.parse(item.mappedJson) as { name?: string }).name ?? '—' : '—';
-                    } catch {
-                      /* ignore */
-                    }
-                    return (
+            <>
+              <div className="flex flex-col gap-2 md:hidden">
+                {job.items.slice(0, 50).map((item) => (
+                  <article
+                    key={item.id}
+                    className="rounded-md border border-border p-3 text-sm"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{itemName(item.mappedJson)}</p>
+                        <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                          #{item.rowIndex + 1}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs font-medium">{item.status}</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>Aksiyon: {item.action ?? '—'}</span>
+                      {item.error && (
+                        <span className="text-destructive">{item.error}</span>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto rounded-md border border-border md:block">
+                <table className="w-full min-w-[36rem] text-left text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-3 py-2">#</th>
+                      <th className="px-3 py-2">Ad</th>
+                      <th className="px-3 py-2">Aksiyon</th>
+                      <th className="px-3 py-2">Durum</th>
+                      <th className="px-3 py-2">Hata</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {job.items.slice(0, 50).map((item) => (
                       <tr key={item.id} className="border-t border-border">
                         <td className="px-3 py-2 font-mono">{item.rowIndex + 1}</td>
-                        <td className="px-3 py-2">{name}</td>
+                        <td className="px-3 py-2">{itemName(item.mappedJson)}</td>
                         <td className="px-3 py-2">{item.action}</td>
                         <td className="px-3 py-2">{item.status}</td>
                         <td className="px-3 py-2 text-destructive">{item.error ?? '—'}</td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
-          <div className="flex gap-2">
-            <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={() => setStep(1)}>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="min-h-11 flex-1 rounded-md border border-border px-3 py-2 text-sm sm:flex-none"
+              onClick={() => setStep(1)}
+            >
               Yeni iş
             </button>
             {source === 'csv' && step === 3 && !jobId && (
-              <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={() => void runDryRun()}>
+              <button
+                type="button"
+                className="min-h-11 flex-1 rounded-md border border-border px-3 py-2 text-sm sm:flex-none"
+                onClick={() => void runDryRun()}
+              >
                 Dry-run
               </button>
             )}
             {source !== 'csv' && !jobId && (
               <button
                 type="button"
-                className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+                className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground sm:flex-none"
                 disabled={busy}
                 onClick={() => void runDryRun()}
               >
@@ -397,7 +443,7 @@ export default function ImportWizard() {
             {jobId && (
               <button
                 type="button"
-                className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+                className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:flex-none"
                 disabled={busy || !summary || summary.create + summary.update === 0}
                 onClick={() => void runApply()}
               >
@@ -423,7 +469,11 @@ export default function ImportWizard() {
               <li className="rounded-md border border-border p-3">Error: <strong>{summary.error}</strong></li>
             </ul>
           )}
-          <button type="button" className="w-fit rounded-md border border-border px-3 py-2 text-sm" onClick={() => setStep(1)}>
+          <button
+            type="button"
+            className="min-h-11 w-full rounded-md border border-border px-3 py-2 text-sm sm:w-fit"
+            onClick={() => setStep(1)}
+          >
             Yeni import
           </button>
         </section>
@@ -436,14 +486,16 @@ export default function ImportWizard() {
         ) : (
           <ul className="flex flex-col gap-2 text-sm">
             {jobs.slice(0, 10).map((j) => (
-              <li key={j.id} className="flex flex-wrap items-center gap-3 rounded-md border border-border px-3 py-2">
+              <li key={j.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2.5 sm:gap-3">
                 <span className="font-mono text-xs text-muted-foreground">{j.id.slice(0, 18)}…</span>
                 <span>{j.source}</span>
                 <span>{j.status}</span>
-                <span className="text-muted-foreground">{new Date(j.createdAt).toLocaleString('tr-TR')}</span>
+                <span className="w-full text-xs text-muted-foreground sm:w-auto sm:text-sm">
+                  {new Date(j.createdAt).toLocaleString('tr-TR')}
+                </span>
                 <button
                   type="button"
-                  className="hover:underline"
+                  className="min-h-11 px-1 text-sm hover:underline"
                   onClick={() => {
                     setJobId(j.id);
                     setStep(j.status === 'queued' || j.status === 'processing' || j.status === 'completed' ? 4 : 3);

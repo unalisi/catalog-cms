@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
+import { MoreHorizontal } from 'lucide-react';
 import type { ApiResult } from '../../lib/api';
-import DeleteButton from './DeleteButton';
 import MediaPicker, { type MediaItem } from './MediaPicker';
 import { mediaTransformPath } from '../../lib/media/urls';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function MediaLibrary() {
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -46,13 +52,24 @@ export default function MediaLibrary() {
     await load();
   }
 
+  async function deleteMedia(id: string) {
+    if (!window.confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+    const res = await fetch(`/api/admin/media/${id}`, { method: 'DELETE' });
+    const json = (await res.json()) as ApiResult<unknown>;
+    if (!json.ok) {
+      setError(json.error.message ?? 'Silinemedi');
+      return;
+    }
+    await load();
+  }
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex min-w-[12rem] flex-1 flex-col gap-1.5 text-sm">
+    <div className="flex flex-col gap-4 md:gap-6">
+      <div className="sticky top-0 z-10 -mx-4 flex flex-col gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 md:static md:mx-0 md:flex-row md:flex-wrap md:items-end md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+        <label className="flex min-w-0 flex-1 flex-col gap-1.5 text-sm md:min-w-[12rem]">
           <span className="font-medium">Ara</span>
           <input
-            className="rounded-md border border-input bg-background px-3 py-2"
+            className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
@@ -60,21 +77,23 @@ export default function MediaLibrary() {
             }}
           />
         </label>
-        <button
-          type="button"
-          className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
-          onClick={() => void load(q)}
-        >
-          Ara
-        </button>
-        <button
-          type="button"
-          className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-          onClick={() => setPickerOpen(true)}
-        >
-          <span aria-hidden="true">+</span>
-          Yükle
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="min-h-11 flex-1 rounded-md border border-border px-3 py-2 text-sm hover:bg-muted md:flex-none"
+            onClick={() => void load(q)}
+          >
+            Ara
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted md:flex-none"
+            onClick={() => setPickerOpen(true)}
+          >
+            <span aria-hidden="true">+</span>
+            Yükle
+          </button>
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground">{total} dosya</p>
@@ -89,7 +108,7 @@ export default function MediaLibrary() {
           Henüz medya yok. Yükle ile ekleyin; alt metin zorunludur.
         </p>
       ) : (
-        <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
           {items.map((item) => (
             <li key={item.id} className="overflow-hidden rounded-md border border-border">
               <img
@@ -102,15 +121,23 @@ export default function MediaLibrary() {
                 {editId === item.id ? (
                   <>
                     <input
-                      className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+                      className="min-h-11 rounded-md border border-input bg-background px-2 py-1 text-sm"
                       value={editAlt}
                       onChange={(e) => setEditAlt(e.target.value)}
                     />
                     <div className="flex gap-2 text-sm">
-                      <button type="button" className="hover:underline" onClick={() => void saveAlt()}>
+                      <button
+                        type="button"
+                        className="min-h-11 px-1 hover:underline"
+                        onClick={() => void saveAlt()}
+                      >
                         Kaydet
                       </button>
-                      <button type="button" className="hover:underline" onClick={() => setEditId(null)}>
+                      <button
+                        type="button"
+                        className="min-h-11 px-1 hover:underline"
+                        onClick={() => setEditId(null)}
+                      >
                         İptal
                       </button>
                     </div>
@@ -119,21 +146,61 @@ export default function MediaLibrary() {
                   <>
                     <p className="truncate text-sm font-medium">{item.alt || '—'}</p>
                     <p className="truncate font-mono text-xs text-muted-foreground">{item.key}</p>
-                    <div className="flex items-center gap-3 text-sm">
-                      <button
-                        type="button"
-                        className="hover:underline"
-                        onClick={() => {
-                          setEditId(item.id);
-                          setEditAlt(item.alt);
-                        }}
-                      >
-                        Alt düzenle
-                      </button>
-                      <a href={item.url} target="_blank" rel="noreferrer" className="hover:underline">
-                        Aç
-                      </a>
-                      <DeleteButton endpoint={`/api/admin/media/${item.id}`} />
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="hidden items-center gap-3 text-sm md:flex">
+                        <button
+                          type="button"
+                          className="hover:underline"
+                          onClick={() => {
+                            setEditId(item.id);
+                            setEditAlt(item.alt);
+                          }}
+                        >
+                          Alt düzenle
+                        </button>
+                        <a href={item.url} target="_blank" rel="noreferrer" className="hover:underline">
+                          Aç
+                        </a>
+                        <button
+                          type="button"
+                          className="text-destructive hover:underline"
+                          onClick={() => void deleteMedia(item.id)}
+                        >
+                          Sil
+                        </button>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="inline-flex size-11 items-center justify-center rounded-md border border-border hover:bg-muted md:hidden"
+                            aria-label="Medya işlemleri"
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              setEditId(item.id);
+                              setEditAlt(item.alt);
+                            }}
+                          >
+                            Alt düzenle
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <a href={item.url} target="_blank" rel="noreferrer">
+                              Aç
+                            </a>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => void deleteMedia(item.id)}
+                          >
+                            Sil
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </>
                 )}
