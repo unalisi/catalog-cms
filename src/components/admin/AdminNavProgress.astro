@@ -1,0 +1,128 @@
+---
+/**
+ * Top progress bar for Admin ClientRouter navigations.
+ * Persists across view-transition swaps so the animation isn't cut off.
+ */
+---
+
+<div
+  id="admin-nav-progress"
+  transition:persist="admin-nav-progress"
+  transition:animate="none"
+  class="admin-nav-progress pointer-events-none fixed inset-x-0 top-0 z-[100]"
+  aria-hidden="true"
+  data-state="idle"
+>
+  <div class="admin-nav-progress__bar bg-primary"></div>
+</div>
+
+<style is:global>
+  .admin-nav-progress {
+    height: 2px;
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  .admin-nav-progress[data-state='active'],
+  .admin-nav-progress[data-state='finishing'] {
+    opacity: 1;
+  }
+
+  .admin-nav-progress__bar {
+    height: 100%;
+    width: 0%;
+    transform-origin: left;
+    box-shadow: 0 0 8px color-mix(in oklab, var(--primary) 55%, transparent);
+    transition: width 200ms ease-out;
+  }
+
+  .admin-nav-progress[data-state='finishing'] .admin-nav-progress__bar {
+    transition: width 180ms ease-in;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .admin-nav-progress,
+    .admin-nav-progress__bar {
+      transition: none !important;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    if (window.__adminNavProgressBound) return;
+    window.__adminNavProgressBound = true;
+
+    var timer = null;
+    var hideTimer = null;
+    var progress = 0;
+
+    function root() {
+      return document.getElementById('admin-nav-progress');
+    }
+
+    function bar(el) {
+      return el && el.querySelector('.admin-nav-progress__bar');
+    }
+
+    function reducedMotion() {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    function setWidth(el, value) {
+      var b = bar(el);
+      if (!b) return;
+      b.style.width = value + '%';
+    }
+
+    function clearTimers() {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+    }
+
+    function start() {
+      var el = root();
+      if (!el) return;
+      clearTimers();
+      progress = reducedMotion() ? 80 : 12;
+      el.dataset.state = 'active';
+      setWidth(el, progress);
+
+      if (reducedMotion()) return;
+
+      timer = setInterval(function () {
+        if (progress >= 90) return;
+        var step = progress < 40 ? 8 : progress < 70 ? 3.5 : 1.2;
+        progress = Math.min(90, progress + step * (0.6 + Math.random() * 0.8));
+        setWidth(el, progress);
+      }, 180);
+    }
+
+    function finish() {
+      var el = root();
+      if (!el || el.dataset.state === 'idle') return;
+      clearTimers();
+      el.dataset.state = 'finishing';
+      progress = 100;
+      setWidth(el, 100);
+
+      hideTimer = setTimeout(
+        function () {
+          el.dataset.state = 'idle';
+          setWidth(el, 0);
+          progress = 0;
+        },
+        reducedMotion() ? 0 : 220,
+      );
+    }
+
+    document.addEventListener('astro:before-preparation', start);
+    document.addEventListener('astro:page-load', finish);
+  })();
+</script>

@@ -18,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminCommand } from '@/components/admin/AdminCommand';
 
 export type AdminBreadcrumb = { href?: string; label: string };
@@ -71,24 +70,26 @@ export function TopNav({ breadcrumbs, user }: Props) {
 
   return (
     <>
-      <div className="flex w-full items-center gap-3">
-        <SidebarTrigger className="-ml-1 md:hidden" />
-
+      <div className="flex w-full items-center gap-2 sm:gap-3">
         <Breadcrumb className="min-w-0 flex-1">
           <BreadcrumbList className="text-sm text-faint">
-            <BreadcrumbItem>
+            <BreadcrumbItem className="hidden sm:inline-flex">
               <BreadcrumbLink href="/admin" className="text-faint hover:text-foreground">
                 Panel
               </BreadcrumbLink>
             </BreadcrumbItem>
             {crumbTrail.map((item, index) => {
               const isLast = index === crumbTrail.length - 1;
+              const hideOnMobile = !isLast;
               return (
-                <span key={`${item.label}-${index}`} className="contents">
-                  <BreadcrumbSeparator>
+                <span
+                  key={`${item.label}-${index}`}
+                  className={hideOnMobile ? 'contents max-sm:hidden' : 'contents'}
+                >
+                  <BreadcrumbSeparator className="hidden sm:block">
                     <ChevronRight className="size-3.5" />
                   </BreadcrumbSeparator>
-                  <BreadcrumbItem>
+                  <BreadcrumbItem className={hideOnMobile ? 'hidden sm:inline-flex' : undefined}>
                     {isLast || !item.href ? (
                       <BreadcrumbPage className="truncate font-medium text-foreground">
                         {item.label}
@@ -105,7 +106,7 @@ export function TopNav({ breadcrumbs, user }: Props) {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
           <button
             type="button"
             onClick={() => setCommandOpen(true)}
@@ -121,7 +122,7 @@ export function TopNav({ breadcrumbs, user }: Props) {
             type="button"
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="size-11 md:hidden"
             onClick={() => setCommandOpen(true)}
             aria-label="Ara"
           >
@@ -134,11 +135,11 @@ export function TopNav({ breadcrumbs, user }: Props) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="relative text-muted-foreground"
+                className="relative size-11 text-muted-foreground sm:size-9"
                 aria-label="Bildirimler"
               >
                 <Bell className="size-4" />
-                <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" aria-hidden="true" />
+                <span className="absolute top-2.5 right-2.5 size-1.5 rounded-full bg-primary sm:top-1.5 sm:right-1.5" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72">
@@ -154,7 +155,7 @@ export function TopNav({ breadcrumbs, user }: Props) {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex size-8 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-8"
                 aria-label="Kullanıcı menüsü"
               >
                 <Avatar className="size-8">

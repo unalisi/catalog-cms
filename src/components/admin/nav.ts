@@ -62,6 +62,9 @@ export const adminNavGroups: AdminNavGroup[] = [
 
 export const adminNav: AdminNavItem[] = adminNavGroups.flatMap((g) => g.items);
 
+/** Primary mobile bottom-bar destinations (More fills the rest). */
+export const adminMobileTabHrefs = ['/admin', '/admin/products', '/admin/media'] as const;
+
 export function isNavActive(pathname: string, href: string, exact = false): boolean {
   if (exact) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -74,6 +77,29 @@ export function filterNavGroups(
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => permissions?.includes(item.permission)),
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
+export function filterMobileTabs(
+  permissions: readonly string[] | undefined,
+): AdminNavItem[] {
+  const allowed = new Set(
+    adminNav.filter((item) => permissions?.includes(item.permission)).map((i) => i.href),
+  );
+  return adminMobileTabHrefs
+    .map((href) => adminNav.find((i) => i.href === href))
+    .filter((item): item is AdminNavItem => Boolean(item && allowed.has(item.href)));
+}
+
+export function filterMoreNavGroups(
+  permissions: readonly string[] | undefined,
+): AdminNavGroup[] {
+  const tabHrefs = new Set<string>(adminMobileTabHrefs);
+  return filterNavGroups(permissions)
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !tabHrefs.has(item.href)),
     }))
     .filter((group) => group.items.length > 0);
 }

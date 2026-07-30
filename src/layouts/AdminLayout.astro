@@ -1,6 +1,8 @@
 ---
+import { ClientRouter, fade } from 'astro:transitions';
 import '../styles/global.css';
 import { AdminShell } from '../components/admin/AdminShell';
+import AdminNavProgress from '../components/admin/AdminNavProgress.astro';
 import { Toaster } from '../components/ui/sonner';
 
 interface Props {
@@ -11,10 +13,12 @@ interface Props {
 const { title = 'Admin', breadcrumbs = [] } = Astro.props;
 const pathname = Astro.url.pathname;
 const user = Astro.locals.user ?? null;
+
+const pageFade = fade({ duration: '220ms' });
 ---
 
 <!doctype html>
-<html lang="tr" class="antialiased">
+<html lang="tr" class="antialiased" transition:animate="none">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -28,17 +32,21 @@ const user = Astro.locals.user ?? null;
       rel="stylesheet"
     />
     <title>{title} · Admin</title>
+    <ClientRouter />
   </head>
   <body class="min-h-dvh bg-background font-sans text-foreground">
+    <AdminNavProgress />
     <a
       href="#admin-main"
       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
     >
       İçeriğe geç
     </a>
-    <AdminShell client:load pathname={pathname} title={title} breadcrumbs={breadcrumbs} user={user}>
-      <slot />
-    </AdminShell>
+    <div id="admin-page" class="min-h-dvh" transition:animate={pageFade}>
+      <AdminShell client:load pathname={pathname} title={title} breadcrumbs={breadcrumbs} user={user}>
+        <slot />
+      </AdminShell>
+    </div>
     <Toaster client:idle />
   </body>
 </html>
