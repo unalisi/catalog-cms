@@ -26,7 +26,26 @@ const { title = 'Sayfa düzenleyici' } = Astro.props;
     <title>{title} · Builder</title>
   </head>
   <body class="h-dvh overflow-hidden bg-background font-sans text-foreground">
-    <slot />
+    <div
+      class="flex h-full flex-col items-center justify-center gap-3 px-6 text-center md:hidden"
+      role="status"
+    >
+      <p class="font-display text-lg font-semibold tracking-tight">
+        Yalnızca masaüstü cihazlarda düzenlenebilir
+      </p>
+      <p class="max-w-sm text-sm text-muted-foreground">
+        Bu ekranı 768px veya daha geniş bir cihazda açın.
+      </p>
+      <a
+        href="/admin"
+        class="mt-2 inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-medium hover:bg-muted"
+      >
+        Admin’e dön
+      </a>
+    </div>
+    <div class="hidden h-full md:block">
+      <slot />
+    </div>
     <Toaster client:idle />
   </body>
 </html>

@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import EmptyState from '../../../components/admin/EmptyState.astro';
 import DeleteButton from '../../../components/admin/DeleteButton';
+import DesktopOnlyGate from '../../../components/admin/DesktopOnlyGate.astro';
 import { isCorePageSlug } from '../../../lib/pages/core-pages';
 import { listAdminPages } from '../../../server/services/pages';
 
@@ -12,74 +13,76 @@ const pages = await listAdminPages();
   title="Sayfalar"
   breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'Sayfalar' }]}
 >
-  <div class="flex flex-col gap-4">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight">Sayfalar</h1>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {pages.length} kayıt · düzenle = tam ekran builder
-        </p>
+  <DesktopOnlyGate>
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div>
+          <h1 class="font-display text-2xl font-bold tracking-tight">Sayfalar</h1>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {pages.length} kayıt · düzenle = tam ekran builder
+          </p>
+        </div>
+        <a
+          href="/admin/pages/new"
+          class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          <span aria-hidden="true">+</span>
+          Yeni sayfa
+        </a>
       </div>
-      <a
-        href="/admin/pages/new"
-        class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-      >
-        <span aria-hidden="true">+</span>
-        Yeni sayfa
-      </a>
-    </div>
 
-    {
-      pages.length === 0 ? (
-        <div class="rounded-lg border border-border bg-background p-4 md:p-6">
-          <EmptyState
-            title="Henüz sayfa yok"
-            description="Ana sayfa seed’ini yükleyin veya yeni sayfa oluşturun."
-            actionHref="/admin/pages/new"
-            actionLabel="Sayfa ekle"
-          />
-        </div>
-      ) : (
-        <div class="overflow-x-auto rounded-md border border-border bg-background">
-          <table class="w-full min-w-[36rem] border-collapse text-left text-sm">
-            <thead class="bg-muted text-xs font-medium">
-              <tr>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Başlık</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Slug</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Durum</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Section</th>
-                <th class="border-b border-border px-3 py-2.5 font-medium">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pages.map((page) => (
-                <tr class="bg-background hover:bg-muted/40">
-                  <td class="border-b border-r border-border px-3 py-2 font-medium">{page.title}</td>
-                  <td class="border-b border-r border-border px-3 py-2 font-mono text-muted-foreground">
-                    {page.slug}
-                  </td>
-                  <td class="border-b border-r border-border px-3 py-2">{page.status}</td>
-                  <td class="border-b border-r border-border px-3 py-2 font-mono">{page.sectionCount}</td>
-                  <td class="border-b border-border px-3 py-2">
-                    <div class="flex items-center gap-3">
-                      <a href={`/admin/builder/${page.slug}`} class="hover:underline">
-                        Düzenle
-                      </a>
-                      {!isCorePageSlug(page.slug) && (
-                        <DeleteButton
-                          client:load
-                          endpoint={`/api/admin/pages/${page.slug}`}
-                          redirectTo="/admin/pages"
-                        />
-                      )}
-                    </div>
-                  </td>
+      {
+        pages.length === 0 ? (
+          <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+            <EmptyState
+              title="Henüz sayfa yok"
+              description="Ana sayfa seed’ini yükleyin veya yeni sayfa oluşturun."
+              actionHref="/admin/pages/new"
+              actionLabel="Sayfa ekle"
+            />
+          </div>
+        ) : (
+          <div class="overflow-x-auto rounded-md border border-border bg-background">
+            <table class="w-full min-w-[36rem] border-collapse text-left text-sm">
+              <thead class="bg-muted text-xs font-medium">
+                <tr>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Başlık</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Slug</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Durum</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Section</th>
+                  <th class="border-b border-border px-3 py-2.5 font-medium">İşlem</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )
-    }
-  </div>
+              </thead>
+              <tbody>
+                {pages.map((page) => (
+                  <tr class="bg-background hover:bg-muted/40">
+                    <td class="border-b border-r border-border px-3 py-2 font-medium">{page.title}</td>
+                    <td class="border-b border-r border-border px-3 py-2 font-mono text-muted-foreground">
+                      {page.slug}
+                    </td>
+                    <td class="border-b border-r border-border px-3 py-2">{page.status}</td>
+                    <td class="border-b border-r border-border px-3 py-2 font-mono">{page.sectionCount}</td>
+                    <td class="border-b border-border px-3 py-2">
+                      <div class="flex items-center gap-3">
+                        <a href={`/admin/builder/${page.slug}`} class="hover:underline">
+                          Düzenle
+                        </a>
+                        {!isCorePageSlug(page.slug) && (
+                          <DeleteButton
+                            client:load
+                            endpoint={`/api/admin/pages/${page.slug}`}
+                            redirectTo="/admin/pages"
+                          />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+    </div>
+  </DesktopOnlyGate>
 </AdminLayout>
