@@ -33,5 +33,9 @@ cosmic-conjunction/
 # generated load-test seed (FAZ 3)
 db/seed-grid.sql
 
+# Efor scrape/ingest temp + generated SQL
+.tmp/
+db/seed-efor-telsiz.sql
+
 # D1 backups (FAZ 9)
 backups/
