@@ -19,6 +19,8 @@ export const productUpsertSchema = z.object({
   status: productStatusSchema,
   brandId: z.string().optional().nullable(),
   primaryMediaId: z.string().optional().nullable(),
+  /** Ordered gallery; first item becomes primaryMediaId when provided. */
+  mediaIds: z.array(z.string().min(1)).max(24).optional(),
   seo: seoFieldsSchema.optional().nullable(),
 });
 

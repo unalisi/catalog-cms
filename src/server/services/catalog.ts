@@ -67,3 +67,7 @@ export async function getSitemapUrls() {
     catalogRepo.listSitemapEntries(getDb()),
   );
 }
+
+export async function getSampleProductSlug() {
+  return catalogRepo.getSamplePublishedProductSlug(getDb());
+}

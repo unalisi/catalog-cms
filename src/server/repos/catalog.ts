@@ -1,10 +1,11 @@
-import { and, asc, count, eq, inArray } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNotNull } from 'drizzle-orm';
 import {
   brands,
   categories,
   media,
   pages,
   productCategories,
+  productMedia,
   products,
   productVariants,
   seoMeta,
@@ -31,11 +32,18 @@ export type ProductListItem = {
   brand: { id: string; slug: string; name: string } | null;
 };
 
+export type ProductImage = {
+  id: string;
+  url: string;
+  alt: string;
+};
+
 export type ProductDetail = ProductListItem & {
   updatedAt: string;
   publishedAt: string | null;
   categories: { id: string; slug: string; name: string }[];
   variants: ProductVariant[];
+  images: ProductImage[];
   seo: SeoMeta | null;
 };
 
@@ -121,6 +129,26 @@ export async function listPublishedProducts(
   };
 }
 
+/** First published product — prefer one with a primary image (urun-sablon builder preview). */
+export async function getSamplePublishedProductSlug(db: Db): Promise<string | null> {
+  const [preferred] = await db
+    .select({ slug: products.slug })
+    .from(products)
+    .where(and(eq(products.status, 'published'), isNotNull(products.primaryMediaId)))
+    .orderBy(asc(products.name))
+    .limit(1);
+  if (preferred) return preferred.slug;
+
+  const [any] = await db
+    .select({ slug: products.slug })
+    .from(products)
+    .where(eq(products.status, 'published'))
+    .orderBy(asc(products.name))
+    .limit(1);
+
+  return any?.slug ?? null;
+}
+
 export async function getPublishedProductBySlug(
   db: Db,
   slug: string,
@@ -159,6 +187,37 @@ export async function getPublishedProductBySlug(
       and(eq(productCategories.productId, row.product.id), eq(categories.status, 'published')),
     );
 
+  const galleryRows = await db
+    .select({
+      id: media.id,
+      key: media.key,
+      alt: media.alt,
+      position: productMedia.position,
+    })
+    .from(productMedia)
+    .innerJoin(media, eq(productMedia.mediaId, media.id))
+    .where(eq(productMedia.productId, row.product.id))
+    .orderBy(asc(productMedia.position));
+
+  let images: ProductImage[] = galleryRows.map((g) => ({
+    id: g.id,
+    url: mediaPublicPath(g.key),
+    alt: g.alt || row.product.name,
+  }));
+
+  // Fallback: primary media when product_media is empty
+  if (images.length === 0 && row.mediaKey) {
+    images = [
+      {
+        id: row.product.primaryMediaId ?? 'primary',
+        url: mediaPublicPath(row.mediaKey),
+        alt: row.product.name,
+      },
+    ];
+  }
+
+  const imageUrl = images[0]?.url ?? (row.mediaKey ? mediaPublicPath(row.mediaKey) : null);
+
   return {
     id: row.product.id,
     slug: row.product.slug,
@@ -169,7 +228,7 @@ export async function getPublishedProductBySlug(
     compareAtPrice: row.product.compareAtPrice,
     currency: row.product.currency,
     stock: row.product.stock,
-    imageUrl: row.mediaKey ? mediaPublicPath(row.mediaKey) : null,
+    imageUrl,
     updatedAt: row.product.updatedAt,
     publishedAt: row.product.publishedAt,
     brand: row.brand
@@ -177,6 +236,7 @@ export async function getPublishedProductBySlug(
       : null,
     categories: categoryRows,
     variants: variantRows,
+    images,
     seo: row.seo,
   };
 }

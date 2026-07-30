@@ -11,14 +11,50 @@ export async function listGridProducts() {
   return repo.listProductsForGrid(getDb());
 }
 
+export async function listAdminProductsPage(opts: { page: number; pageSize: number }) {
+  return repo.listProductsAdminPage(getDb(), opts);
+}
+
 export async function getAdminProduct(id: string) {
   const product = await repo.getProductAdminById(getDb(), id);
   if (!product) return null;
   const seo = product.seoId ? await seoRepo.getSeoById(getDb(), product.seoId) : null;
-  const primaryMedia = product.primaryMediaId
+  const gallery = await repo.listProductGallery(getDb(), id);
+  let primaryMedia = product.primaryMediaId
     ? await mediaRepo.getMediaById(getDb(), product.primaryMediaId)
     : null;
-  return { ...product, seo, primaryMedia };
+
+  // If gallery empty but primary exists, surface primary as single gallery item
+  const galleryItems =
+    gallery.length > 0
+      ? gallery
+      : primaryMedia
+        ? [
+            {
+              id: primaryMedia.id,
+              key: primaryMedia.key,
+              url: primaryMedia.url,
+              alt: primaryMedia.alt,
+              mime: primaryMedia.mime,
+              position: 0,
+            },
+          ]
+        : [];
+
+  if (!primaryMedia && galleryItems[0]) {
+    primaryMedia = await mediaRepo.getMediaById(getDb(), galleryItems[0].id);
+  }
+
+  return { ...product, seo, primaryMedia, gallery: galleryItems };
+}
+
+function resolveMediaIds(data: {
+  mediaIds?: string[];
+  primaryMediaId?: string | null;
+}): string[] {
+  if (data.mediaIds) return data.mediaIds.filter(Boolean);
+  if (data.primaryMediaId) return [data.primaryMediaId];
+  return [];
 }
 
 export async function createAdminProduct(input: unknown) {
@@ -33,10 +69,13 @@ export async function createAdminProduct(input: unknown) {
   if (parsed.data.sku && (await repo.isProductSkuTaken(db, parsed.data.sku))) {
     return { ok: false as const, fields: { sku: 'Bu SKU zaten kullanılıyor' } };
   }
-  const { seo, ...rest } = parsed.data;
+  const { seo, mediaIds: _mediaIds, ...rest } = parsed.data;
+  const mediaIds = resolveMediaIds(parsed.data);
+  const primaryMediaId = mediaIds[0] ?? null;
   let seoId: string | null = null;
   if (seo) seoId = await seoRepo.upsertSeoMeta(db, null, seo);
-  const product = await repo.createProduct(db, { ...rest, seoId });
+  const product = await repo.createProduct(db, { ...rest, seoId, primaryMediaId });
+  await repo.replaceProductGallery(db, product.id, mediaIds);
   await invalidateProductCache(product.slug);
   return { ok: true as const, data: product };
 }
@@ -55,11 +94,18 @@ export async function updateAdminProduct(id: string, input: unknown) {
   if (parsed.data.sku && (await repo.isProductSkuTaken(db, parsed.data.sku, id))) {
     return { ok: false as const, fields: { sku: 'Bu SKU zaten kullanılıyor' } };
   }
-  const { seo, ...rest } = parsed.data;
+  const { seo, mediaIds: _mediaIds, ...rest } = parsed.data;
+  const mediaIds = resolveMediaIds(parsed.data);
+  const primaryMediaId = mediaIds[0] ?? null;
   let seoId = existing.seoId;
   if (seo) seoId = await seoRepo.upsertSeoMeta(db, existing.seoId, seo);
-  const product = await repo.updateProductFields(db, id, { ...rest, seoId });
+  const product = await repo.updateProductFields(db, id, {
+    ...rest,
+    seoId,
+    primaryMediaId,
+  });
   if (!product) return { ok: false as const, notFound: true as const };
+  await repo.replaceProductGallery(db, id, mediaIds);
   if (existing.slug !== product.slug) {
     await seoRepo.recordSlugChangeRedirect(db, '/product', existing.slug, product.slug);
   }

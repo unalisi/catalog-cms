@@ -2,6 +2,7 @@ import { and, asc, count, eq, ne } from 'drizzle-orm';
 import {
   brands,
   media,
+  productMedia,
   productVariants,
   products,
   type Product,
@@ -26,6 +27,45 @@ export type GridProduct = {
   updatedAt: string;
 };
 
+export type AdminProductListItem = {
+  id: string;
+  sku: string | null;
+  name: string;
+  price: number;
+  stock: number;
+  status: Product['status'];
+  brandId: string | null;
+  brandName: string | null;
+  imageUrl: string | null;
+};
+
+export type AdminProductGalleryItem = {
+  id: string;
+  key: string;
+  url: string;
+  alt: string;
+  mime: string | null;
+  position: number;
+};
+
+export const ADMIN_PRODUCT_PAGE_SIZES = [20, 50] as const;
+export type AdminProductPageSize = (typeof ADMIN_PRODUCT_PAGE_SIZES)[number];
+
+function clampPageSize(pageSize: number): AdminProductPageSize {
+  return pageSize === 50 ? 50 : 20;
+}
+
+function clampPage(page: number): number {
+  return Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+}
+
+function mapImageUrl(mediaKey: string | null, mediaMime: string | null): string | null {
+  if (!mediaKey) return null;
+  return mediaMime === 'image/svg+xml'
+    ? mediaPublicPath(mediaKey)
+    : mediaTransformPath(mediaKey, 128);
+}
+
 export async function listProductsForGrid(db: Db): Promise<GridProduct[]> {
   const rows = await db
     .select({
@@ -33,7 +73,6 @@ export async function listProductsForGrid(db: Db): Promise<GridProduct[]> {
       slug: products.slug,
       sku: products.sku,
       name: products.name,
-      description: products.description,
       price: products.price,
       stock: products.stock,
       status: products.status,
@@ -53,19 +92,66 @@ export async function listProductsForGrid(db: Db): Promise<GridProduct[]> {
     slug: r.slug,
     sku: r.sku,
     name: r.name,
-    description: r.description,
+    description: null,
     price: r.price,
     stock: r.stock,
     status: r.status,
     brandId: r.brandId,
     brandName: r.brandName ?? null,
-    imageUrl: r.mediaKey
-      ? r.mediaMime === 'image/svg+xml'
-        ? mediaPublicPath(r.mediaKey)
-        : mediaTransformPath(r.mediaKey, 128)
-      : null,
+    imageUrl: mapImageUrl(r.mediaKey, r.mediaMime),
     updatedAt: r.updatedAt,
   }));
+}
+
+export async function listProductsAdminPage(
+  db: Db,
+  opts: { page: number; pageSize: number },
+): Promise<{ items: AdminProductListItem[]; total: number; page: number; pageSize: AdminProductPageSize }> {
+  const pageSize = clampPageSize(opts.pageSize);
+  let page = clampPage(opts.page);
+
+  const [totalRow] = await db.select({ value: count() }).from(products);
+  const total = totalRow?.value ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
+  if (page > totalPages) page = totalPages;
+
+  const offset = (page - 1) * pageSize;
+  const rows = await db
+    .select({
+      id: products.id,
+      sku: products.sku,
+      name: products.name,
+      price: products.price,
+      stock: products.stock,
+      status: products.status,
+      brandId: products.brandId,
+      brandName: brands.name,
+      mediaKey: media.key,
+      mediaMime: media.mime,
+    })
+    .from(products)
+    .leftJoin(brands, eq(products.brandId, brands.id))
+    .leftJoin(media, eq(products.primaryMediaId, media.id))
+    .orderBy(asc(products.name))
+    .limit(pageSize)
+    .offset(offset);
+
+  return {
+    items: rows.map((r) => ({
+      id: r.id,
+      sku: r.sku,
+      name: r.name,
+      price: r.price,
+      stock: r.stock,
+      status: r.status,
+      brandId: r.brandId,
+      brandName: r.brandName ?? null,
+      imageUrl: mapImageUrl(r.mediaKey, r.mediaMime),
+    })),
+    total,
+    page,
+    pageSize,
+  };
 }
 
 export async function getProductAdminById(db: Db, id: string) {
@@ -87,6 +173,51 @@ export async function getProductAdminById(db: Db, id: string) {
     .orderBy(asc(productVariants.position));
 
   return { ...row.product, brandName: row.brandName ?? null, variants };
+}
+
+export async function listProductGallery(db: Db, productId: string): Promise<AdminProductGalleryItem[]> {
+  const rows = await db
+    .select({
+      id: media.id,
+      key: media.key,
+      url: media.url,
+      alt: media.alt,
+      mime: media.mime,
+      position: productMedia.position,
+    })
+    .from(productMedia)
+    .innerJoin(media, eq(productMedia.mediaId, media.id))
+    .where(eq(productMedia.productId, productId))
+    .orderBy(asc(productMedia.position));
+
+  return rows.map((r) => ({
+    id: r.id,
+    key: r.key,
+    url: r.url || mediaPublicPath(r.key),
+    alt: r.alt,
+    mime: r.mime,
+    position: r.position,
+  }));
+}
+
+/** Replace product_media rows and return the primary media id (first in list). */
+export async function replaceProductGallery(
+  db: Db,
+  productId: string,
+  mediaIds: string[],
+): Promise<string | null> {
+  await db.delete(productMedia).where(eq(productMedia.productId, productId));
+  const unique = [...new Set(mediaIds.filter(Boolean))];
+  if (unique.length === 0) return null;
+
+  await db.insert(productMedia).values(
+    unique.map((mediaId, position) => ({
+      productId,
+      mediaId,
+      position,
+    })),
+  );
+  return unique[0] ?? null;
 }
 
 export async function isProductSlugTaken(db: Db, slug: string, excludeId?: string) {
