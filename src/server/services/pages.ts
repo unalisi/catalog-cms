@@ -189,9 +189,19 @@ export async function removeSection(sectionId: string) {
   const db = getDb();
   const existing = await repo.getSectionById(db, sectionId);
   if (!existing) return { ok: false as const, notFound: true as const };
+  const page = await repo.getPageById(db, existing.pageId);
+  if (
+    page &&
+    ((page.slug === 'urun-sablon' && existing.type === 'product-detail') ||
+      (page.slug === 'iletisim' && existing.type === 'contact-layout'))
+  ) {
+    return {
+      ok: false as const,
+      error: { code: 'forbidden', message: 'Bu section silinemez' },
+    };
+  }
   const deleted = await repo.deleteSection(db, sectionId);
   if (!deleted) return { ok: false as const, notFound: true as const };
-  const page = await repo.getPageById(db, existing.pageId);
   if (page) await invalidatePageCache(page.slug);
   return { ok: true as const, data: deleted };
 }

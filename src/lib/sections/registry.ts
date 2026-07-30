@@ -18,6 +18,7 @@ export const SECTION_TYPES = [
   'contact-layout',
   'product-list',
   'blog-list',
+  'product-detail',
   'related-products',
   'related-posts',
 ] as const;
@@ -229,6 +230,18 @@ export const relatedPostsSchema = z.object({
   layout: z.enum(['row', 'grid']).default('row'),
 });
 
+const showHide = z.enum(['show', 'hide']).default('show');
+
+export const productDetailSchema = z.object({
+  layout: z.enum(['gallery-left', 'gallery-top', 'thumbs-aside']).default('gallery-left'),
+  showBreadcrumb: showHide,
+  showSku: showHide,
+  showStock: showHide,
+  showCategories: showHide,
+  ctaLabel: z.string().max(80).default('Teklif alın'),
+  ctaHref: z.string().max(300).default('/iletisim'),
+});
+
 export const sectionSchemas = {
   hero: heroSchema,
   'featured-products': featuredProductsSchema,
@@ -247,6 +260,7 @@ export const sectionSchemas = {
   'contact-layout': contactLayoutSchema,
   'product-list': productListSchema,
   'blog-list': blogListSchema,
+  'product-detail': productDetailSchema,
   'related-products': relatedProductsSchema,
   'related-posts': relatedPostsSchema,
 } as const;
@@ -373,6 +387,15 @@ export const sectionDefaults: { [K in SectionType]: SectionConfigMap[K] } = {
     pageSize: 12,
   },
   'blog-list': { title: 'Blog', layout: 'row', columns: 3 },
+  'product-detail': {
+    layout: 'gallery-left',
+    showBreadcrumb: 'show',
+    showSku: 'show',
+    showStock: 'show',
+    showCategories: 'show',
+    ctaLabel: 'Teklif alın',
+    ctaHref: '/iletisim',
+  },
   'related-products': { title: 'Benzer ürünler', limit: 4, layout: 'grid' },
   'related-posts': { title: 'İlgili yazılar', limit: 3, layout: 'row' },
 };
@@ -395,6 +418,7 @@ export const sectionLabels: Record<SectionType, string> = {
   'contact-layout': 'İletişim layout',
   'product-list': 'Ürün listesi',
   'blog-list': 'Blog listesi',
+  'product-detail': 'Ürün detay',
   'related-products': 'Benzer ürünler',
   'related-posts': 'İlgili yazılar',
 };
@@ -639,6 +663,56 @@ export const sectionFields: Record<SectionType, FieldDef[]> = {
       showWhen: { key: 'layout', equals: 'grid' },
     },
     { key: 'pageSize', label: 'Sayfa boyutu', kind: 'number' },
+  ],
+  'product-detail': [
+    {
+      key: 'layout',
+      label: 'Yerleşim',
+      kind: 'select',
+      options: [
+        { value: 'gallery-left', label: 'Galeri sol | Bilgi sağ' },
+        { value: 'gallery-top', label: 'Galeri üst | Bilgi alt' },
+        { value: 'thumbs-aside', label: 'Dikey thumbs | Sticky bilgi' },
+      ],
+    },
+    {
+      key: 'showBreadcrumb',
+      label: 'Breadcrumb',
+      kind: 'select',
+      options: [
+        { value: 'show', label: 'Göster' },
+        { value: 'hide', label: 'Gizle' },
+      ],
+    },
+    {
+      key: 'showSku',
+      label: 'SKU',
+      kind: 'select',
+      options: [
+        { value: 'show', label: 'Göster' },
+        { value: 'hide', label: 'Gizle' },
+      ],
+    },
+    {
+      key: 'showStock',
+      label: 'Stok',
+      kind: 'select',
+      options: [
+        { value: 'show', label: 'Göster' },
+        { value: 'hide', label: 'Gizle' },
+      ],
+    },
+    {
+      key: 'showCategories',
+      label: 'Kategoriler',
+      kind: 'select',
+      options: [
+        { value: 'show', label: 'Göster' },
+        { value: 'hide', label: 'Gizle' },
+      ],
+    },
+    { key: 'ctaLabel', label: 'CTA metni', kind: 'text' },
+    { key: 'ctaHref', label: 'CTA link', kind: 'url' },
   ],
   'blog-list': [
     { key: 'title', label: 'Başlık', kind: 'text' },

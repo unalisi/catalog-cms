@@ -1,5 +1,6 @@
 import { CORE_PAGES } from '../../lib/pages/core-pages';
 import { sectionDefaults } from '../../lib/sections/registry';
+import { invalidatePageCache } from '../../lib/cache/invalidate';
 import { getDb } from '../db';
 import * as repo from '../repos/pages';
 
@@ -14,6 +15,10 @@ const CORE_SECTION_SEED: Record<string, { type: keyof typeof sectionDefaults; co
       },
     ],
     'urun-sablon': [
+      {
+        type: 'product-detail',
+        config: sectionDefaults['product-detail'],
+      },
       {
         type: 'related-products',
         config: sectionDefaults['related-products'],
@@ -70,4 +75,30 @@ export async function ensureCorePages() {
       });
     }
   }
+
+  await ensureProductDetailSection();
+}
+
+/**
+ * Existing installs may have urun-sablon without product-detail.
+ * Insert at the top (position 0) and reorder if missing.
+ */
+export async function ensureProductDetailSection() {
+  const db = getDb();
+  const page = await repo.getPageBySlug(db, 'urun-sablon');
+  if (!page) return;
+
+  const hasDetail = page.sections.some((s) => s.type === 'product-detail');
+  if (hasDetail) return;
+
+  const created = await repo.createSection(db, {
+    pageId: page.id,
+    type: 'product-detail',
+    configJson: JSON.stringify(sectionDefaults['product-detail']),
+    isVisible: true,
+  });
+
+  const orderedIds = [created.id, ...page.sections.map((s) => s.id)];
+  await repo.reorderSections(db, page.id, orderedIds);
+  await invalidatePageCache('urun-sablon');
 }

@@ -32,7 +32,13 @@ export const PAGE_ALLOWED_SECTIONS: Record<CorePageSlug, readonly SectionType[]>
   iletisim: ['contact-layout'],
   blog: ['blog-list'],
   catalog: ['product-list'],
-  'urun-sablon': ['related-products', 'banner-cta', 'rich-text', 'gallery'],
+  'urun-sablon': [
+    'product-detail',
+    'related-products',
+    'banner-cta',
+    'rich-text',
+    'gallery',
+  ],
   'yazi-sablon': ['related-posts', 'banner-cta', 'rich-text'],
 };
 
