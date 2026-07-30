@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ApiResult } from '../../lib/api';
 import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 
 type UserStatus = 'pending' | 'active';
 
@@ -103,6 +109,8 @@ export default function UsersRolesAdmin({
     permissions: [] as string[],
   });
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [userSheetOpen, setUserSheetOpen] = useState(false);
+  const [roleSheetOpen, setRoleSheetOpen] = useState(false);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
@@ -173,11 +181,45 @@ export default function UsersRolesAdmin({
       password: '',
       roleId: roles[0]?.id ?? '',
     });
+    setUserSheetOpen(false);
   }
 
   function resetRoleForm() {
     setEditingRoleId(null);
     setRoleForm({ name: '', description: '', permissions: [] });
+    setRoleSheetOpen(false);
+  }
+
+  function openNewUser() {
+    setEditingUserId(null);
+    setUserForm({
+      email: '',
+      password: '',
+      roleId: roles[0]?.id ?? '',
+    });
+    setUserSheetOpen(true);
+  }
+
+  function openEditUser(u: UserRow) {
+    setEditingUserId(u.id);
+    setUserForm({ email: u.email, password: '', roleId: u.roleId });
+    setUserSheetOpen(true);
+  }
+
+  function openNewRole() {
+    setEditingRoleId(null);
+    setRoleForm({ name: '', description: '', permissions: [] });
+    setRoleSheetOpen(true);
+  }
+
+  function openEditRole(r: RoleRow) {
+    setEditingRoleId(r.id);
+    setRoleForm({
+      name: r.name,
+      description: r.description ?? '',
+      permissions: [...r.permissions],
+    });
+    setRoleSheetOpen(true);
   }
 
   function upsertUser(row: UserRow) {
@@ -339,12 +381,128 @@ export default function UsersRolesAdmin({
   const editingRole = editingRoleId ? roles.find((r) => r.id === editingRoleId) : null;
   const rolePermsLocked = editingRole?.slug === 'admin';
 
+  const userFormFields = (
+    <>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium">E-posta</span>
+        <input
+          className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
+          type="email"
+          required
+          value={userForm.email}
+          onChange={(e) => setUserForm((f) => ({ ...f, email: e.target.value }))}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium">
+          Parola{editingUserId ? ' (boş = değişmez)' : ''}
+        </span>
+        <div className="flex gap-2">
+          <input
+            className="min-h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
+            type="text"
+            autoComplete="new-password"
+            minLength={8}
+            required={!editingUserId}
+            value={userForm.password}
+            onChange={(e) => setUserForm((f) => ({ ...f, password: e.target.value }))}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11 shrink-0"
+            onClick={() => setUserForm((f) => ({ ...f, password: generateTempPassword() }))}
+          >
+            Üret
+          </Button>
+        </div>
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium">Rol</span>
+        <select
+          className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
+          value={userForm.roleId}
+          onChange={(e) => setUserForm((f) => ({ ...f, roleId: e.target.value }))}
+          required
+        >
+          {roles.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="flex gap-2 pt-1">
+        <Button type="submit" disabled={busy} className="min-h-11">
+          {editingUserId ? 'Kaydet' : 'Oluştur'}
+        </Button>
+        {editingUserId && (
+          <Button type="button" variant="outline" className="min-h-11" onClick={resetUserForm}>
+            İptal
+          </Button>
+        )}
+      </div>
+    </>
+  );
+
+  const roleFormFields = (
+    <>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium">Ad</span>
+        <input
+          className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
+          required
+          value={roleForm.name}
+          onChange={(e) => setRoleForm((f) => ({ ...f, name: e.target.value }))}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium">Açıklama</span>
+        <textarea
+          className="min-h-16 rounded-md border border-input bg-background px-3 py-2"
+          value={roleForm.description}
+          onChange={(e) => setRoleForm((f) => ({ ...f, description: e.target.value }))}
+        />
+      </label>
+      <fieldset className="flex flex-col gap-2" disabled={rolePermsLocked}>
+        <legend className="text-sm font-medium">Yetkiler</legend>
+        {rolePermsLocked && (
+          <p className="text-xs text-muted-foreground">Admin rolünün yetkileri kilitlidir.</p>
+        )}
+        <div className="flex max-h-64 flex-col gap-1.5 overflow-y-auto">
+          {permissions.map((p) => (
+            <label key={p.key} className="flex min-h-11 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={roleForm.permissions.includes(p.key)}
+                onChange={() => togglePerm(p.key)}
+                disabled={rolePermsLocked}
+              />
+              <span>{p.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div className="flex gap-2 pt-1">
+        <Button type="submit" disabled={busy} className="min-h-11">
+          {editingRoleId ? 'Kaydet' : 'Oluştur'}
+        </Button>
+        {editingRoleId && (
+          <Button type="button" variant="outline" className="min-h-11" onClick={resetRoleForm}>
+            İptal
+          </Button>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-2 border-b border-border">
+      <div className="sticky top-0 z-10 -mx-1 flex gap-2 border-b border-border bg-background px-1">
         <button
           type="button"
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${
+          className={`min-h-11 border-b-2 px-3 py-2 text-sm font-medium ${
             tab === 'users' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
           }`}
           onClick={() => setTab('users')}
@@ -353,7 +511,7 @@ export default function UsersRolesAdmin({
         </button>
         <button
           type="button"
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${
+          className={`min-h-11 border-b-2 px-3 py-2 text-sm font-medium ${
             tab === 'roles' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
           }`}
           onClick={() => setTab('roles')}
@@ -380,71 +538,124 @@ export default function UsersRolesAdmin({
       )}
 
       {tab === 'users' && (
-        <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2 font-medium">E-posta</th>
-                  <th className="px-3 py-2 font-medium">Rol</th>
-                  <th className="px-3 py-2 font-medium">Durum</th>
-                  <th className="px-3 py-2 font-medium">İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
-                {!loading && users.length === 0 ? (
+        <div className="grid gap-6 lg:grid-cols-[1fr_20rem] lg:gap-8">
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={openNewUser}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium lg:hidden"
+            >
+              <span aria-hidden="true">+</span>
+              Yeni kullanıcı
+            </button>
+
+            <div className="flex flex-col gap-2 md:hidden">
+              {!loading && users.length === 0 ? (
+                <p className="rounded-md border border-border px-3 py-8 text-center text-sm text-muted-foreground">
+                  Henüz kullanıcı yok.
+                </p>
+              ) : (
+                users.map((u) => (
+                  <article key={u.id} className="rounded-md border border-border p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{u.email}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{u.roleName}</p>
+                      </div>
+                      <span
+                        className={
+                          u.status === 'active'
+                            ? 'shrink-0 text-xs font-medium text-foreground'
+                            : 'shrink-0 text-xs font-medium text-muted-foreground'
+                        }
+                      >
+                        {statusLabel(u.status)}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex min-h-11 items-center gap-4">
+                      <button
+                        type="button"
+                        className="text-sm font-medium text-primary hover:underline"
+                        onClick={() => openEditUser(u)}
+                      >
+                        Düzenle
+                      </button>
+                      <button
+                        type="button"
+                        className="text-sm font-medium text-destructive hover:underline"
+                        onClick={() => void deleteUser(u.id)}
+                        disabled={busy}
+                      >
+                        Sil
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+
+            <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
-                    <td colSpan={4} className="px-3 py-8 text-center text-muted-foreground">
-                      Henüz kullanıcı yok.
-                    </td>
+                    <th className="px-3 py-2 font-medium">E-posta</th>
+                    <th className="px-3 py-2 font-medium">Rol</th>
+                    <th className="px-3 py-2 font-medium">Durum</th>
+                    <th className="px-3 py-2 font-medium">İşlem</th>
                   </tr>
-                ) : (
-                  users.map((u) => (
-                    <tr key={u.id} className="border-b border-border last:border-0">
-                      <td className="px-3 py-2.5 font-medium">{u.email}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground">{u.roleName}</td>
-                      <td className="px-3 py-2.5">
-                        <span
-                          className={
-                            u.status === 'active'
-                              ? 'text-xs font-medium text-foreground'
-                              : 'text-xs font-medium text-muted-foreground'
-                          }
-                        >
-                          {statusLabel(u.status)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            className="text-xs font-medium hover:underline"
-                            onClick={() => {
-                              setEditingUserId(u.id);
-                              setUserForm({ email: u.email, password: '', roleId: u.roleId });
-                            }}
-                          >
-                            Düzenle
-                          </button>
-                          <button
-                            type="button"
-                            className="text-xs font-medium text-destructive hover:underline"
-                            onClick={() => void deleteUser(u.id)}
-                            disabled={busy}
-                          >
-                            Sil
-                          </button>
-                        </div>
+                </thead>
+                <tbody>
+                  {!loading && users.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-3 py-8 text-center text-muted-foreground">
+                        Henüz kullanıcı yok.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    users.map((u) => (
+                      <tr key={u.id} className="border-b border-border last:border-0">
+                        <td className="px-3 py-2.5 font-medium">{u.email}</td>
+                        <td className="px-3 py-2.5 text-muted-foreground">{u.roleName}</td>
+                        <td className="px-3 py-2.5">
+                          <span
+                            className={
+                              u.status === 'active'
+                                ? 'text-xs font-medium text-foreground'
+                                : 'text-xs font-medium text-muted-foreground'
+                            }
+                          >
+                            {statusLabel(u.status)}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className="text-xs font-medium hover:underline"
+                              onClick={() => openEditUser(u)}
+                            >
+                              Düzenle
+                            </button>
+                            <button
+                              type="button"
+                              className="text-xs font-medium text-destructive hover:underline"
+                              onClick={() => void deleteUser(u.id)}
+                              disabled={busy}
+                            >
+                              Sil
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <form
-            className="flex flex-col gap-3 rounded-lg border border-border p-4"
+            className="hidden flex-col gap-3 rounded-lg border border-border p-4 lg:flex"
             onSubmit={(e) => {
               e.preventDefault();
               void saveUser();
@@ -453,75 +664,42 @@ export default function UsersRolesAdmin({
             <h2 className="font-display text-base font-semibold">
               {editingUserId ? 'Kullanıcıyı düzenle' : 'Yeni kullanıcı'}
             </h2>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">E-posta</span>
-              <input
-                className="rounded-md border border-input bg-background px-3 py-2"
-                type="email"
-                required
-                value={userForm.email}
-                onChange={(e) => setUserForm((f) => ({ ...f, email: e.target.value }))}
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">
-                Parola{editingUserId ? ' (boş = değişmez)' : ''}
-              </span>
-              <div className="flex gap-2">
-                <input
-                  className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
-                  type="text"
-                  autoComplete="new-password"
-                  minLength={8}
-                  required={!editingUserId}
-                  value={userForm.password}
-                  onChange={(e) => setUserForm((f) => ({ ...f, password: e.target.value }))}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() =>
-                    setUserForm((f) => ({ ...f, password: generateTempPassword() }))
-                  }
-                >
-                  Üret
-                </Button>
-              </div>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Rol</span>
-              <select
-                className="rounded-md border border-input bg-background px-3 py-2"
-                value={userForm.roleId}
-                onChange={(e) => setUserForm((f) => ({ ...f, roleId: e.target.value }))}
-                required
-              >
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="flex gap-2 pt-1">
-              <Button type="submit" disabled={busy} size="sm">
-                {editingUserId ? 'Kaydet' : 'Oluştur'}
-              </Button>
-              {editingUserId && (
-                <Button type="button" variant="outline" size="sm" onClick={resetUserForm}>
-                  İptal
-                </Button>
-              )}
-            </div>
+            {userFormFields}
           </form>
+
+          <Sheet open={userSheetOpen} onOpenChange={setUserSheetOpen}>
+            <SheetContent
+              side="bottom"
+              className="max-h-[90dvh] gap-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)] lg:hidden"
+            >
+              <SheetHeader className="border-b border-border text-left">
+                <SheetTitle>{editingUserId ? 'Kullanıcıyı düzenle' : 'Yeni kullanıcı'}</SheetTitle>
+              </SheetHeader>
+              <form
+                className="flex flex-col gap-3 overflow-y-auto px-1 py-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void saveUser();
+                }}
+              >
+                {userFormFields}
+              </form>
+            </SheetContent>
+          </Sheet>
         </div>
       )}
 
       {tab === 'roles' && (
-        <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_22rem] lg:gap-8">
           <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={openNewRole}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium lg:hidden"
+            >
+              <span aria-hidden="true">+</span>
+              Yeni rol
+            </button>
             {!loading && roles.length === 0 ? (
               <p className="rounded-lg border border-border px-3 py-8 text-center text-sm text-muted-foreground">
                 Henüz rol yok.
@@ -541,29 +719,20 @@ export default function UsersRolesAdmin({
                       {r.description && (
                         <p className="mt-2 text-sm text-muted-foreground">{r.description}</p>
                       )}
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {r.permissions.length} yetki
-                      </p>
+                      <p className="mt-2 text-xs text-muted-foreground">{r.permissions.length} yetki</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex min-h-11 items-center gap-3">
                       <button
                         type="button"
-                        className="text-xs font-medium hover:underline"
-                        onClick={() => {
-                          setEditingRoleId(r.id);
-                          setRoleForm({
-                            name: r.name,
-                            description: r.description ?? '',
-                            permissions: [...r.permissions],
-                          });
-                        }}
+                        className="text-sm font-medium hover:underline"
+                        onClick={() => openEditRole(r)}
                       >
                         Düzenle
                       </button>
                       {!r.isSystem && (
                         <button
                           type="button"
-                          className="text-xs font-medium text-destructive hover:underline"
+                          className="text-sm font-medium text-destructive hover:underline"
                           onClick={() => void deleteRole(r.id)}
                           disabled={busy}
                         >
@@ -578,7 +747,7 @@ export default function UsersRolesAdmin({
           </div>
 
           <form
-            className="flex flex-col gap-3 rounded-lg border border-border p-4"
+            className="hidden flex-col gap-3 rounded-lg border border-border p-4 lg:flex"
             onSubmit={(e) => {
               e.preventDefault();
               void saveRole();
@@ -587,53 +756,28 @@ export default function UsersRolesAdmin({
             <h2 className="font-display text-base font-semibold">
               {editingRoleId ? 'Rolü düzenle' : 'Yeni rol'}
             </h2>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Ad</span>
-              <input
-                className="rounded-md border border-input bg-background px-3 py-2"
-                required
-                value={roleForm.name}
-                onChange={(e) => setRoleForm((f) => ({ ...f, name: e.target.value }))}
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Açıklama</span>
-              <textarea
-                className="min-h-16 rounded-md border border-input bg-background px-3 py-2"
-                value={roleForm.description}
-                onChange={(e) => setRoleForm((f) => ({ ...f, description: e.target.value }))}
-              />
-            </label>
-            <fieldset className="flex flex-col gap-2" disabled={rolePermsLocked}>
-              <legend className="text-sm font-medium">Yetkiler</legend>
-              {rolePermsLocked && (
-                <p className="text-xs text-muted-foreground">Admin rolünün yetkileri kilitlidir.</p>
-              )}
-              <div className="flex max-h-64 flex-col gap-1.5 overflow-y-auto">
-                {permissions.map((p) => (
-                  <label key={p.key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={roleForm.permissions.includes(p.key)}
-                      onChange={() => togglePerm(p.key)}
-                      disabled={rolePermsLocked}
-                    />
-                    <span>{p.label}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <div className="flex gap-2 pt-1">
-              <Button type="submit" disabled={busy} size="sm">
-                {editingRoleId ? 'Kaydet' : 'Oluştur'}
-              </Button>
-              {editingRoleId && (
-                <Button type="button" variant="outline" size="sm" onClick={resetRoleForm}>
-                  İptal
-                </Button>
-              )}
-            </div>
+            {roleFormFields}
           </form>
+
+          <Sheet open={roleSheetOpen} onOpenChange={setRoleSheetOpen}>
+            <SheetContent
+              side="bottom"
+              className="max-h-[90dvh] gap-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)] lg:hidden"
+            >
+              <SheetHeader className="border-b border-border text-left">
+                <SheetTitle>{editingRoleId ? 'Rolü düzenle' : 'Yeni rol'}</SheetTitle>
+              </SheetHeader>
+              <form
+                className="flex flex-col gap-3 overflow-y-auto px-1 py-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void saveRole();
+                }}
+              >
+                {roleFormFields}
+              </form>
+            </SheetContent>
+          </Sheet>
         </div>
       )}
     </div>

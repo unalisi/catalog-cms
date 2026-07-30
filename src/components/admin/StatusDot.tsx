@@ -11,7 +11,7 @@ function normalize(status: ContentStatus): 'live' | 'draft' | 'hidden' {
 const LABELS = {
   live: 'Yayında',
   draft: 'Taslak',
-  hidden: 'Gizli',
+  hidden: 'Listedışı',
 } as const;
 
 type Props = {

@@ -81,7 +81,11 @@ export function displayCellValue(row: GridProduct, colId: ColId, brands: BrandOp
     case 'brandId':
       return brands.find((b) => b.id === row.brandId)?.name ?? row.brandName ?? '';
     case 'status':
-      return row.status;
+      return row.status === 'published'
+        ? 'Yayında'
+        : row.status === 'draft'
+          ? 'Taslak'
+          : 'Listedışı';
   }
 }
 
@@ -120,7 +124,10 @@ export function coerceEditValue(
     case 'status': {
       const v = raw.trim().toLowerCase();
       if (v === 'draft' || v === 'published' || v === 'archived') return { ok: true, value: v };
-      return { ok: false, message: 'Durum: draft | published | archived' };
+      if (v === 'taslak') return { ok: true, value: 'draft' };
+      if (v === 'yayinda' || v === 'yayında') return { ok: true, value: 'published' };
+      if (v === 'listedisi' || v === 'listedışı' || v === 'gizli') return { ok: true, value: 'archived' };
+      return { ok: false, message: 'Durum: Yayında | Taslak | Listedışı' };
     }
   }
 }

@@ -16,8 +16,8 @@ import {
   type ProductStatus,
 } from './types';
 
-const ROW_HEIGHT = 36;
-const CHECK_WIDTH = 40;
+const ROW_HEIGHT = 44;
+const CHECK_WIDTH = 44;
 const ACTION_WIDTH = 72;
 
 type ProductGridProps = {
@@ -477,15 +477,18 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
-        <div className="text-muted-foreground">
+      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-background/95 px-3 py-2 text-sm backdrop-blur supports-[backdrop-filter]:bg-background/90">
+        <div className="min-w-0 text-muted-foreground">
           {selectedCellCount > 0 && <span>{selectedCellCount} hücre</span>}
           {selectedCellCount > 0 && selectedRowCount > 0 && <span> · </span>}
           {selectedRowCount > 0 && <span>{selectedRowCount} satır</span>}
           {selectedCellCount === 0 && selectedRowCount === 0 && (
-            <span>
+            <span className="hidden sm:inline">
               {rows.length} ürün · ok/Tab gezin · Enter düzenle · ⌘/Ctrl+S kaydet · yapıştır TSV
             </span>
+          )}
+          {selectedCellCount === 0 && selectedRowCount === 0 && (
+            <span className="sm:hidden">{rows.length} ürün</span>
           )}
           {dirtyCount > 0 && (
             <span className="ml-2 font-medium text-foreground">· {dirtyCount} satır değişti</span>
@@ -494,7 +497,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40"
+            className="hidden min-h-11 rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40 sm:inline-flex sm:items-center"
             disabled={!active || saving}
             onClick={fillDown}
           >
@@ -502,7 +505,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
           </button>
           <button
             type="button"
-            className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40"
+            className="hidden min-h-11 rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40 sm:inline-flex sm:items-center"
             disabled={!active || saving}
             onClick={fillRight}
           >
@@ -510,7 +513,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
           </button>
           <button
             type="button"
-            className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40"
+            className="min-h-11 rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-40"
             disabled={dirtyCount === 0 || saving}
             onClick={discardDirty}
           >
@@ -518,7 +521,7 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
           </button>
           <button
             type="button"
-            className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
+            className="min-h-11 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
             disabled={dirtyCount === 0 || saving}
             onClick={() => void saveDirty()}
           >
@@ -661,9 +664,9 @@ export default function ProductGrid({ initialProducts, brands }: ProductGridProp
                             >
                               {col.id === 'status' ? (
                                 <>
-                                  <option value="draft">draft</option>
-                                  <option value="published">published</option>
-                                  <option value="archived">archived</option>
+                                  <option value="published">Yayında</option>
+                                  <option value="draft">Taslak</option>
+                                  <option value="archived">Listedışı</option>
                                 </>
                               ) : (
                                 <>
