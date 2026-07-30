@@ -1,0 +1,279 @@
+{
+  "scrapedAt": "2026-07-30T19:38:54.536Z",
+  "source": "https://www.efortelekom.com/wp-json/wc/store/v1/products?category=238&per_page=100",
+  "count": 15,
+  "products": [
+    {
+      "sourceId": 7538,
+      "sourceUrl": "https://www.efortelekom.com/urunler/7538/",
+      "name": "Alervites AT 31D Telsiz Type-C Şarj Özellikli",
+      "slug": "efor-alervites-at-31d-telsiz-type-c-sarj-ozellikli",
+      "sku": "EFOR-TEL-01",
+      "price": 150000,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Alervites",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2026/04/Alervites-AT-31D-Telsiz-0.png",
+      "description": "Alervites AT 31D Telsiz Type-C Şarj Özellikli\n\nAlervites AT 31D telsiz; güçlü sinyal kalitesi, uzun pil ömrü ve dayanıklı yapısıyla güvenlik, organizasyon ve saha kullanımı için idealdir.\n\n•\nÜrün Tipi: El Telsizi\n\n•\nFrekans Bandı: VHF / UHF (modele göre değişebilir)\n\n•\nİletişim Türü: Analog / Dijital destek (modele göre)\n\n•\nBatarya: Şarjlı batarya paketi\n\n•\nPil Ömrü: Uzun süreli kullanım\n\n•\nSes Kalitesi: Net ve güçlü hoparlör çıkışı\n\n•\nKapsama Alanı: Açık alanda uzun menzil\n\n•\nDayanıklılık: Sağlam ve ergonomik gövde\n\n•\nKullanım Alanları:\n\n•\nGüvenlik ve organizasyon ekipleri\n\n•\nİnşaat sahaları\n\n•\nDepo ve lojistik\n\n•\nEtkinlik yönetimi\n\n•\nOutdoor aktiviteler"
+    },
+    {
+      "sourceId": 7532,
+      "sourceUrl": "https://www.efortelekom.com/urunler/7532/",
+      "name": "Baofeng Bf-T20 Mini Telsiz PMR 446 Type-C Şarj Özellikli",
+      "slug": "efor-baofeng-bf-t20-mini-telsiz-pmr-446-type-c-sarj-ozellikli",
+      "sku": "EFOR-TEL-02",
+      "price": 100000,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Baofeng",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2026/04/Baofeng-T20-Telsiz.png",
+      "description": "Baofeng Bf-T20 Mini Telsiz PMR 446 Type-C Şarj Özellikli\n\nVOX\n\nÇağrı sonu Bip\n\nKlavye Kilitleri\n\nÇıkış gücü:0,5W\n\nTeknik özellikler\n\nCTCSS:38(1-38)CDCSS:60(39-99)\n\nDüşük güç uyarısı ve güç göstergesi\n\nKanal: Çeşitli sivil frekanslarla ilgilidir\n\nFrekans aralığı: 446 mhz."
+    },
+    {
+      "sourceId": 7522,
+      "sourceUrl": "https://www.efortelekom.com/urunler/7522/",
+      "name": "Aselsannet PM-985 GRİ 2'Li Set PMR El Telsizi (Masaüstü Çiftli Şarj ve Batarya)",
+      "slug": "efor-aselsannet-pm-985-gri-2-li-set-pmr-el-telsizi-masaustu-ciftli-sarj-ve-batarya",
+      "sku": "EFOR-TEL-03",
+      "price": 410500,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "ASELSAN COBRA",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2026/04/aselsan-cobra_PM985-Gri_telsiz_1080x1080.png",
+      "description": "Aselsannet PM-985 GRİ PMR El Telsizi\n\nGenel Özellikler\nAselsannet PM-985 GRİ PMR El Telsizi Genel Özellikler\n\n• 12 Km'ye Kadar Görüşme Mesafesi (*\n\n• 16 Ana Kanal\n\n• 121 Alt Kanal\n\n• 1936 Alt Kanal Kombinasyonu\n\n• Sesli otomatik gönderme (VOX) özelliği\n\n• Anlaşıldı / Doğrulama Sinyali (açık/kapalı)\n\n• Aydınlatmalı LCD Ekran\n\n• Güç tasarrufu\n\n• Tarama (ana ve alt kanallar)\n\n• Kulaklık , mikrofon, şarj girişi\n\n• Pil seviyesi göstergesi\n\n• Tuşlama Tonu (açık/kapalı)\n\n• Tuş Kilidi\n\n• İzin/Ruhsat ve Kullanım Ücreti Gerekmez\n\nKutu İçeriği:\n\n• 2 adet Aselsannet PM-985 El telsizi\n\n• 2 adet 1.300 mAh NiMh şarj edilebilir batarya\n\n• 1 adet masa üstü şarj cihazı\n\n• 1 adet kemer klipsi\n\n• 1 adet kullanım kılavuzu"
+    },
+    {
+      "sourceId": 7506,
+      "sourceUrl": "https://www.efortelekom.com/urunler/7506/",
+      "name": "Aselsannet Cobra RX 380 2'Li Set PMR El Telsizi (Masaüstü Çiftli Şarj ve Pil Dahil)",
+      "slug": "efor-aselsannet-cobra-rx-380-2-li-set-pmr-el-telsizi-masaustu-ciftli-sarj-ve-pil-dahi",
+      "sku": "EFOR-TEL-04",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "ASELSAN COBRA",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2026/04/aselsan-cobra_RX380_telsiz_1080x1080.png",
+      "description": "Aselsannet Cobra RX380 PMR El Telsizi\nAselsannet Cobra RX380 PMR El Telsizi; LCD ekranı ve kullanıcı dostu arayüzüyle 8 Km’ye kadar görüşme mesafesi ve 9 saat çalışma süresiyle etkili ve kolay bir haberleşme sunar.\n\nKULLANIM ALANLARI\n\nProfesyonel Amaçlı:\n\n    İnşaat şantiyeleri, okullar, oteller, konferans, fuar, müsabaka organizasyonları, kampüsler, süpermarket, kreş, ambarlar, rafineriler, haritacılar, BTK tarafından diğer telsizler için izin alamayan şirketler vb.\n\nAile Kullanımı için:\n\n    Alışveriş merkezlerinde, spor karşılaşmalarında, parklarda, ayrı arabalarda yapılan seyahatlerde vb.\n\nSportif Amaçlı:\n\n    Avcılar, balıkçılar, bisikletçiler, motosikletçiler, kampçılar, dağcılar, mağaracılar vb. sporcular."
+    },
+    {
+      "sourceId": 7504,
+      "sourceUrl": "https://www.efortelekom.com/urunler/7504/",
+      "name": "Aselsannet Cobra PM 865 2'Li Set PMR El Telsizi (Masaüstü Çiftli Şarj ve Pil Dahil)",
+      "slug": "efor-aselsannet-cobra-pm-865-2-li-set-pmr-el-telsizi-masaustu-ciftli-sarj-ve-pil-dahi",
+      "sku": "EFOR-TEL-05",
+      "price": 637000,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "ASELSAN COBRA",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2026/04/aselsan-cobra_PM865_telsiz-1080x1080-1.png",
+      "description": "Aselsannet Cobra PM 865 PMR El Telsizi\nAselsannet Cobra PM 865 PMR El Telsizi hatsız, kartsız, lisanssız olma özellikleri ile öne çıkmaktadır. Telsiz çekim mesafesi şehir içerisinde 2 km'ye kadar, optik görüş olduğu durumlarda ise 10 km'ye kadar çıkabilmektedir.\n\nKULLANIM ALANLARI\n\nProfesyonel Amaçlı:\n\n    İnşaat şantiyeleri, okullar, oteller,   konferans, fuar, müsabaka organizasyonları, kampüsler, süpermarket, kreş, ambarlar, rafineriler, haritacılar,  BTK tarafından diğer telsizler için izin alamayan şirketler vb.\n\nAile Kullanımı için:\n\n    Alışveriş merkezlerinde, spor  karşılaşmalarında, parklarda, ayrı arabalarda yapılan seyahatlerde vb.\n\nSportif Amaçlı:\n\n    Avcılar, balıkçılar, bisikletçiler, motosikletçiler, kampçılar, dağcılar, mağaracılar vb. sporcular."
+    },
+    {
+      "sourceId": 6876,
+      "sourceUrl": "https://www.efortelekom.com/urunler/6876/",
+      "name": "Baofeng UV-3R El Telsizi",
+      "slug": "efor-baofeng-uv-3r-el-telsizi",
+      "sku": "EFOR-TEL-06",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Baofeng",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/10/Baofeng-UV-3R.png",
+      "description": "Baofeng UV-3R El Telsizi\n&nbsp;\n\nGenel Özellikler:\n\nFrekans Aralığı:\n136.00-174.00 MHz\n\n400.00-470.00 MHz\n\nHafızaya alınabilir kanal sayısı Kanal\n99\n\nFrekansıAdımları\n2.5/5/6.25/10/12.5/20/25 KHz\n\nGerilimi\nDC 3.7 V\n\nBatarya Kapasitesi\nH-1500 mAh"
+    },
+    {
+      "sourceId": 6065,
+      "sourceUrl": "https://www.efortelekom.com/urunler/6065/",
+      "name": "ASELSANNET PMR A446 TELSİZ",
+      "slug": "efor-aselsannet-pmr-a446-telsiz",
+      "sku": "EFOR-TEL-07",
+      "price": 400000,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Aselsannet",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/09/Aselsannet-A446-telsiz.png",
+      "description": "ASELSANNET PMR A446 TELSİZ ÖZELLİKLERİ\n\n• 15 Km'ye kadar görüşme mesafesi\n\n• Lisans Ücretsiz PMR Telsiz\n\n• 16 Ana Kanal\n\n• DCS/CTCSS Ara Kanal\n\n• Eller Serbest Görüşme (VOX)\n\n• El feneri\n\n• 1800 mAh Batarya"
+    },
+    {
+      "sourceId": 5540,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5540/",
+      "name": "TALKPOD D30 DMR TELSİZ",
+      "slug": "efor-talkpod-d30-dmr-telsiz",
+      "sku": "EFOR-TEL-08",
+      "price": 0,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Talkpod",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/INTERKOM_TALKPOD-D30-DMR-TELSiZ.png",
+      "description": "TALKPOD D30 DMR TELSİZ ÖZELLİKLERİ\nİster Analog İster Dijital\n\n• ÇIKIŞ GÜCÜ: 5 WATT\n\n• Standart UHF 400-470MHz\n\n• Dijital ve Analog Çift Mod\n\n• Akıllı Gürültü Azaltma\n\n• %40 Pil Ömrü Artışı\n\n• DMR Tier II\n\n• SOS Alarmı\n\n• Yüksek/Düşük Güç Anahtarı\n\n• DMO 2 Yuvalı\n\n• AMBE ++ veya AMBE +2TM\n\n• Mikrofon Bozulma Kontrolü\n\n• Benzersiz Seri Numarası\n\n• Akıllı Ses\n\n• Kanal Aralığı: 16 Ana Kanal"
+    },
+    {
+      "sourceId": 5529,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5529/",
+      "name": "ASELSAN COBRA DENİZ TELSİZİ MR F77B GPS E",
+      "slug": "efor-aselsan-cobra-deniz-telsizi-mr-f77b-gps-e",
+      "sku": "EFOR-TEL-09",
+      "price": 1863875,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "ASELSAN COBRA",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/ASELSAN-marin-deniz-telsizI-COBRA-MR-HH-500-FLT-BT-EU-1.png",
+      "description": "ASELSAN COBRA DENİZ TELSİZİ MR F77B GPS E ÖZELLİKLERİ\n\n• 25W Çıkış Gücü\n\n• Düğme ile Kanal Değiştirme\n\n• Lokal Kullanım Modu\n\n• Kanal 16/9 Hızlı Erişim\n\n• Hafızada ki Kanalları Tarama\n\n• DSC MMSI ID Gösterme\n\n• IPX8 / JIS8 Standardına Uygunluk\n\n• Mikrofon Gürültüsünü Bastırma\n\n• Aydınlatmalı Tuşlar"
+    },
+    {
+      "sourceId": 5523,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5523/",
+      "name": "ASELSAN COBRA DENİZ TELSİZİ MR HH 500 FLT BT EU",
+      "slug": "efor-aselsan-cobra-deniz-telsizi-mr-hh-500-flt-bt-eu",
+      "sku": "EFOR-TEL-10",
+      "price": 1242325,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "ASELSAN COBRA",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/ASELSAN-marin-deniz-telsizI-COBRA-MR-HH-500-FLT-BT-EU.png",
+      "description": "ASELSAN COBRA DENİZ TELSİZİ MR HH 500 FLT BT EU ÖZELLİKLERİ\nTEKNİK ÖZELLİKLER\n\n• Rewind-Say-Again (Tekrar Söyle)\n\n• Programlama ile Kanal İptali ve Güç Kısıtlama,\n\n• 1 – 3 ve 6 W Çıkış Gücü,Üçlü Izleme (Tri-Watch),\n\n• Limitsiz Kanal Hafızası,\n\n• Geniş, Aydınlatmalı Ekran,\n\n• Eller Serbest Kullanım (VOX),\n\n• Şarj Cihazı,\n\n• JIS7 (IPX7) Standardında Suya Dayanıklılık,\n\n• Gürültü Önleyici Mikrofon,Hoparlör Üzerindeki Suyu\n\n• Atma (BURP)."
+    },
+    {
+      "sourceId": 5505,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5505/",
+      "name": "ASELSAN COBRA DENİZ TELSİZİ MR HH 350 FLT EU",
+      "slug": "efor-aselsan-cobra-deniz-telsizi-mr-hh-350-flt-eu",
+      "sku": "EFOR-TEL-11",
+      "price": 1004400,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "ASELSAN COBRA",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/ASELSAN-marin-deniz-telsizI-COBRA-MR-HH-350-FLT-EU.png",
+      "description": "ASELSAN COBRA DENİZ TELSİZİ MR HH 350 FLT EU BATMAZ TASARIM ÖZELLİKLERİ\n\n• Rewind-Say-Again(Tekrar Söyle)\n\n• Programlama ile Kanal İptali ve Güç Kısıtlama,\n\n• 1 – 3 ve 6 W Çıkış Gücü,\n\n• Üçlü İzleme (Tri-Watch),\n\n• Limitsiz Kanal Hafızası,\n\n• Geniş, Aydınlatmalı Ekran,\n\n• Eller Serbest Kullanım (VOX)\n\n• Şarj Cihazı,\n\n• JIS7 (IPX7) Standardında Suya Dayanıklılık,\n\n• Gürültü Önleyici Mikrofon,\n\n• Hoparlör üzerindeki Suyu Atma (BURP)."
+    },
+    {
+      "sourceId": 5515,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5515/",
+      "name": "ASELSAN COBRA DENİZ TELSİZİ MR HH 150 EU",
+      "slug": "efor-aselsan-cobra-deniz-telsizi-mr-hh-150-eu",
+      "sku": "EFOR-TEL-12",
+      "price": 621550,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "ASELSAN COBRA",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/ASELSAN-marin-denizci-telsiz-COBRA-MR-HH-150-EU.png",
+      "description": "ASELSAN COBRA TELSİZ MR HH 150 EU ÖZELLİKLERİ\nTEKNİK ÖZELLİKLER\n\n• Ağırlık 8 oz (227 g)\n\n• Yükseklik 4,5&#8243; (114,3 mm)\n\n• Genişlik 2,7&#8243; (68,58 mm)\n\n• Derinlik 1,5&#8243; (38,1 mm)\n\nÜRÜN HAKKINDA\nYüzer – Yüzer tasarım ve turuncu çekirdek, denize düştüğünde telsizi almayı kolaylaştırır.\n\nDalgıç – Endüstri standardı JIS7 (IPX7) Spesifikasyonlarına göre derecelendirilmiş dalgıç. 30 dakika boyunca bir metre.\n\n3 Watt VHF – Kısa ve uzun menzilli iletişim için Düşük/Orta/Yüksek Çıkış gücü\n\nABD, Kanada ve Uluslararası Kanallar – Bu alanlar için oluşturulan üç farklı kanal haritasından herhangi biri üzerinde işlem yapılmasına izin verir. En son 4 haneli kanalları içerir.\n\n10 NOAA Hava Durumu Kanalı ve Hava Durumu Uyarısı – Ulusal Tüm Tehlikeler ve hava durumu bilgilerine günde 24 saat anında erişim ve yakınlarda tehdit edici hava varsa uyarılar.\n\nHava Durumu Uyarısı – Yakınlarda tehdit edici hava varsa sesli ve görsel alarmlı uyarılar."
+    },
+    {
+      "sourceId": 5422,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5422/",
+      "name": "BAOFENG EL TELSİZİ TYPE-C ŞARJ SOKETLİ",
+      "slug": "efor-baofeng-el-telsizi-type-c-sarj-soketli",
+      "sku": "EFOR-TEL-13",
+      "price": 300000,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Baofeng",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/08/Efor-baofeng-R5-telsiz-1.png",
+      "description": "BAOFENG EL TELSİZİ ÖZELLİKLERİ\n2 Adet Fiyatıdır.\n\n16 kanallı açık alanda 3 – 5 km kadar görüşme imkanı sunar.\n\nProgramlanabilir farklı marka ve modellerle uyumlu çalışma imkanı sunar.\n\nStok Kodu: 5422"
+    },
+    {
+      "sourceId": 5182,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5182/",
+      "name": "Baofeng UV-82 Telsiz için Çakmaklık Beslemeli Batarya Eliminatörü",
+      "slug": "efor-baofeng-uv-82-telsiz-icin-cakmaklik-beslemeli-batarya-eliminatoru",
+      "sku": "EFOR-TEL-14",
+      "price": 25000,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Baofeng",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsiz Aksesuarları",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/06/EFOR-205292441_0340_0340.png",
+      "description": ""
+    },
+    {
+      "sourceId": 5172,
+      "sourceUrl": "https://www.efortelekom.com/urunler/5172/",
+      "name": "Baofeng K type Yaka Mikrofonu Mike Orijinal",
+      "slug": "efor-baofeng-k-type-yaka-mikrofonu-mike-orijinal",
+      "sku": "EFOR-TEL-15",
+      "price": 20000,
+      "currency": "TRY",
+      "stock": 10,
+      "status": "published",
+      "brand": "Baofeng",
+      "categories": [
+        "İletişim Ürünleri",
+        "Telsiz Aksesuarları",
+        "Telsizler"
+      ],
+      "imageUrl": "https://www.efortelekom.com/wp-content/uploads/2025/06/Efor-BAOFENG-TELSIZ-YAKA-MIK-1.png",
+      "description": "Baofeng K type Yaka Mikrofonu Mike Orijinal Özellikleri\nTeknik Özellikler\n\n•\nBağlantı: Kenwood 2-pin uyumlu\n\n•\nMikrofon Türü: Dahili mikrofon + PTT düğmesi\n\n•\nKlips: Ters klipsli, kolay sabitleme\n\n•\nKablo Uzunluğu: Yaklaşık 1 metre\n\n•\nKullanım Tipi: Profesyonel ve bireysel kullanım için uygundur\n\nKullanım Alanları\n\n•\nGüvenlik görevlileri\n\n•\nÖzel organizasyonlar\n\n•\nAçık hava etkinlikleri\n\n•\nİnşaat ve saha ekipleri\n\n•\nAmatör telsiz kullanıcıları\n\nUyumlu Modeller\n\n• BAOFENG\n\n• WOUXUN\n\n• TYT\n\n• SFE\n\n• AIT\n\n• ANYTONE\n\n(Kenwood tipi çift pinli giriş ile uyumludur.)"
+    }
+  ]
+}
