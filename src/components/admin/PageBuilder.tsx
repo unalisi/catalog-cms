@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Monitor, Plus, Smartphone } from 'lucide-react';
+import { ArrowLeft, List, Monitor, MoreHorizontal, Plus, Smartphone, Eye } from 'lucide-react';
 import type { ApiResult } from '../../lib/api';
 import {
   sectionFields,
@@ -16,6 +16,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -113,6 +120,7 @@ export default function PageBuilder({
   const [sections, setSections] = useState<SectionRow[]>(initialPage?.sections ?? []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panel, setPanel] = useState<'list' | 'settings'>('list');
+  const [mobilePane, setMobilePane] = useState<'list' | 'preview'>('list');
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [config, setConfig] = useState<Record<string, unknown>>({});
   const [savedConfigJson, setSavedConfigJson] = useState('{}');
@@ -189,6 +197,7 @@ export default function PageBuilder({
   function openSettings(id: string) {
     setSelectedId(id);
     setPanel('settings');
+    setMobilePane('list');
   }
 
   function backToList() {
@@ -345,6 +354,15 @@ export default function PageBuilder({
   }
 
   async function deleteSection(id: string) {
+    const target = sections.find((s) => s.id === id);
+    if (slug === 'urun-sablon' && target?.type === 'product-detail') {
+      setError('Ürün detay section’ı silinemez');
+      return;
+    }
+    if (slug === 'iletisim' && target?.type === 'contact-layout') {
+      setError('İletişim layout section’ı silinemez');
+      return;
+    }
     if (!window.confirm('Bu section silinsin mi?')) return;
     const res = await fetch(`/api/admin/sections/${id}`, { method: 'DELETE' });
     const json = (await res.json()) as ApiResult<unknown>;
@@ -522,7 +540,38 @@ export default function PageBuilder({
               {error ?? message}
             </span>
           )}
-          <div className="flex rounded-md border border-border p-0.5">
+
+          <div className="flex rounded-md border border-border p-0.5 md:hidden">
+            <button
+              type="button"
+              aria-pressed={mobilePane === 'list'}
+              className={cn(
+                'inline-flex min-h-11 items-center gap-1 rounded-sm px-2.5 text-xs font-medium',
+                mobilePane === 'list' ? 'bg-muted text-foreground' : 'text-muted-foreground',
+              )}
+              onClick={() => setMobilePane('list')}
+            >
+              <List className="size-4" />
+              Liste
+            </button>
+            <button
+              type="button"
+              aria-pressed={mobilePane === 'preview'}
+              className={cn(
+                'inline-flex min-h-11 items-center gap-1 rounded-sm px-2.5 text-xs font-medium',
+                mobilePane === 'preview' ? 'bg-muted text-foreground' : 'text-muted-foreground',
+              )}
+              onClick={() => {
+                setMobilePane('preview');
+                if (panel === 'settings') setPanel('list');
+              }}
+            >
+              <Eye className="size-4" />
+              Önizleme
+            </button>
+          </div>
+
+          <div className="hidden rounded-md border border-border p-0.5 md:flex">
             <button
               type="button"
               title="Masaüstü"
@@ -546,19 +595,36 @@ export default function PageBuilder({
               <Smartphone className="size-4" />
             </button>
           </div>
+
           <button
             type="button"
-            className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
+            className="hidden rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted md:inline-flex"
             onClick={refreshPreview}
           >
             Yenile
           </button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex size-11 items-center justify-center rounded-md border border-border hover:bg-muted md:hidden"
+                aria-label="Daha fazla"
+              >
+                <MoreHorizontal className="size-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={refreshPreview}>Yenile</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {editable ? (
             <button
               type="button"
               disabled={saving || !dirty}
               onClick={() => void saveAll()}
-              className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              className="min-h-11 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
               Kaydet
             </button>
@@ -567,7 +633,16 @@ export default function PageBuilder({
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="flex w-[20rem] shrink-0 flex-col border-r border-border bg-background md:w-[22rem]">
+        <aside
+          className={cn(
+            'flex shrink-0 flex-col border-r border-border bg-background md:w-[22rem]',
+            panel === 'settings'
+              ? 'fixed inset-0 z-50 w-full border-0 md:relative md:inset-auto md:z-auto md:border-r'
+              : mobilePane === 'list'
+                ? 'relative w-full flex-1 md:flex-none'
+                : 'hidden md:flex',
+          )}
+        >
           {!editable ? (
             <div className="flex flex-col gap-4 p-4">
               <h2 className="font-display text-sm font-semibold">
@@ -665,7 +740,11 @@ export default function PageBuilder({
                     </button>
                     <button
                       type="button"
-                      className="text-xs text-destructive"
+                      className="text-xs text-destructive disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={
+                        (slug === 'urun-sablon' && section.type === 'product-detail') ||
+                        (slug === 'iletisim' && section.type === 'contact-layout')
+                      }
                       onClick={() => void deleteSection(section.id)}
                     >
                       Sil
@@ -1260,21 +1339,28 @@ export default function PageBuilder({
           )}
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-hidden bg-muted/50">
+        <main
+          className={cn(
+            'min-w-0 flex-1 overflow-hidden bg-muted/50',
+            (mobilePane === 'list' || panel === 'settings') && 'hidden md:block',
+          )}
+        >
           <div
-            className={`flex h-full justify-center ${
-              device === 'mobile' ? 'p-4 md:p-6' : ''
-            }`}
+            className={cn(
+              'flex h-full justify-center',
+              device === 'mobile' && 'md:p-4 lg:p-6',
+            )}
           >
             <iframe
               key={previewKey}
               title="Sayfa önizleme"
               src={previewPath}
-              className={
+              className={cn(
+                'h-full w-full bg-background',
                 device === 'mobile'
-                  ? 'h-full w-full max-w-[390px] rounded-md border border-border bg-background shadow-sm'
-                  : 'h-full w-full border-0 bg-background'
-              }
+                  ? 'border-0 md:max-w-[390px] md:rounded-md md:border md:border-border md:shadow-sm'
+                  : 'border-0',
+              )}
             />
           </div>
         </main>

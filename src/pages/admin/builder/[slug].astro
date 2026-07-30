@@ -8,6 +8,7 @@ import {
   listSectionTypeOptions,
 } from '../../../server/services/pages';
 import { ensureCorePages } from '../../../server/services/core-pages';
+import { getSampleProductSlug } from '../../../server/services/catalog';
 
 const slug = Astro.params.slug;
 if (!slug) return Astro.redirect('/admin/pages');
@@ -22,13 +23,15 @@ const core = getCorePage(page.slug);
 let previewPath = `/${page.slug}`;
 if (page.slug === 'home') previewPath = '/';
 else if (core?.path && !core.path.includes('{')) previewPath = core.path;
-else if (page.slug === 'urun-sablon') previewPath = '/catalog';
-else if (page.slug === 'yazi-sablon') previewPath = '/blog';
+else if (page.slug === 'urun-sablon') {
+  const sampleSlug = await getSampleProductSlug();
+  previewPath = sampleSlug ? `/product/${sampleSlug}` : '/catalog';
+} else if (page.slug === 'yazi-sablon') previewPath = '/blog';
 ---
 
 <BuilderLayout title={page.title}>
   <PageBuilder
-    client:load
+    client:media="(min-width: 768px)"
     mode="edit"
     slug={page.slug}
     previewPath={previewPath}
