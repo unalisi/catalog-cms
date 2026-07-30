@@ -1,0 +1,359 @@
+---
+import { formatMoney } from '../../lib/money';
+import type { SectionConfigMap } from '../../lib/sections/registry';
+import type { ProductDetail as ProductDetailData } from '../../server/repos/catalog';
+import ProductImageGallery from './ProductImageGallery';
+import ProductVariantPicker from './ProductVariantPicker';
+
+interface Props {
+  config: SectionConfigMap['product-detail'];
+  product?: ProductDetailData | null;
+}
+
+const { config, product = null } = Astro.props;
+const layout = config.layout ?? 'gallery-left';
+const showBreadcrumb = config.showBreadcrumb !== 'hide';
+const showSku = config.showSku !== 'hide';
+const showStock = config.showStock !== 'hide';
+const showCategories = config.showCategories !== 'hide';
+const hasVariants = Boolean(product?.variants && product.variants.length > 0);
+const images =
+  product?.images?.map((img) => ({ id: img.id, url: img.url, alt: img.alt })) ??
+  (product?.imageUrl
+    ? [{ id: 'primary', url: product.imageUrl, alt: product.name }]
+    : []);
+---
+
+{
+  !product ? (
+    <section class="mx-auto max-w-6xl px-4 py-16 md:px-6" data-section="product-detail">
+      <div class="rounded-md border border-dashed border-border p-10 text-center">
+        <p class="font-display text-xl font-semibold">Ürün detay yerleşimi</p>
+        <p class="mt-2 text-sm text-muted-foreground">
+          Bu blok ürün sayfalarında (`/product/…`) gerçek ürün verisiyle render edilir. Önizleme için
+          bir ürün sayfasını açın.
+        </p>
+        <p class="mt-4 font-mono text-xs text-muted-foreground">layout: {layout}</p>
+      </div>
+    </section>
+  ) : (
+    <article
+      class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16"
+      data-section="product-detail"
+      data-layout={layout}
+    >
+      {
+        showBreadcrumb && (
+          <nav aria-label="Breadcrumb" class="mb-6 text-sm text-muted-foreground">
+            <ol class="flex flex-wrap gap-2">
+              <li>
+                <a href="/catalog" class="hover:text-foreground">
+                  Katalog
+                </a>
+              </li>
+              <li aria-hidden="true">/</li>
+              {
+                product.brand && (
+                  <>
+                    <li>
+                      <a href={`/brand/${product.brand.slug}`} class="hover:text-foreground">
+                        {product.brand.name}
+                      </a>
+                    </li>
+                    <li aria-hidden="true">/</li>
+                  </>
+                )
+              }
+              <li class="text-foreground">{product.name}</li>
+            </ol>
+          </nav>
+        )
+      }
+
+      {
+        layout === 'gallery-top' ? (
+          <div class="flex flex-col gap-10">
+            <ProductImageGallery client:load images={images} thumbsPosition="bottom" />
+            <div class="grid gap-10 md:grid-cols-2">
+              <div class="flex flex-col gap-4">
+                {
+                  showSku && !hasVariants && (
+                    <p class="font-mono text-sm text-muted-foreground">SKU {product.sku ?? '—'}</p>
+                  )
+                }
+                <h1 class="font-display text-3xl font-bold md:text-4xl">{product.name}</h1>
+                {
+                  product.description && (
+                    <p class="whitespace-pre-line text-lg text-muted-foreground">{product.description}</p>
+                  )
+                }
+                {
+                  showCategories && product.categories.length > 0 && (
+                    <div>
+                      <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Kategoriler
+                      </h2>
+                      <ul class="mt-3 flex flex-wrap gap-2">
+                        {
+                          product.categories.map((cat) => (
+                            <li>
+                              <a
+                                href={`/category/${cat.slug}`}
+                                class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
+                              >
+                                {cat.name}
+                              </a>
+                            </li>
+                          ))
+                        }
+                      </ul>
+                    </div>
+                  )
+                }
+              </div>
+              <div class="flex flex-col gap-6 rounded-md border border-border p-5 md:sticky md:top-6 md:self-start">
+                {
+                  !hasVariants && (
+                    <div>
+                      <p class="font-mono text-2xl font-bold text-primary">
+                        {formatMoney(product.price, product.currency)}
+                      </p>
+                      {
+                        product.compareAtPrice != null &&
+                          product.compareAtPrice > product.price && (
+                            <p class="font-mono text-sm text-muted-foreground line-through">
+                              {formatMoney(product.compareAtPrice, product.currency)}
+                            </p>
+                          )
+                      }
+                      {
+                        showStock && (
+                          <p class="mt-1 text-sm text-muted-foreground">Stok: {product.stock}</p>
+                        )
+                      }
+                    </div>
+                  )
+                }
+                {
+                  hasVariants && (
+                    <ProductVariantPicker
+                      client:load
+                      variants={product.variants.map((v) => ({
+                        id: v.id,
+                        sku: v.sku,
+                        name: v.name,
+                        price: v.price,
+                        stock: v.stock,
+                        attributesJson: v.attributesJson,
+                      }))}
+                      currency={product.currency}
+                      basePrice={product.price}
+                      baseSku={product.sku}
+                      baseStock={product.stock}
+                      showSku={showSku}
+                      showStock={showStock}
+                    />
+                  )
+                }
+                {
+                  config.ctaLabel && config.ctaHref && (
+                    <a
+                      href={config.ctaHref}
+                      class="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                    >
+                      {config.ctaLabel}
+                    </a>
+                  )
+                }
+              </div>
+            </div>
+          </div>
+        ) : layout === 'thumbs-aside' ? (
+          <div class="grid gap-10 lg:grid-cols-2">
+            <ProductImageGallery client:load images={images} thumbsPosition="left" />
+            <div class="flex flex-col gap-6 md:sticky md:top-6 md:self-start">
+              {
+                showSku && !hasVariants && (
+                  <p class="font-mono text-sm text-muted-foreground">SKU {product.sku ?? '—'}</p>
+                )
+              }
+              <h1 class="font-display text-3xl font-bold md:text-4xl">{product.name}</h1>
+              {
+                !hasVariants && (
+                  <div>
+                    <p class="font-mono text-2xl font-bold text-primary">
+                      {formatMoney(product.price, product.currency)}
+                    </p>
+                    {
+                      product.compareAtPrice != null && product.compareAtPrice > product.price && (
+                        <p class="font-mono text-sm text-muted-foreground line-through">
+                          {formatMoney(product.compareAtPrice, product.currency)}
+                        </p>
+                      )
+                    }
+                    {
+                      showStock && (
+                        <p class="mt-1 text-sm text-muted-foreground">Stok: {product.stock}</p>
+                      )
+                    }
+                  </div>
+                )
+              }
+              {
+                hasVariants && (
+                  <ProductVariantPicker
+                    client:load
+                    variants={product.variants.map((v) => ({
+                      id: v.id,
+                      sku: v.sku,
+                      name: v.name,
+                      price: v.price,
+                      stock: v.stock,
+                      attributesJson: v.attributesJson,
+                    }))}
+                    currency={product.currency}
+                    basePrice={product.price}
+                    baseSku={product.sku}
+                    baseStock={product.stock}
+                    showSku={showSku}
+                    showStock={showStock}
+                  />
+                )
+              }
+              {
+                product.description && (
+                  <p class="whitespace-pre-line text-muted-foreground">{product.description}</p>
+                )
+              }
+              {
+                showCategories && product.categories.length > 0 && (
+                  <div>
+                    <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Kategoriler
+                    </h2>
+                    <ul class="mt-3 flex flex-wrap gap-2">
+                      {
+                        product.categories.map((cat) => (
+                          <li>
+                            <a
+                              href={`/category/${cat.slug}`}
+                              class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
+                            >
+                              {cat.name}
+                            </a>
+                          </li>
+                        ))
+                      }
+                    </ul>
+                  </div>
+                )
+              }
+              {
+                config.ctaLabel && config.ctaHref && (
+                  <a
+                    href={config.ctaHref}
+                    class="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    {config.ctaLabel}
+                  </a>
+                )
+              }
+            </div>
+          </div>
+        ) : (
+          <div class="grid gap-10 lg:grid-cols-2">
+            <ProductImageGallery client:load images={images} thumbsPosition="bottom" />
+            <div class="flex flex-col gap-6">
+              {
+                showSku && !hasVariants && (
+                  <p class="font-mono text-sm text-muted-foreground">SKU {product.sku ?? '—'}</p>
+                )
+              }
+              <h1 class="font-display text-3xl font-bold md:text-4xl">{product.name}</h1>
+              {
+                !hasVariants && (
+                  <div>
+                    <p class="font-mono text-2xl font-bold text-primary">
+                      {formatMoney(product.price, product.currency)}
+                    </p>
+                    {
+                      product.compareAtPrice != null && product.compareAtPrice > product.price && (
+                        <p class="font-mono text-sm text-muted-foreground line-through">
+                          {formatMoney(product.compareAtPrice, product.currency)}
+                        </p>
+                      )
+                    }
+                    {
+                      showStock && (
+                        <p class="mt-1 text-sm text-muted-foreground">Stok: {product.stock}</p>
+                      )
+                    }
+                  </div>
+                )
+              }
+              {
+                hasVariants && (
+                  <ProductVariantPicker
+                    client:load
+                    variants={product.variants.map((v) => ({
+                      id: v.id,
+                      sku: v.sku,
+                      name: v.name,
+                      price: v.price,
+                      stock: v.stock,
+                      attributesJson: v.attributesJson,
+                    }))}
+                    currency={product.currency}
+                    basePrice={product.price}
+                    baseSku={product.sku}
+                    baseStock={product.stock}
+                    showSku={showSku}
+                    showStock={showStock}
+                  />
+                )
+              }
+              {
+                product.description && (
+                  <p class="whitespace-pre-line text-lg text-muted-foreground">{product.description}</p>
+                )
+              }
+              {
+                showCategories && product.categories.length > 0 && (
+                  <div>
+                    <h2 class="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Kategoriler
+                    </h2>
+                    <ul class="mt-3 flex flex-wrap gap-2">
+                      {
+                        product.categories.map((cat) => (
+                          <li>
+                            <a
+                              href={`/category/${cat.slug}`}
+                              class="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
+                            >
+                              {cat.name}
+                            </a>
+                          </li>
+                        ))
+                      }
+                    </ul>
+                  </div>
+                )
+              }
+              {
+                config.ctaLabel && config.ctaHref && (
+                  <a
+                    href={config.ctaHref}
+                    class="inline-flex min-h-11 w-fit items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    {config.ctaLabel}
+                  </a>
+                )
+              }
+            </div>
+          </div>
+        )
+      }
+    </article>
+  )
+}

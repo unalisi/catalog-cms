@@ -16,6 +16,7 @@ import WhatsAppFloatSection from './WhatsAppFloat.astro';
 import ContactLayout from './ContactLayout.astro';
 import ProductList from './ProductList.astro';
 import BlogList from './BlogList.astro';
+import ProductDetail from './ProductDetail.astro';
 import RelatedProducts from './RelatedProducts.astro';
 import RelatedPosts from './RelatedPosts.astro';
 import {
@@ -24,6 +25,7 @@ import {
   type SectionConfigMap,
   type SectionType,
 } from '../../lib/sections/registry';
+import type { ProductDetail as ProductDetailData } from '../../server/repos/catalog';
 
 export type RenderSection = {
   id: string;
@@ -33,9 +35,10 @@ export type RenderSection = {
 
 interface Props {
   sections: RenderSection[];
+  product?: ProductDetailData | null;
 }
 
-const { sections } = Astro.props;
+const { sections, product = null } = Astro.props;
 
 function typedConfig<T extends SectionType>(type: T, configJson: string): SectionConfigMap[T] {
   return parseConfigJson(type, configJson) as SectionConfigMap[T];
@@ -87,6 +90,13 @@ function typedConfig<T extends SectionType>(type: T, configJson: string): Sectio
         return <ProductList config={typedConfig('product-list', section.configJson)} />;
       case 'blog-list':
         return <BlogList config={typedConfig('blog-list', section.configJson)} />;
+      case 'product-detail':
+        return (
+          <ProductDetail
+            config={typedConfig('product-detail', section.configJson)}
+            product={product}
+          />
+        );
       case 'related-products':
         return <RelatedProducts config={typedConfig('related-products', section.configJson)} />;
       case 'related-posts':
