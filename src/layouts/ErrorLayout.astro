@@ -1,0 +1,46 @@
+---
+import '../styles/global.css';
+import { getCachedSiteSettings } from '../server/services/settings';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = '' } = Astro.props;
+
+let siteName = 'Catalog CMS';
+let favicon = '/favicon.svg';
+
+try {
+  const { data: site } = await getCachedSiteSettings();
+  if (site?.name) siteName = site.name;
+  if (site?.faviconUrl) favicon = site.faviconUrl;
+} catch {
+  // DB/cache may be down on 500 — keep static fallbacks
+}
+---
+
+<!doctype html>
+<html lang="tr" class="h-full antialiased">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description || title} />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" href={favicon} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title} · {siteName}</title>
+  </head>
+  <body class="min-h-dvh bg-background font-sans text-foreground">
+    <div class="flex min-h-dvh flex-col items-center justify-center px-4 py-12">
+      <slot />
+    </div>
+  </body>
+</html>
