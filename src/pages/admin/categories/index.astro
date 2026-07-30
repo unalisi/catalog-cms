@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import EmptyState from '../../../components/admin/EmptyState.astro';
 import DeleteButton from '../../../components/admin/DeleteButton';
+import AdminListCard from '../../../components/admin/AdminListCard.astro';
 import { getDb } from '../../../server/db';
 import { listAllCategories } from '../../../server/repos/admin';
 import type { Category } from '../../../../db/schema';
@@ -15,14 +16,14 @@ const byId = new Map<string, Category>(categories.map((c) => [c.id, c]));
   breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'Kategoriler' }]}
 >
   <div class="flex flex-col gap-4">
-    <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
       <div>
         <h1 class="font-display text-2xl font-bold tracking-tight">Kategoriler</h1>
         <p class="mt-1 text-sm text-muted-foreground">{categories.length} kayıt</p>
       </div>
       <a
         href="/admin/categories/new"
-        class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        class="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:min-h-9"
       >
         <span aria-hidden="true">+</span>
         Yeni kategori
@@ -40,43 +41,60 @@ const byId = new Map<string, Category>(categories.map((c) => [c.id, c]));
           />
         </div>
       ) : (
-        <div class="overflow-x-auto rounded-md border border-border bg-background">
-          <table class="w-full min-w-[44rem] border-collapse text-left text-sm">
-            <thead class="bg-muted text-xs font-medium">
-              <tr>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Ad</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Slug</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Üst</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Sıra</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Durum</th>
-                <th class="border-b border-border px-3 py-2.5 font-medium">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories.map((category) => (
-                <tr class="bg-background hover:bg-muted/40">
-                  <td class="border-b border-r border-border px-3 py-2 font-medium">{category.name}</td>
-                  <td class="border-b border-r border-border px-3 py-2 font-mono text-muted-foreground">
-                    {category.slug}
-                  </td>
-                  <td class="border-b border-r border-border px-3 py-2 text-muted-foreground">
-                    {category.parentId ? (byId.get(category.parentId)?.name ?? '—') : '—'}
-                  </td>
-                  <td class="border-b border-r border-border px-3 py-2 font-mono">{category.position}</td>
-                  <td class="border-b border-r border-border px-3 py-2">{category.status}</td>
-                  <td class="border-b border-border px-3 py-2">
-                    <div class="flex items-center gap-3">
-                      <a href={`/admin/categories/${category.id}`} class="hover:underline">
-                        Düzenle
-                      </a>
-                      <DeleteButton client:load endpoint={`/api/admin/categories/${category.id}`} />
-                    </div>
-                  </td>
+        <>
+          <div class="flex flex-col gap-2 md:hidden">
+            {categories.map((category) => (
+              <AdminListCard
+                href={`/admin/categories/${category.id}`}
+                title={category.name}
+                status={category.status}
+                meta={[
+                  category.slug,
+                  category.parentId ? (byId.get(category.parentId)?.name ?? 'Üst yok') : 'Kök',
+                  `Sıra ${category.position}`,
+                ]}
+                deleteEndpoint={`/api/admin/categories/${category.id}`}
+              />
+            ))}
+          </div>
+          <div class="hidden overflow-x-auto rounded-md border border-border bg-background md:block">
+            <table class="w-full min-w-[44rem] border-collapse text-left text-sm">
+              <thead class="bg-muted text-xs font-medium">
+                <tr>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Ad</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Slug</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Üst</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Sıra</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Durum</th>
+                  <th class="border-b border-border px-3 py-2.5 font-medium">İşlem</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {categories.map((category) => (
+                  <tr class="bg-background hover:bg-muted/40">
+                    <td class="border-b border-r border-border px-3 py-2 font-medium">{category.name}</td>
+                    <td class="border-b border-r border-border px-3 py-2 font-mono text-muted-foreground">
+                      {category.slug}
+                    </td>
+                    <td class="border-b border-r border-border px-3 py-2 text-muted-foreground">
+                      {category.parentId ? (byId.get(category.parentId)?.name ?? '—') : '—'}
+                    </td>
+                    <td class="border-b border-r border-border px-3 py-2 font-mono">{category.position}</td>
+                    <td class="border-b border-r border-border px-3 py-2">{category.status}</td>
+                    <td class="border-b border-border px-3 py-2">
+                      <div class="flex items-center gap-3">
+                        <a href={`/admin/categories/${category.id}`} class="hover:underline">
+                          Düzenle
+                        </a>
+                        <DeleteButton client:load endpoint={`/api/admin/categories/${category.id}`} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )
     }
   </div>

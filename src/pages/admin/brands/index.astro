@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import EmptyState from '../../../components/admin/EmptyState.astro';
 import DeleteButton from '../../../components/admin/DeleteButton';
+import AdminListCard from '../../../components/admin/AdminListCard.astro';
 import { StatusDot } from '../../../components/admin/StatusDot';
 import { getDb } from '../../../server/db';
 import { listAllBrandsWithLogos } from '../../../server/repos/admin';
@@ -14,11 +15,11 @@ const brands = await listAllBrandsWithLogos(getDb());
   breadcrumbs={[{ href: '/admin', label: 'Panel' }, { label: 'Markalar' }]}
 >
   <div class="flex flex-col gap-5">
-    <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       <p class="text-sm text-muted-foreground">{brands.length} marka listeleniyor</p>
       <a
         href="/admin/brands/new"
-        class="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        class="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:min-h-9"
       >
         <span aria-hidden="true">+</span>
         Marka Ekle
@@ -36,62 +37,77 @@ const brands = await listAllBrandsWithLogos(getDb());
           />
         </div>
       ) : (
-        <div class="overflow-x-auto rounded-md border border-border bg-background">
-          <table class="w-full min-w-[40rem] border-collapse text-left text-sm">
-            <thead class="bg-muted text-xs font-medium">
-              <tr>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium"></th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Ad</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Slug</th>
-                <th class="border-b border-r border-border px-3 py-2.5 font-medium">Durum</th>
-                <th class="border-b border-border px-3 py-2.5 font-medium">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {brands.map((brand) => (
-                <tr class="bg-background hover:bg-muted/40">
-                  <td class="border-b border-r border-border px-3 py-2">
-                    {brand.logoUrl ? (
-                      <img
-                        src={brand.logoUrl}
-                        alt=""
-                        class="size-10 rounded-md border border-border bg-background object-contain p-0.5"
-                        loading="lazy"
-                        width="40"
-                        height="40"
-                      />
-                    ) : (
-                      <div
-                        class="flex size-10 items-center justify-center rounded-md border border-border bg-primary-soft text-xs font-semibold text-primary"
-                        aria-hidden="true"
-                      >
-                        {brand.name.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                  </td>
-                  <td class="border-b border-r border-border px-3 py-2 font-medium">{brand.name}</td>
-                  <td class="border-b border-r border-border px-3 py-2 font-mono text-muted-foreground">
-                    {brand.slug}
-                  </td>
-                  <td class="border-b border-r border-border px-3 py-2">
-                    <StatusDot status={brand.status} />
-                  </td>
-                  <td class="border-b border-border px-3 py-2">
-                    <div class="flex items-center gap-3">
-                      <a
-                        href={`/admin/brands/${brand.id}`}
-                        class="text-xs font-medium text-primary hover:underline"
-                      >
-                        Düzenle
-                      </a>
-                      <DeleteButton client:load endpoint={`/api/admin/brands/${brand.id}`} />
-                    </div>
-                  </td>
+        <>
+          <div class="flex flex-col gap-2 md:hidden">
+            {brands.map((brand) => (
+              <AdminListCard
+                href={`/admin/brands/${brand.id}`}
+                title={brand.name}
+                imageUrl={brand.logoUrl}
+                imageFallback={brand.name}
+                status={brand.status}
+                meta={[brand.slug]}
+                deleteEndpoint={`/api/admin/brands/${brand.id}`}
+              />
+            ))}
+          </div>
+          <div class="hidden overflow-x-auto rounded-md border border-border bg-background md:block">
+            <table class="w-full min-w-[40rem] border-collapse text-left text-sm">
+              <thead class="bg-muted text-xs font-medium">
+                <tr>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium"></th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Ad</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Slug</th>
+                  <th class="border-b border-r border-border px-3 py-2.5 font-medium">Durum</th>
+                  <th class="border-b border-border px-3 py-2.5 font-medium">İşlem</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {brands.map((brand) => (
+                  <tr class="bg-background hover:bg-muted/40">
+                    <td class="border-b border-r border-border px-3 py-2">
+                      {brand.logoUrl ? (
+                        <img
+                          src={brand.logoUrl}
+                          alt=""
+                          class="size-10 rounded-md border border-border bg-background object-contain p-0.5"
+                          loading="lazy"
+                          width="40"
+                          height="40"
+                        />
+                      ) : (
+                        <div
+                          class="flex size-10 items-center justify-center rounded-md border border-border bg-primary-soft text-xs font-semibold text-primary"
+                          aria-hidden="true"
+                        >
+                          {brand.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </td>
+                    <td class="border-b border-r border-border px-3 py-2 font-medium">{brand.name}</td>
+                    <td class="border-b border-r border-border px-3 py-2 font-mono text-muted-foreground">
+                      {brand.slug}
+                    </td>
+                    <td class="border-b border-r border-border px-3 py-2">
+                      <StatusDot status={brand.status} />
+                    </td>
+                    <td class="border-b border-border px-3 py-2">
+                      <div class="flex items-center gap-3">
+                        <a
+                          href={`/admin/brands/${brand.id}`}
+                          class="text-xs font-medium text-primary hover:underline"
+                        >
+                          Düzenle
+                        </a>
+                        <DeleteButton client:load endpoint={`/api/admin/brands/${brand.id}`} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )
     }
   </div>
