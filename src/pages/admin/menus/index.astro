@@ -1,0 +1,25 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import MenusEditor from '../../../components/admin/MenusEditor';
+---
+
+<AdminLayout
+  title="Menüler"
+  breadcrumbs={[
+    { href: '/admin', label: 'Admin' },
+    { href: '/admin/pages', label: 'Tasarım' },
+    { label: 'Menüler' },
+  ]}
+>
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">Menüler</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Navbar stili, sağ CTA’lar ve menü ağacını (link / panel) düzenleyin. Tüm public sayfalarda geçerlidir.
+      </p>
+    </div>
+    <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+      <MenusEditor client:load />
+    </div>
+  </div>
+</AdminLayout>
