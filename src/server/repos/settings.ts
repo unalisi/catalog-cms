@@ -4,6 +4,7 @@ import type { Db } from '../db';
 import { nowIso } from '../../lib/utils/id';
 import {
   DEFAULT_SITE_SETTINGS,
+  parseNavigation,
   siteSettingsSchema,
   type SiteSettings,
 } from '../../lib/validation/settings';
@@ -14,9 +15,12 @@ export async function getSiteSettings(db: Db): Promise<SiteSettings> {
   if (!row) return DEFAULT_SITE_SETTINGS;
   try {
     const parsed = siteSettingsSchema.safeParse(JSON.parse(row.valueJson));
-    return parsed.success
-      ? { ...DEFAULT_SITE_SETTINGS, ...parsed.data }
-      : DEFAULT_SITE_SETTINGS;
+    if (!parsed.success) return DEFAULT_SITE_SETTINGS;
+    return {
+      ...DEFAULT_SITE_SETTINGS,
+      ...parsed.data,
+      navigation: parseNavigation(parsed.data.navigation),
+    };
   } catch {
     return DEFAULT_SITE_SETTINGS;
   }
