@@ -4,8 +4,6 @@ import { AdminFormStickyBar } from './AdminFormStickyBar';
 import MediaPicker, { type MediaItem } from './MediaPicker';
 import { mediaTransformPath } from '../../lib/media/urls';
 
-type NavItem = { label: string; href: string };
-
 type SiteForm = {
   name: string;
   tagline: string;
@@ -23,7 +21,9 @@ type SiteForm = {
     youtube: string;
   };
   analytics: { gaMeasurementId: string; gtmId: string };
-  navigation: NavItem[];
+  navigation: unknown[];
+  navbarLayout: string;
+  navbarCtas: unknown[];
   footerText: string;
 };
 
@@ -83,7 +83,9 @@ export default function SettingsForm() {
           gaMeasurementId: s.analytics?.gaMeasurementId ?? '',
           gtmId: s.analytics?.gtmId ?? '',
         },
-        navigation: s.navigation?.length ? s.navigation : [{ label: 'Katalog', href: '/catalog' }],
+        navigation: Array.isArray(s.navigation) ? s.navigation : [],
+        navbarLayout: (s as { navbarLayout?: string }).navbarLayout ?? 'classic',
+        navbarCtas: (s as { navbarCtas?: unknown[] }).navbarCtas ?? [],
         footerText: s.footerText ?? '',
       });
       setSeo({
@@ -140,7 +142,9 @@ export default function SettingsForm() {
           gaMeasurementId: site.analytics.gaMeasurementId || null,
           gtmId: site.analytics.gtmId || null,
         },
-        navigation: site.navigation.filter((n) => n.label && n.href),
+        navigation: site.navigation,
+        navbarLayout: (site as { navbarLayout?: string }).navbarLayout ?? 'classic',
+        navbarCtas: (site as { navbarCtas?: unknown }).navbarCtas ?? [],
         footerText: site.footerText || null,
       },
       seo: {
@@ -299,51 +303,13 @@ export default function SettingsForm() {
 
       <section className="flex flex-col gap-4 border-t border-border pt-6">
         <h2 className="font-display text-lg font-semibold">Navigasyon</h2>
-        {site.navigation.map((item, index) => (
-          <div key={index} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-            <input
-              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Etiket"
-              value={item.label}
-              onChange={(e) => {
-                const navigation = [...site.navigation];
-                navigation[index] = { ...item, label: e.target.value };
-                setSite({ ...site, navigation });
-              }}
-            />
-            <input
-              className="rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
-              placeholder="/path"
-              value={item.href}
-              onChange={(e) => {
-                const navigation = [...site.navigation];
-                navigation[index] = { ...item, href: e.target.value };
-                setSite({ ...site, navigation });
-              }}
-            />
-            <button
-              type="button"
-              className="text-sm text-destructive hover:underline"
-              onClick={() =>
-                setSite({
-                  ...site,
-                  navigation: site.navigation.filter((_, i) => i !== index),
-                })
-              }
-            >
-              Sil
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          className="w-fit text-sm hover:underline"
-          onClick={() =>
-            setSite({ ...site, navigation: [...site.navigation, { label: '', href: '/' }] })
-          }
-        >
-          + Menü öğesi
-        </button>
+        <p className="text-sm text-muted-foreground">
+          Header menüsü artık{' '}
+          <a href="/admin/menus" className="font-medium text-foreground underline-offset-2 hover:underline">
+            Tasarım → Menüler
+          </a>{' '}
+          ekranından düzenlenir.
+        </p>
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium">Footer metni</span>
           <input
