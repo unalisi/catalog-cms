@@ -17,6 +17,7 @@ export async function invalidateCategoryCache(slug: string, previousSlug?: strin
     CACHE_KEYS.category(slug),
     'list:categories:published',
     CACHE_KEYS.sitemap,
+    CACHE_KEYS.nav,
   ];
   if (previousSlug && previousSlug !== slug) keys.push(CACHE_KEYS.category(previousSlug));
   await cacheDelete(...keys);

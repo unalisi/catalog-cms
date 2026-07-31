@@ -1,7 +1,14 @@
 ---
 import '../styles/global.css';
 import type { PageSeo } from '../lib/seo/meta';
+import {
+  DEFAULT_SITE_SETTINGS,
+  type NavbarLayout,
+} from '../lib/validation/settings';
+import { parseNavigation } from '../lib/navigation/nav';
 import { getCachedSiteSettings } from '../server/services/settings';
+import { resolveNavForPublic } from '../server/services/nav';
+import SiteNavbar from '../components/public/navbar/SiteNavbar';
 
 interface Props {
   title?: string;
@@ -23,15 +30,16 @@ const {
 
 const { data: site } = await getCachedSiteSettings();
 const siteName = site?.name ?? 'Catalog CMS';
-  const nav = site?.navigation?.length
-  ? site.navigation
-  : [
-      { label: 'Katalog', href: '/catalog' },
-      { label: 'Blog', href: '/blog' },
-      { label: 'İletişim', href: '/iletisim' },
-    ];
+const nav = await resolveNavForPublic(
+  parseNavigation(site?.navigation ?? DEFAULT_SITE_SETTINGS.navigation),
+);
+const navbarLayout = (site?.navbarLayout ?? 'classic') as NavbarLayout;
+const navbarCtas = site?.navbarCtas?.length
+  ? site.navbarCtas
+  : DEFAULT_SITE_SETTINGS.navbarCtas;
 const favicon = site?.faviconUrl || '/favicon.svg';
-const logoUrl = site?.logoUrl;
+const logoUrl = site?.logoUrl ?? null;
+const logoAlt = site?.logoAlt ?? siteName;
 const footerText = site?.footerText || `© ${new Date().getFullYear()} ${siteName}`;
 const gaId = site?.analytics?.gaMeasurementId?.trim() || null;
 
@@ -97,35 +105,15 @@ const robots =
     >
       İçeriğe geç
     </a>
-    <header class="border-b border-border">
-      <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-6">
-        <a href="/" class="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-          {
-            logoUrl ? (
-              <img src={logoUrl} alt={site?.logoAlt ?? siteName} class="h-8 w-auto" />
-            ) : (
-              siteName
-            )
-          }
-          {logoUrl && <span class="sr-only">{siteName}</span>}
-        </a>
-        <nav aria-label="Ana menü" class="flex items-center gap-4 text-sm font-medium">
-          {
-            nav.map((item) => (
-              <a href={item.href} class="text-muted-foreground hover:text-foreground">
-                {item.label}
-              </a>
-            ))
-          }
-          <a
-            href="/admin"
-            class="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
-          >
-            Admin
-          </a>
-        </nav>
-      </div>
-    </header>
+    <SiteNavbar
+      client:load
+      siteName={siteName}
+      logoUrl={logoUrl}
+      logoAlt={logoAlt}
+      layout={navbarLayout}
+      items={nav}
+      ctas={navbarCtas}
+    />
     <main id="main" class="flex-1" data-cache={cacheStatus ?? undefined}>
       <slot />
     </main>
