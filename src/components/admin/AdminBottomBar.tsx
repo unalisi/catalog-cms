@@ -10,6 +10,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import {
   filterMobileTabs,
   filterMoreNavGroups,
+  isAdminNavDropdown,
   isNavActive,
 } from '@/components/admin/nav';
 import { useAdminChrome } from '@/components/admin/AdminChromeContext';
@@ -96,13 +97,48 @@ export function AdminBottomBar({ pathname, permissions }: Props) {
                     {group.label}
                   </p>
                   <ul className="flex flex-col gap-0.5">
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
-                      const active = isNavActive(pathname, item.href, item.exact);
+                    {group.items.map((entry) => {
+                      if (isAdminNavDropdown(entry)) {
+                        const ParentIcon = entry.icon;
+                        return (
+                          <li key={entry.id} className="mb-1">
+                            <div className="flex min-h-9 items-center gap-3 px-3 text-xs font-semibold uppercase tracking-wide text-faint">
+                              <ParentIcon className="size-4" />
+                              {entry.label}
+                            </div>
+                            <ul className="ml-2 flex flex-col gap-0.5 border-l border-border pl-2">
+                              {entry.children.map((child) => {
+                                const Icon = child.icon;
+                                const active = isNavActive(pathname, child.href, child.exact);
+                                return (
+                                  <li key={child.href}>
+                                    <a
+                                      href={child.href}
+                                      onClick={() => setMoreOpen(false)}
+                                      className={cn(
+                                        'flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors',
+                                        active
+                                          ? 'bg-primary-soft text-foreground'
+                                          : 'text-foreground hover:bg-muted',
+                                      )}
+                                    >
+                                      <Icon className="size-5 text-muted-foreground" />
+                                      {child.label}
+                                    </a>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </li>
+                        );
+                      }
+
+                      const Icon = entry.icon;
+                      const active = isNavActive(pathname, entry.href, entry.exact);
                       return (
-                        <li key={item.href}>
+                        <li key={entry.href}>
                           <a
-                            href={item.href}
+                            href={entry.href}
                             onClick={() => setMoreOpen(false)}
                             className={cn(
                               'flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors',
@@ -112,7 +148,7 @@ export function AdminBottomBar({ pathname, permissions }: Props) {
                             )}
                           >
                             <Icon className="size-5 text-muted-foreground" />
-                            {item.label}
+                            {entry.label}
                           </a>
                         </li>
                       );
