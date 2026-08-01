@@ -25,6 +25,7 @@ const ROUTE_PERMISSIONS: { prefix: string; permission: Permission }[] = [
   { prefix: '/api/admin/seo', permission: 'seo.manage' },
   { prefix: '/admin/seo', permission: 'seo.manage' },
   { prefix: '/api/admin/import', permission: 'import.manage' },
+  { prefix: '/api/admin/export', permission: 'import.manage' },
   { prefix: '/admin/import', permission: 'import.manage' },
   { prefix: '/api/admin/settings', permission: 'settings.manage' },
   { prefix: '/admin/settings', permission: 'settings.manage' },

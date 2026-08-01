@@ -91,8 +91,40 @@ export async function insertImportItems(
     error: item.error ?? null,
     createdAt: now,
   }));
-  await db.insert(importItems).values(rows);
+
+  // D1 limits: max 100 bound params and 100KB SQL per statement.
+  // Multi-row INSERT blows both limits with Woo mapped_json payloads.
+  // Use one INSERT per row, grouped via db.batch (~40 statements each).
+  const STATEMENT_BATCH = 40;
+  for (let i = 0; i < rows.length; i += STATEMENT_BATCH) {
+    const chunk = rows.slice(i, i + STATEMENT_BATCH);
+    if (chunk.length === 1) {
+      await db.insert(importItems).values(chunk[0]);
+      continue;
+    }
+    const statements = chunk.map((row) => db.insert(importItems).values(row));
+    await db.batch(statements as [typeof statements[0], ...typeof statements]);
+  }
   return rows;
+}
+
+export async function failImportJob(db: Db, id: string, message: string): Promise<void> {
+  const summary: ImportJobSummary = {
+    total: 0,
+    create: 0,
+    update: 0,
+    skip: 0,
+    error: 0,
+    message,
+  };
+  await db
+    .update(importJobs)
+    .set({
+      status: 'failed',
+      summaryJson: JSON.stringify(summary),
+      updatedAt: nowIso(),
+    })
+    .where(eq(importJobs.id, id));
 }
 
 export async function listImportItemsByJob(
@@ -160,4 +192,23 @@ export async function isAllItemsProcessed(db: Db, jobId: string): Promise<boolea
   if (total === 0) return true;
   const items = await listImportItemsByJob(db, jobId);
   return items.every((item) => item.status !== 'pending');
+}
+
+/** Counts for apply progress UI (does not load mapped JSON payloads). */
+export async function getImportJobProgress(
+  db: Db,
+  jobId: string,
+): Promise<{ total: number; processed: number; pending: number; error: number }> {
+  const items = await db
+    .select({ status: importItems.status })
+    .from(importItems)
+    .where(eq(importItems.jobId, jobId));
+  let pending = 0;
+  let error = 0;
+  for (const item of items) {
+    if (item.status === 'pending') pending++;
+    else if (item.status === 'error') error++;
+  }
+  const total = items.length;
+  return { total, processed: total - pending, pending, error };
 }

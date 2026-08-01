@@ -27,13 +27,24 @@ export type ImportJobSummary = {
   update: number;
   skip: number;
   error: number;
+  /** Human-readable failure reason when job status is `failed`. */
+  message?: string;
+  /** Background media import counters (products may complete before media). */
+  mediaTotal?: number;
+  mediaDone?: number;
+  mediaError?: number;
 };
 
-/** Message shape sent to the `IMPORT_QUEUE` (catalog-import) queue. */
-export type ImportQueueMessage = {
-  jobId: string;
-  itemIds: string[];
-};
+/**
+ * Messages for `IMPORT_QUEUE` (catalog-import) and `IMPORT_MEDIA_QUEUE` (catalog-import-media).
+ * - `prepare` / `apply` → product queue only
+ * - `media` → dedicated media queue (never competes with product apply concurrency)
+ */
+export type ImportQueueMessage =
+  | { type: 'prepare'; jobId: string }
+  | { type: 'apply'; jobId: string; itemIds: string[] }
+  | { type: 'media'; jobId: string; itemId: string; productId: string }
+  | { jobId: string; itemIds: string[] };
 
 export type ImportAdapter = {
   parseToRecords(input: string, mapping?: MappingProfile): ImportRecord[];

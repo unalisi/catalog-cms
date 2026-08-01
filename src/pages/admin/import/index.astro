@@ -5,15 +5,15 @@ import ImportWizard from '../../../components/admin/ImportWizard';
 ---
 
 <AdminLayout
-  title="İçe aktarım"
-  breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'İçe aktarım' }]}
+  title="İçe / dışa aktarım"
+  breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'İçe / dışa aktarım' }]}
 >
   <DesktopOnlyGate>
     <div class="flex flex-col gap-4">
       <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight">Katalog içe aktarım</h1>
+        <h1 class="font-display text-2xl font-bold tracking-tight">Katalog içe / dışa aktarım</h1>
         <p class="mt-1 text-sm text-muted-foreground">
-          CSV · WooCommerce JSON · WXR → dry-run → Queue apply (SKU/slug upsert, medya R2)
+          CSV · WooCommerce JSON · WXR → dry-run → Queue apply · Export (galeri, kategori, marka)
         </p>
       </div>
       <div class="rounded-lg border border-border bg-background p-4 md:p-6">

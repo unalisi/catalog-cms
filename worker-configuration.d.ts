@@ -7,6 +7,7 @@ interface __BaseEnv_Env {
 	MEDIA: R2Bucket;
 	DB: D1Database;
 	IMPORT_QUEUE: Queue;
+	IMPORT_MEDIA_QUEUE: Queue;
 	IMAGES: ImagesBinding;
 	ASSETS: Fetcher;
 	SESSION_SECRET: string;

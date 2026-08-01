@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ApiResult } from '../../lib/api';
 
 type Source = 'csv' | 'woo' | 'wxr';
 type ConflictPolicy = 'skip' | 'overwrite' | 'merge';
+type ExportFormat = 'csv' | 'woo-json';
 
 type Mapping = {
   name: string;
   slug: string;
   sku: string;
   price: string;
+  compareAtPrice: string;
   stock: string;
   description: string;
   brand: string;
@@ -23,6 +25,10 @@ type JobSummary = {
   update: number;
   skip: number;
   error: number;
+  message?: string;
+  mediaTotal?: number;
+  mediaDone?: number;
+  mediaError?: number;
 };
 
 type JobRow = {
@@ -37,6 +43,7 @@ type JobRow = {
 
 type JobDetail = JobRow & {
   summary: JobSummary;
+  progress?: { total: number; processed: number; pending: number; error: number };
   items: {
     id: string;
     rowIndex: number;
@@ -44,6 +51,7 @@ type JobDetail = JobRow & {
     status: string;
     error: string | null;
     mappedJson: string | null;
+    rawJson?: string | null;
   }[];
 };
 
@@ -52,6 +60,7 @@ const DEFAULT_MAPPING: Mapping = {
   slug: 'slug',
   sku: 'sku',
   price: 'price',
+  compareAtPrice: 'compareAtPrice',
   stock: 'stock',
   description: 'description',
   brand: 'brand',
@@ -60,18 +69,40 @@ const DEFAULT_MAPPING: Mapping = {
   status: 'status',
 };
 
-const SAMPLE_CSV = `name,slug,sku,price,stock,description,brand,categories,image,status
-Demo Kulaklık,demo-kulaklik,IMP-ANC-01,1299.90,25,"Import demo ürünü",Nord Teknik,"Elektronik,Aksesuar",,published
-Demo Mouse,demo-mouse,IMP-MSE-01,899.00,40,Ergonomik mouse,Nord Teknik,Elektronik,,draft
+const SAMPLE_CSV = `name,slug,sku,price,compareAtPrice,stock,description,brand,categories,image,status
+Demo Kulaklık,demo-kulaklik,IMP-ANC-01,1299.90,,25,"Import demo ürünü",Nord Teknik,"Elektronik,Aksesuar",,published
+Demo Mouse,demo-mouse,IMP-MSE-01,899.00,,40,Ergonomik mouse,Nord Teknik,Elektronik,,draft
 `;
 
 const PROFILES_KEY = 'catalog-import-mapping-profiles';
 
-function itemName(mappedJson: string | null): string {
+function itemName(mappedJson: string | null, rawJson?: string | null): string {
+  for (const raw of [mappedJson, rawJson]) {
+    if (!raw) continue;
+    try {
+      const name = (JSON.parse(raw) as { name?: string }).name;
+      if (name) return name;
+    } catch {
+      // try next
+    }
+  }
+  return '—';
+}
+
+async function readApiJson<T>(res: Response): Promise<ApiResult<T>> {
+  const text = await res.text();
   try {
-    return mappedJson ? (JSON.parse(mappedJson) as { name?: string }).name ?? '—' : '—';
+    return JSON.parse(text) as ApiResult<T>;
   } catch {
-    return '—';
+    return {
+      ok: false,
+      error: {
+        code: 'server_error',
+        message: res.ok
+          ? 'Sunucu geçersiz yanıt döndü'
+          : `Sunucu hatası (${res.status}). ${text.slice(0, 120)}`,
+      },
+    };
   }
 }
 
@@ -83,6 +114,109 @@ function loadProfiles(): Record<string, Mapping> {
   } catch {
     return {};
   }
+}
+
+function formatEta(seconds: number | null): string {
+  if (seconds == null || !Number.isFinite(seconds)) return 'hesaplanıyor…';
+  if (seconds < 5) return 'birkaç saniye';
+  if (seconds < 60) return `~${Math.ceil(seconds)} sn`;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.ceil(seconds % 60);
+  return `~${mins} dk ${secs} sn`;
+}
+
+function ProgressPanel({
+  processed,
+  total,
+  percent,
+  etaSeconds,
+  status,
+  done,
+  mediaTotal,
+  mediaDone,
+  mediaError,
+}: {
+  processed: number;
+  total: number;
+  percent: number;
+  etaSeconds: number | null;
+  status: string;
+  done: boolean;
+  mediaTotal: number;
+  mediaDone: number;
+  mediaError: number;
+}) {
+  const mediaPercent =
+    mediaTotal > 0 ? Math.min(100, Math.round((mediaDone / mediaTotal) * 100)) : 0;
+  const mediaDoneAll = mediaTotal > 0 && mediaDone >= mediaTotal;
+
+  return (
+    <div className="flex flex-col gap-4 rounded-lg border border-border bg-muted/30 p-4">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="font-medium">
+            {done ? 'Ürünler tamamlandı' : 'Ürünler işleniyor…'}{' '}
+            <span className="text-muted-foreground">({status})</span>
+          </span>
+          <span className="font-mono tabular-nums">
+            {processed}/{total} · %{percent}
+          </span>
+        </div>
+        <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full bg-primary transition-[width] duration-500 ease-out ${
+              done ? '' : 'animate-pulse'
+            }`}
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        {!done && (
+          <p className="text-xs text-muted-foreground">
+            Tahmini ürün süresi: <strong>{formatEta(etaSeconds)}</strong>
+          </p>
+        )}
+        {done && (
+          <p className="flex items-center gap-2 text-sm text-foreground">
+            <span
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+              aria-hidden
+            >
+              ✓
+            </span>
+            Ürün kayıtları katalogda hazır
+          </p>
+        )}
+      </div>
+
+      {mediaTotal > 0 && (
+        <div className="flex flex-col gap-2 border-t border-border pt-3">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="font-medium">
+              {mediaDoneAll ? 'Görseller tamamlandı' : 'Görseller arka planda…'}
+            </span>
+            <span className="font-mono tabular-nums">
+              {mediaDone}/{mediaTotal} · %{mediaPercent}
+              {mediaError > 0 ? ` · ${mediaError} hata` : ''}
+            </span>
+          </div>
+          <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className={`h-full rounded-full bg-foreground/70 transition-[width] duration-500 ease-out ${
+                mediaDoneAll ? '' : 'animate-pulse'
+              }`}
+              style={{ width: `${mediaPercent}%` }}
+            />
+          </div>
+          {!mediaDoneAll && (
+            <p className="text-xs text-muted-foreground">
+              Ürünler ayrı kuyrukta saniyeler içinde yazılır; görseller tamamen ayrı medya
+              kuyruğunda arka planda indirilir.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ImportWizard() {
@@ -98,6 +232,10 @@ export default function ImportWizard() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [job, setJob] = useState<JobDetail | null>(null);
   const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('woo-json');
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportMsg, setExportMsg] = useState<string | null>(null);
+  const applyStartedAt = useRef<number | null>(null);
 
   useEffect(() => {
     setProfiles(loadProfiles());
@@ -108,12 +246,28 @@ export default function ImportWizard() {
     if (!jobId) return;
     let cancelled = false;
     const tick = async () => {
-      const res = await fetch(`/api/admin/import/jobs/${jobId}`);
-      const json = (await res.json()) as ApiResult<{ job: JobDetail }>;
-      if (!cancelled && json.ok) setJob(json.data.job);
+      try {
+        const res = await fetch(`/api/admin/import/jobs/${jobId}`);
+        const json = await readApiJson<{ job: JobDetail }>(res);
+        if (cancelled || !json.ok) return;
+        setJob(json.data.job);
+        if (json.data.job.status === 'failed') {
+          const msg = json.data.job.summary?.message;
+          setError(msg || 'Dry-run başarısız');
+        }
+        if (
+          json.data.job.status === 'ready' ||
+          json.data.job.status === 'failed' ||
+          json.data.job.status === 'completed'
+        ) {
+          void refreshJobs();
+        }
+      } catch {
+        // transient network — next poll retries
+      }
     };
     void tick();
-    const id = window.setInterval(() => void tick(), 2500);
+    const id = window.setInterval(() => void tick(), 1500);
     return () => {
       cancelled = true;
       window.clearInterval(id);
@@ -121,11 +275,61 @@ export default function ImportWizard() {
   }, [jobId]);
 
   const summary = useMemo(() => job?.summary, [job]);
+  const isPreparing =
+    busy ||
+    job?.status === 'validating' ||
+    job?.status === 'pending' ||
+    (Boolean(jobId) && !job);
+  const dryRunReady = job?.status === 'ready';
+
+  const progress = useMemo(() => {
+    if (!job) {
+      return {
+        processed: 0,
+        total: 0,
+        percent: 0,
+        etaSeconds: null as number | null,
+        done: false,
+        mediaTotal: 0,
+        mediaDone: 0,
+        mediaError: 0,
+      };
+    }
+    const total = job.progress?.total ?? summary?.total ?? job.items.length ?? 0;
+    const processed =
+      job.progress?.processed ?? job.items.filter((i) => i.status !== 'pending').length;
+    const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
+    const done =
+      job.status === 'completed' ||
+      job.status === 'failed' ||
+      (total > 0 && processed >= total && (job.status === 'processing' || job.status === 'queued'));
+    let etaSeconds: number | null = null;
+    if (!done && processed > 0 && applyStartedAt.current) {
+      const elapsed = (Date.now() - applyStartedAt.current) / 1000;
+      const rate = processed / elapsed;
+      const remaining = Math.max(0, total - processed);
+      etaSeconds = rate > 0 ? remaining / rate : null;
+    }
+    return {
+      processed,
+      total,
+      percent,
+      etaSeconds,
+      done,
+      mediaTotal: summary?.mediaTotal ?? 0,
+      mediaDone: summary?.mediaDone ?? 0,
+      mediaError: summary?.mediaError ?? 0,
+    };
+  }, [job, summary]);
 
   async function refreshJobs() {
-    const res = await fetch('/api/admin/import/jobs');
-    const json = (await res.json()) as ApiResult<{ jobs: JobRow[] }>;
-    if (json.ok) setJobs(json.data.jobs);
+    try {
+      const res = await fetch('/api/admin/import/jobs');
+      const json = await readApiJson<{ jobs: JobRow[] }>(res);
+      if (json.ok) setJobs(json.data.jobs);
+    } catch {
+      // ignore list refresh errors
+    }
   }
 
   async function onFile(file: File | null) {
@@ -145,58 +349,139 @@ export default function ImportWizard() {
   async function runDryRun() {
     setBusy(true);
     setError(null);
-    const payload = {
-      source,
-      content,
-      conflictPolicy,
-      mapping: source === 'csv' ? mapping : undefined,
-    };
-    const res = await fetch('/api/admin/import/jobs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const json = (await res.json()) as ApiResult<{ job: JobRow; summary: JobSummary }>;
-    setBusy(false);
-    if (!json.ok) {
-      setError(json.error.message ?? 'Dry-run başarısız');
+    setJob(null);
+    setStep(3);
+    try {
+      const payload = {
+        source,
+        content,
+        conflictPolicy,
+        mapping: source === 'csv' ? mapping : undefined,
+      };
+      const res = await fetch('/api/admin/import/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await readApiJson<{ job: JobRow; summary: JobSummary }>(res);
+      if (!json.ok) {
+        setError(json.error.message ?? 'Dry-run başlatılamadı');
+        return;
+      }
+      setJobId(json.data.job.id);
+      await refreshJobs();
+    } catch {
+      setError('Dry-run isteği gönderilemedi (ağ veya sunucu hatası)');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function continueFromSource() {
+    if (source === 'csv') {
+      setStep(2);
       return;
     }
-    setJobId(json.data.job.id);
-    setStep(3);
-    await refreshJobs();
+    await runDryRun();
   }
 
   async function runApply() {
     if (!jobId) return;
     setBusy(true);
     setError(null);
-    const res = await fetch(`/api/admin/import/jobs/${jobId}/apply`, { method: 'POST' });
-    const json = (await res.json()) as ApiResult<{ job: JobRow }>;
-    setBusy(false);
-    if (!json.ok) {
-      setError(json.error.message ?? 'Apply başarısız');
-      return;
+    applyStartedAt.current = Date.now();
+    try {
+      const res = await fetch(`/api/admin/import/jobs/${jobId}/apply`, { method: 'POST' });
+      const json = await readApiJson<{ job: JobRow }>(res);
+      if (!json.ok) {
+        setError(json.error.message ?? 'Apply başarısız');
+        return;
+      }
+      setStep(4);
+      await refreshJobs();
+    } catch {
+      setError('Apply isteği gönderilemedi');
+    } finally {
+      setBusy(false);
     }
-    setStep(4);
-    await refreshJobs();
+  }
+
+  async function runExport() {
+    setExportBusy(true);
+    setExportMsg(null);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/export/products?format=${exportFormat}`);
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as ApiResult<unknown> | null;
+        setError(json && !json.ok ? json.error.message : 'Export başarısız');
+        return;
+      }
+      const blob = await res.blob();
+      const count = res.headers.get('X-Export-Count') ?? '?';
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = /filename="([^"]+)"/.exec(disposition);
+      const filename =
+        match?.[1] ||
+        (exportFormat === 'csv' ? 'products-export.csv' : 'products-export.json');
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(href);
+      setExportMsg(`${count} ürün indirildi.`);
+    } catch {
+      setError('Export sırasında ağ hatası');
+    } finally {
+      setExportBusy(false);
+    }
   }
 
   return (
     <div className="flex max-w-4xl flex-col gap-8">
+      <section className="rounded-lg border border-border bg-muted/20 p-4">
+        <h2 className="font-display text-lg font-semibold">Dışa aktarım</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Katalogdaki ürünleri CSV veya WooCommerce JSON olarak indirin (round-trip uyumlu).
+        </p>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Format</span>
+            <select
+              className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+            >
+              <option value="woo-json">WooCommerce JSON</option>
+              <option value="csv">CSV</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            className="relative min-h-11 overflow-hidden rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+            disabled={exportBusy}
+            onClick={() => void runExport()}
+          >
+            {exportBusy ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                Hazırlanıyor…
+              </span>
+            ) : (
+              'İndir'
+            )}
+          </button>
+        </div>
+        {exportMsg && <p className="mt-2 text-sm text-muted-foreground">{exportMsg}</p>}
+      </section>
+
       <ol className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border border-border p-3 text-sm sm:flex sm:flex-wrap sm:gap-3 sm:border-0 sm:p-0">
-        {[
-          '1. Kaynak',
-          '2. Eşleme',
-          '3. Dry-run',
-          '4. Apply',
-        ].map((label, i) => (
+        {['1. Kaynak', '2. Eşleme', '3. Dry-run', '4. Apply'].map((label, i) => (
           <li
             key={label}
             className={
-              step === i + 1
-                ? 'font-semibold text-foreground'
-                : 'text-muted-foreground'
+              step === i + 1 ? 'font-semibold text-foreground' : 'text-muted-foreground'
             }
           >
             {label}
@@ -230,6 +515,7 @@ export default function ImportWizard() {
                 onClick={() => {
                   setSource(value);
                   if (value === 'csv' && !content.trim()) setContent(SAMPLE_CSV);
+                  if (value !== 'csv' && content === SAMPLE_CSV) setContent('');
                 }}
               >
                 {label}
@@ -240,7 +526,13 @@ export default function ImportWizard() {
             <span className="font-medium">Dosya yükle</span>
             <input
               type="file"
-              accept={source === 'csv' ? '.csv,text/csv' : source === 'wxr' ? '.xml,text/xml' : '.json,application/json'}
+              accept={
+                source === 'csv'
+                  ? '.csv,text/csv'
+                  : source === 'wxr'
+                    ? '.xml,text/xml'
+                    : '.json,application/json'
+              }
               onChange={(e) => void onFile(e.target.files?.[0] ?? null)}
             />
           </label>
@@ -250,6 +542,11 @@ export default function ImportWizard() {
               className="min-h-48 rounded-md border border-input bg-background px-3 py-2 font-mono text-xs"
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              placeholder={
+                source === 'woo'
+                  ? 'WooCommerce products JSON dizisini yapıştırın…'
+                  : undefined
+              }
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
@@ -266,11 +563,15 @@ export default function ImportWizard() {
           </label>
           <button
             type="button"
-            className="min-h-11 w-full rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground sm:w-fit"
-            onClick={() => setStep(source === 'csv' ? 2 : 3)}
-            disabled={!content.trim()}
+            className="min-h-11 w-full rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:w-fit"
+            onClick={() => void continueFromSource()}
+            disabled={!content.trim() || busy}
           >
-            Devam
+            {busy
+              ? 'Dry-run…'
+              : source === 'csv'
+                ? 'Devam'
+                : 'Dry-run başlat'}
           </button>
         </section>
       )}
@@ -312,7 +613,7 @@ export default function ImportWizard() {
               defaultValue=""
               onChange={(e) => {
                 const p = profiles[e.target.value];
-                if (p) setMapping(p);
+                if (p) setMapping({ ...DEFAULT_MAPPING, ...p });
               }}
             >
               <option value="" disabled>
@@ -351,27 +652,59 @@ export default function ImportWizard() {
           <p className="text-sm text-muted-foreground">
             Ürün tablosuna yazılmaz. SKU/slug ile mevcut kayıtlar tarandı.
           </p>
-          {!job && <p className="text-sm">Rapor yükleniyor…</p>}
-          {summary && (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-5 text-sm">
-              <li className="rounded-md border border-border p-3">Toplam: <strong>{summary.total}</strong></li>
-              <li className="rounded-md border border-border p-3">Create: <strong>{summary.create}</strong></li>
-              <li className="rounded-md border border-border p-3">Update: <strong>{summary.update}</strong></li>
-              <li className="rounded-md border border-border p-3">Skip: <strong>{summary.skip}</strong></li>
-              <li className="rounded-md border border-border p-3">Error: <strong>{summary.error}</strong></li>
+          {isPreparing && job?.status !== 'failed' && (
+            <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
+                <span className="font-medium">
+                  {busy && !jobId
+                    ? 'Dosya yükleniyor…'
+                    : 'Dosya kuyrukta ayrıştırılıyor…'}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Büyük WooCommerce JSON dosyalarında bu adım birkaç saniye sürebilir. Sayfayı
+                kapatmadan bekleyin — durum otomatik güncellenir.
+              </p>
+              {job?.status && (
+                <p className="font-mono text-xs text-muted-foreground">Durum: {job.status}</p>
+              )}
+            </div>
+          )}
+          {job?.status === 'failed' && (
+            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {summary?.message || 'Dry-run başarısız'}
+            </p>
+          )}
+          {dryRunReady && summary && (
+            <ul className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
+              <li className="rounded-md border border-border p-3">
+                Toplam: <strong>{summary.total}</strong>
+              </li>
+              <li className="rounded-md border border-border p-3">
+                Create: <strong>{summary.create}</strong>
+              </li>
+              <li className="rounded-md border border-border p-3">
+                Update: <strong>{summary.update}</strong>
+              </li>
+              <li className="rounded-md border border-border p-3">
+                Skip: <strong>{summary.skip}</strong>
+              </li>
+              <li className="rounded-md border border-border p-3">
+                Error: <strong>{summary.error}</strong>
+              </li>
             </ul>
           )}
-          {job && (
+          {dryRunReady && job && (
             <>
               <div className="flex flex-col gap-2 md:hidden">
                 {job.items.slice(0, 50).map((item) => (
-                  <article
-                    key={item.id}
-                    className="rounded-md border border-border p-3 text-sm"
-                  >
+                  <article key={item.id} className="rounded-md border border-border p-3 text-sm">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{itemName(item.mappedJson)}</p>
+                        <p className="truncate font-medium">
+                          {itemName(item.mappedJson, item.rawJson)}
+                        </p>
                         <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                           #{item.rowIndex + 1}
                         </p>
@@ -380,9 +713,7 @@ export default function ImportWizard() {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       <span>Aksiyon: {item.action ?? '—'}</span>
-                      {item.error && (
-                        <span className="text-destructive">{item.error}</span>
-                      )}
+                      {item.error && <span className="text-destructive">{item.error}</span>}
                     </div>
                   </article>
                 ))}
@@ -402,7 +733,7 @@ export default function ImportWizard() {
                     {job.items.slice(0, 50).map((item) => (
                       <tr key={item.id} className="border-t border-border">
                         <td className="px-3 py-2 font-mono">{item.rowIndex + 1}</td>
-                        <td className="px-3 py-2">{itemName(item.mappedJson)}</td>
+                        <td className="px-3 py-2">{itemName(item.mappedJson, item.rawJson)}</td>
                         <td className="px-3 py-2">{item.action}</td>
                         <td className="px-3 py-2">{item.status}</td>
                         <td className="px-3 py-2 text-destructive">{item.error ?? '—'}</td>
@@ -417,30 +748,16 @@ export default function ImportWizard() {
             <button
               type="button"
               className="min-h-11 flex-1 rounded-md border border-border px-3 py-2 text-sm sm:flex-none"
-              onClick={() => setStep(1)}
+              onClick={() => {
+                setJobId(null);
+                setJob(null);
+                setError(null);
+                setStep(1);
+              }}
             >
               Yeni iş
             </button>
-            {source === 'csv' && step === 3 && !jobId && (
-              <button
-                type="button"
-                className="min-h-11 flex-1 rounded-md border border-border px-3 py-2 text-sm sm:flex-none"
-                onClick={() => void runDryRun()}
-              >
-                Dry-run
-              </button>
-            )}
-            {source !== 'csv' && !jobId && (
-              <button
-                type="button"
-                className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground sm:flex-none"
-                disabled={busy}
-                onClick={() => void runDryRun()}
-              >
-                {busy ? 'Çalışıyor…' : 'Dry-run'}
-              </button>
-            )}
-            {jobId && (
+            {jobId && dryRunReady && (
               <button
                 type="button"
                 className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:flex-none"
@@ -457,22 +774,45 @@ export default function ImportWizard() {
       {step === 4 && (
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-lg font-semibold">Apply durumu</h2>
-          <p className="text-sm text-muted-foreground">
-            İş Queue’ya alındı. Durum: <strong>{job?.status ?? '…'}</strong>
-          </p>
+          <ProgressPanel
+            processed={progress.processed}
+            total={progress.total}
+            percent={progress.percent}
+            etaSeconds={progress.etaSeconds}
+            status={job?.status ?? '…'}
+            done={progress.done}
+            mediaTotal={progress.mediaTotal}
+            mediaDone={progress.mediaDone}
+            mediaError={progress.mediaError}
+          />
           {summary && (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-5 text-sm">
-              <li className="rounded-md border border-border p-3">Toplam: <strong>{summary.total}</strong></li>
-              <li className="rounded-md border border-border p-3">Create: <strong>{summary.create}</strong></li>
-              <li className="rounded-md border border-border p-3">Update: <strong>{summary.update}</strong></li>
-              <li className="rounded-md border border-border p-3">Skip: <strong>{summary.skip}</strong></li>
-              <li className="rounded-md border border-border p-3">Error: <strong>{summary.error}</strong></li>
+            <ul className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
+              <li className="rounded-md border border-border p-3">
+                Toplam: <strong>{summary.total}</strong>
+              </li>
+              <li className="rounded-md border border-border p-3">
+                Create: <strong>{summary.create}</strong>
+              </li>
+              <li className="rounded-md border border-border p-3">
+                Update: <strong>{summary.update}</strong>
+              </li>
+              <li className="rounded-md border border-border p-3">
+                Skip: <strong>{summary.skip}</strong>
+              </li>
+              <li className="rounded-md border border-border p-3">
+                Error: <strong>{summary.error}</strong>
+              </li>
             </ul>
           )}
           <button
             type="button"
             className="min-h-11 w-full rounded-md border border-border px-3 py-2 text-sm sm:w-fit"
-            onClick={() => setStep(1)}
+            onClick={() => {
+              setJobId(null);
+              setJob(null);
+              applyStartedAt.current = null;
+              setStep(1);
+            }}
           >
             Yeni import
           </button>
@@ -486,8 +826,13 @@ export default function ImportWizard() {
         ) : (
           <ul className="flex flex-col gap-2 text-sm">
             {jobs.slice(0, 10).map((j) => (
-              <li key={j.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2.5 sm:gap-3">
-                <span className="font-mono text-xs text-muted-foreground">{j.id.slice(0, 18)}…</span>
+              <li
+                key={j.id}
+                className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2.5 sm:gap-3"
+              >
+                <span className="font-mono text-xs text-muted-foreground">
+                  {j.id.slice(0, 18)}…
+                </span>
                 <span>{j.source}</span>
                 <span>{j.status}</span>
                 <span className="w-full text-xs text-muted-foreground sm:w-auto sm:text-sm">
@@ -497,8 +842,15 @@ export default function ImportWizard() {
                   type="button"
                   className="min-h-11 px-1 text-sm hover:underline"
                   onClick={() => {
+                    setError(null);
                     setJobId(j.id);
-                    setStep(j.status === 'queued' || j.status === 'processing' || j.status === 'completed' ? 4 : 3);
+                    setStep(
+                      j.status === 'queued' ||
+                        j.status === 'processing' ||
+                        j.status === 'completed'
+                        ? 4
+                        : 3,
+                    );
                   }}
                 >
                   Aç

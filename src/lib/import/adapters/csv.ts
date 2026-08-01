@@ -6,6 +6,7 @@ const DEFAULT_MAPPING: MappingProfile = {
   slug: 'slug',
   sku: 'sku',
   price: 'price',
+  compareAtPrice: 'compareAtPrice',
   stock: 'stock',
   description: 'description',
   brand: 'brand',
@@ -106,6 +107,7 @@ export function parseToRecords(input: string, mapping?: MappingProfile): ImportR
   const slugIdx = map.slug ? colIndex(map.slug) : -1;
   const skuIdx = map.sku ? colIndex(map.sku) : -1;
   const priceIdx = colIndex(map.price);
+  const compareAtIdx = map.compareAtPrice ? colIndex(map.compareAtPrice) : -1;
   const stockIdx = map.stock ? colIndex(map.stock) : -1;
   const descriptionIdx = map.description ? colIndex(map.description) : -1;
   const brandIdx = map.brand ? colIndex(map.brand) : -1;
@@ -133,7 +135,18 @@ export function parseToRecords(input: string, mapping?: MappingProfile): ImportR
             .map((c) => c.trim())
             .filter(Boolean)
         : [];
-    const imageUrl = imageUrlIdx >= 0 ? row[imageUrlIdx]?.trim() : '';
+    const imageCell = imageUrlIdx >= 0 ? row[imageUrlIdx]?.trim() : '';
+    const media = imageCell
+      ? imageCell
+          .split('|')
+          .map((u) => u.trim())
+          .filter(Boolean)
+          .map((url) => ({ url }))
+      : [];
+    const compareRaw = compareAtIdx >= 0 ? row[compareAtIdx] : undefined;
+    const compareAtPrice = compareRaw?.trim()
+      ? parsePriceToMinorUnits(compareRaw)
+      : null;
 
     records.push({
       name,
@@ -141,11 +154,12 @@ export function parseToRecords(input: string, mapping?: MappingProfile): ImportR
       sku,
       description,
       price: parsePriceToMinorUnits(priceIdx >= 0 ? row[priceIdx] : undefined),
+      compareAtPrice: compareAtPrice && compareAtPrice > 0 ? compareAtPrice : null,
       stock: stockIdx >= 0 ? Math.max(0, Math.trunc(Number(row[stockIdx]) || 0)) : 0,
       status: normalizeStatus(statusIdx >= 0 ? row[statusIdx] : undefined),
       brand,
       categories,
-      media: imageUrl ? [{ url: imageUrl }] : [],
+      media,
     });
   }
 

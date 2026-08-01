@@ -1,46 +1,70 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "catalog-cms",
-  "main": "./src/worker.ts",
-  "compatibility_date": "2026-07-27",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "binding": "ASSETS",
-    "directory": "./dist"
-  },
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "catalog-db",
-      "database_id": "93c9c5cc-6651-4dda-95f7-0fa610b85f67",
-      "migrations_dir": "db/migrations"
-    }
-  ],
-  "kv_namespaces": [
-    {
-      "binding": "CACHE",
-      "id": "61980cf442cd4804b76558e33769caa9"
-    },
-    {
-      "binding": "SESSION",
-      "id": "ff377a7aceb140989f372ff607ac04f4"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "MEDIA",
-      "bucket_name": "catalog-media"
-    }
-  ],
-  "images": {
-    "binding": "IMAGES"
-  },
-  "queues": {
-    "producers": [{ "binding": "IMPORT_QUEUE", "queue": "catalog-import" }],
-    "consumers": [{ "queue": "catalog-import", "max_batch_size": 5, "max_retries": 3 }]
-  }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "catalog-cms",
+	"main": "./src/worker.ts",
+	"compatibility_date": "2026-07-27",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": "./dist"
+	},
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "catalog-db",
+			"database_id": "93c9c5cc-6651-4dda-95f7-0fa610b85f67",
+			"migrations_dir": "../../db/migrations"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "61980cf442cd4804b76558e33769caa9"
+		},
+		{
+			"binding": "SESSION",
+			"id": "ff377a7aceb140989f372ff607ac04f4"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "catalog-media"
+		}
+	],
+	"images": {
+		"binding": "IMAGES"
+	},
+	"queues": {
+		"producers": [
+			{
+				"binding": "IMPORT_QUEUE",
+				"queue": "catalog-import"
+			},
+			{
+				"binding": "IMPORT_MEDIA_QUEUE",
+				"queue": "catalog-import-media"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "catalog-import",
+				"max_batch_size": 25,
+				"max_concurrency": 10,
+				"max_retries": 3
+			},
+			{
+				"queue": "catalog-import-media",
+				"max_batch_size": 5,
+				"max_concurrency": 5,
+				"max_retries": 3
+			}
+		]
+	}
 }
