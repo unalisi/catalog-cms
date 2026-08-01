@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import type { ApiResult } from '../../lib/api';
+import { stripHtmlToText } from '../../lib/html/sanitize-product-description';
 import { mediaTransformPath } from '../../lib/media/urls';
 import { AdminFormStickyBar } from './AdminFormStickyBar';
 import MediaPicker, { type MediaItem } from './MediaPicker';
 import SeoFields, { emptySeoForm, seoFormFromMeta, type SeoFormValue } from './SeoFields';
+
+const ProductDescriptionEditor = lazy(() => import('./ProductDescriptionEditor'));
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -112,6 +115,9 @@ export default function ProductForm({
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [sku, setSku] = useState(initial?.sku ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
+  const [descriptionOpen, setDescriptionOpen] = useState(
+    () => Boolean(initial?.description?.trim()),
+  );
   const [price, setPrice] = useState(majorFromMinor(initial?.price ?? 0));
   const [stock, setStock] = useState(String(initial?.stock ?? 0));
   const [status, setStatus] = useState<Status>(initial?.status ?? 'draft');
@@ -250,14 +256,33 @@ export default function ProductForm({
           />
           {fields.sku && <span className="text-destructive">{fields.sku}</span>}
         </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium">Açıklama</span>
-          <textarea
-            className="min-h-24 rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </label>
+        <div className="flex flex-col gap-1.5 text-sm">
+          <button
+            type="button"
+            className="flex min-h-11 items-center justify-between rounded-md border border-border px-3 py-2 text-left font-medium hover:bg-muted"
+            aria-expanded={descriptionOpen}
+            onClick={() => setDescriptionOpen((open) => !open)}
+          >
+            <span>Açıklama</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {descriptionOpen ? 'Gizle' : 'Düzenle'}
+            </span>
+          </button>
+          {!descriptionOpen && stripHtmlToText(description) ? (
+            <p className="line-clamp-2 px-1 text-muted-foreground">{stripHtmlToText(description)}</p>
+          ) : null}
+          {descriptionOpen ? (
+            <Suspense
+              fallback={
+                <div className="min-h-48 rounded-md border border-input bg-background px-3 py-2 text-muted-foreground">
+                  Editör yükleniyor…
+                </div>
+              }
+            >
+              <ProductDescriptionEditor value={description} onChange={setDescription} />
+            </Suspense>
+          ) : null}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">Fiyat (TRY)</span>
@@ -449,7 +474,7 @@ export default function ProductForm({
           value={seo}
           onChange={setSeo}
           fallbackTitle={name}
-          fallbackDescription={description}
+          fallbackDescription={stripHtmlToText(description)}
           pathPreview={slug ? `/product/${slug}` : '/product/…'}
         />
       </section>

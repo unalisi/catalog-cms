@@ -49,23 +49,48 @@ const ALLOWED_TAGS = new Set([
   'small',
 ]);
 
-const GLOBAL_ATTRS = new Set(['class', 'id', 'title']);
+const GLOBAL_ATTRS = new Set(['class', 'id', 'title', 'style']);
 
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
-  a: new Set(['href', 'title', 'rel', 'target', 'class', 'id']),
+  a: new Set(['href', 'title', 'rel', 'target', 'class', 'id', 'style']),
   img: new Set(['src', 'alt', 'width', 'height', 'loading', 'class', 'id']),
-  td: new Set(['colspan', 'rowspan', 'class', 'id']),
-  th: new Set(['colspan', 'rowspan', 'scope', 'class', 'id']),
-  table: new Set(['class', 'id']),
-  span: new Set(['class', 'id']),
-  div: new Set(['class', 'id']),
-  section: new Set(['class', 'id']),
+  td: new Set(['colspan', 'rowspan', 'class', 'id', 'style']),
+  th: new Set(['colspan', 'rowspan', 'scope', 'class', 'id', 'style']),
+  table: new Set(['class', 'id', 'style']),
+  span: new Set(['class', 'id', 'style']),
+  div: new Set(['class', 'id', 'style']),
+  section: new Set(['class', 'id', 'style']),
   code: new Set(['class']),
   pre: new Set(['class']),
 };
 
+/** Safe CSS properties for inline style on imported CMS/HTML descriptions. */
+const STYLE_ALLOWED_PROPS = new Set([
+  'text-align',
+  'font-weight',
+  'font-style',
+  'text-decoration',
+  'color',
+  'background-color',
+]);
+
 function attrsFor(tag: string): Set<string> {
   return ALLOWED_ATTRS[tag] ?? GLOBAL_ATTRS;
+}
+
+function sanitizeStyleValue(value: string): string | null {
+  const parts = value.split(';').map((p) => p.trim()).filter(Boolean);
+  const out: string[] = [];
+  for (const part of parts) {
+    const colon = part.indexOf(':');
+    if (colon <= 0) continue;
+    const name = part.slice(0, colon).trim().toLowerCase();
+    const val = part.slice(colon + 1).trim();
+    if (!STYLE_ALLOWED_PROPS.has(name)) continue;
+    if (/expression|url\s*\(|javascript|@import|behavior/i.test(val)) continue;
+    out.push(`${name}: ${val}`);
+  }
+  return out.length ? out.join('; ') : null;
 }
 
 function sanitizeAttrs(tag: string, attrs: string): string {
@@ -79,6 +104,11 @@ function sanitizeAttrs(tag: string, attrs: string): string {
     if (name.startsWith('on')) continue;
     if (!allowed.has(name)) continue;
     let value = match[3] ?? match[4] ?? match[5] ?? '';
+    if (name === 'style') {
+      const cleaned = sanitizeStyleValue(value);
+      if (!cleaned) continue;
+      value = cleaned;
+    }
     if (name === 'href' || name === 'src') {
       const trimmed = value.trim();
       if (/^(javascript|data|vbscript):/i.test(trimmed)) continue;

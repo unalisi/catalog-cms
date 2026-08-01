@@ -1,3 +1,4 @@
+import { sanitizeProductDescription } from '../../lib/html/sanitize-product-description';
 import { productBulkSchema, productUpsertSchema } from '../../lib/validation/products';
 import { zodFieldErrors } from '../../lib/validation/admin';
 import { invalidateProductCache, invalidateProductsCache } from '../../lib/cache/invalidate';
@@ -6,6 +7,12 @@ import * as repo from '../repos/products-admin';
 import { getBrandById } from '../repos/admin';
 import * as mediaRepo from '../repos/media';
 import * as seoRepo from '../repos/seo';
+
+function sanitizeDescription(value: string | null | undefined): string | null {
+  if (value == null || value === '') return null;
+  const cleaned = sanitizeProductDescription(value);
+  return cleaned || null;
+}
 
 export async function listGridProducts() {
   return repo.listProductsForGrid(getDb());
@@ -74,7 +81,12 @@ export async function createAdminProduct(input: unknown) {
   const primaryMediaId = mediaIds[0] ?? null;
   let seoId: string | null = null;
   if (seo) seoId = await seoRepo.upsertSeoMeta(db, null, seo);
-  const product = await repo.createProduct(db, { ...rest, seoId, primaryMediaId });
+  const product = await repo.createProduct(db, {
+    ...rest,
+    description: sanitizeDescription(rest.description),
+    seoId,
+    primaryMediaId,
+  });
   await repo.replaceProductGallery(db, product.id, mediaIds);
   await invalidateProductCache(product.slug);
   return { ok: true as const, data: product };
@@ -101,6 +113,7 @@ export async function updateAdminProduct(id: string, input: unknown) {
   if (seo) seoId = await seoRepo.upsertSeoMeta(db, existing.seoId, seo);
   const product = await repo.updateProductFields(db, id, {
     ...rest,
+    description: sanitizeDescription(rest.description),
     seoId,
     primaryMediaId,
   });
@@ -159,7 +172,14 @@ export async function bulkUpdateProducts(input: unknown) {
         continue;
       }
 
-      const product = await repo.updateProductFields(db, change.id, change.fields);
+      const fields =
+        change.fields.description !== undefined
+          ? {
+              ...change.fields,
+              description: sanitizeDescription(change.fields.description),
+            }
+          : change.fields;
+      const product = await repo.updateProductFields(db, change.id, fields);
       if (!product) {
         errors.push({ id: change.id, message: 'Güncellenemedi' });
         continue;

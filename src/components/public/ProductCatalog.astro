@@ -1,5 +1,6 @@
 ---
 import { formatMoney } from '../../lib/money';
+import { stripHtmlToText } from '../../lib/html/sanitize-product-description';
 import { getProductList, getCategories, getBrands } from '../../server/services/catalog';
 
 interface Props {
@@ -160,7 +161,9 @@ function hrefFor(nextPage: number) {
                     <p class="text-sm text-muted-foreground">{product.brand.name}</p>
                   )}
                   {product.description && (
-                    <p class="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+                    <p class="line-clamp-2 text-sm text-muted-foreground">
+                      {stripHtmlToText(product.description)}
+                    </p>
                   )}
                 </div>
               </a>
