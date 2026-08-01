@@ -23,6 +23,11 @@ export default defineConfig({
       alias: {
         '@': path.join(root, 'src'),
       },
+      dedupe: ['react', 'react-dom'],
+    },
+    ssr: {
+      // Keep React singletons for lucide-react / sonner / radix during SSR
+      noExternal: ['lucide-react', 'sonner', '@radix-ui/react-avatar', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tooltip', '@radix-ui/react-separator', '@radix-ui/react-slot'],
     },
   },
 });

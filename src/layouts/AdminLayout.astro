@@ -8,13 +8,31 @@ import { Toaster } from '../components/ui/sonner';
 interface Props {
   title?: string;
   breadcrumbs?: { href?: string; label: string }[];
+  breadcrumbExtra?: string;
 }
 
-const { title = 'Admin', breadcrumbs = [] } = Astro.props;
+const { title = 'Admin', breadcrumbs = [], breadcrumbExtra } = Astro.props;
 const pathname = Astro.url.pathname;
 const user = Astro.locals.user ?? null;
 
+const sidebarCookie = Astro.cookies.get('sidebar_state');
+const defaultSidebarOpen = sidebarCookie ? sidebarCookie.value === 'true' : true;
+
 const pageFade = fade({ duration: '220ms' });
+
+// Only serializable fields — Lucide icon components must NOT cross the Astro→island boundary.
+const shellUser = user
+  ? {
+      id: user.id,
+      email: user.email,
+      name: user.email,
+      roleId: user.roleId,
+      roleSlug: user.roleSlug,
+      roleName: user.roleName,
+      permissions: user.permissions,
+      mustChangePassword: user.mustChangePassword,
+    }
+  : null;
 ---
 
 <!doctype html>
@@ -43,10 +61,17 @@ const pageFade = fade({ duration: '220ms' });
       İçeriğe geç
     </a>
     <div id="admin-page" class="min-h-dvh" transition:animate={pageFade}>
-      <AdminShell client:load pathname={pathname} title={title} breadcrumbs={breadcrumbs} user={user}>
+      <AdminShell
+        client:load
+        currentPath={pathname}
+        breadcrumbs={breadcrumbs.length > 0 ? breadcrumbs : undefined}
+        breadcrumbExtra={breadcrumbExtra}
+        defaultSidebarOpen={defaultSidebarOpen}
+        user={shellUser}
+      >
         <slot />
       </AdminShell>
     </div>
-    <Toaster client:idle />
+    <Toaster client:load />
   </body>
 </html>
