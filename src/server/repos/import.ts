@@ -89,6 +89,7 @@ export async function insertImportItems(
     action: item.action ?? null,
     status: item.status ?? ('pending' as ImportItemStatus),
     error: item.error ?? null,
+    productId: null,
     createdAt: now,
   }));
 
@@ -111,6 +112,12 @@ export async function insertImportItems(
 export async function failImportJob(db: Db, id: string, message: string): Promise<void> {
   const summary: ImportJobSummary = {
     total: 0,
+    core: { done: 0, failed: 0 },
+    media: { pending: 0, done: 0, failed: 0 },
+    published: 0,
+    startedAt: new Date().toISOString(),
+    coreCompletedAt: null,
+    mediaCompletedAt: null,
     create: 0,
     update: 0,
     skip: 0,
@@ -161,6 +168,7 @@ export async function updateImportItem(
     action?: ImportItemAction | null;
     status?: ImportItemStatus;
     error?: string | null;
+    productId?: string | null;
   },
 ): Promise<ImportItem | null> {
   await db.update(importItems).set(patch).where(eq(importItems.id, id));
@@ -173,24 +181,36 @@ export async function getImportJobSummaryFromItems(
   jobId: string,
 ): Promise<ImportJobSummary> {
   const items = await listImportItemsByJob(db, jobId);
-  const summary: ImportJobSummary = { total: items.length, create: 0, update: 0, skip: 0, error: 0 };
+  const summary: ImportJobSummary = {
+    total: items.length,
+    core: { done: 0, failed: 0 },
+    media: { pending: 0, done: 0, failed: 0 },
+    published: 0,
+    startedAt: new Date().toISOString(),
+    coreCompletedAt: null,
+    mediaCompletedAt: null,
+    create: 0,
+    update: 0,
+    skip: 0,
+    error: 0,
+  };
   for (const item of items) {
-    if (item.status === 'error' || item.action === 'error') summary.error++;
-    else if (item.action === 'create') summary.create++;
-    else if (item.action === 'update') summary.update++;
-    else if (item.action === 'skip') summary.skip++;
+    if (item.status === 'error' || item.status === 'failed' || item.action === 'error') {
+      summary.error = (summary.error ?? 0) + 1;
+      summary.core.failed++;
+    } else if (item.status === 'core_done' || item.status === 'ok') {
+      summary.core.done++;
+    }
+    if (item.action === 'create') summary.create = (summary.create ?? 0) + 1;
+    else if (item.action === 'update') summary.update = (summary.update ?? 0) + 1;
+    else if (item.action === 'skip') summary.skip = (summary.skip ?? 0) + 1;
   }
   return summary;
 }
 
 export async function isAllItemsProcessed(db: Db, jobId: string): Promise<boolean> {
-  const [row] = await db
-    .select({ value: count() })
-    .from(importItems)
-    .where(eq(importItems.jobId, jobId));
-  const total = row?.value ?? 0;
-  if (total === 0) return true;
   const items = await listImportItemsByJob(db, jobId);
+  if (items.length === 0) return true;
   return items.every((item) => item.status !== 'pending');
 }
 
@@ -207,7 +227,7 @@ export async function getImportJobProgress(
   let error = 0;
   for (const item of items) {
     if (item.status === 'pending') pending++;
-    else if (item.status === 'error') error++;
+    else if (item.status === 'error' || item.status === 'failed') error++;
   }
   const total = items.length;
   return { total, processed: total - pending, pending, error };

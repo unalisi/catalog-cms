@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ApiResult } from '../../lib/api';
+import type { ImportJobSummary } from '../../lib/import/types';
+import { ExportPanel } from './ExportPanel';
+import { ImportJobProgress } from './ImportJobProgress';
 
 type Source = 'csv' | 'woo' | 'wxr';
 type ConflictPolicy = 'skip' | 'overwrite' | 'merge';
-type ExportFormat = 'csv' | 'woo-json';
 
 type Mapping = {
   name: string;
@@ -19,17 +21,7 @@ type Mapping = {
   status: string;
 };
 
-type JobSummary = {
-  total: number;
-  create: number;
-  update: number;
-  skip: number;
-  error: number;
-  message?: string;
-  mediaTotal?: number;
-  mediaDone?: number;
-  mediaError?: number;
-};
+type JobSummary = ImportJobSummary;
 
 type JobRow = {
   id: string;
@@ -60,18 +52,18 @@ const DEFAULT_MAPPING: Mapping = {
   slug: 'slug',
   sku: 'sku',
   price: 'price',
-  compareAtPrice: 'compareAtPrice',
+  compareAtPrice: 'compare_at_price',
   stock: 'stock',
   description: 'description',
   brand: 'brand',
   categories: 'categories',
-  imageUrl: 'image',
+  imageUrl: 'images',
   status: 'status',
 };
 
-const SAMPLE_CSV = `name,slug,sku,price,compareAtPrice,stock,description,brand,categories,image,status
-Demo Kulaklık,demo-kulaklik,IMP-ANC-01,1299.90,,25,"Import demo ürünü",Nord Teknik,"Elektronik,Aksesuar",,published
-Demo Mouse,demo-mouse,IMP-MSE-01,899.00,,40,Ergonomik mouse,Nord Teknik,Elektronik,,draft
+const SAMPLE_CSV = `sku,name,slug,price,compare_at_price,currency,stock,description,status,brand,categories,images
+IMP-ANC-01,Demo Kulaklık,demo-kulaklik,1299.90,,TRY,25,"Import demo ürünü",published,Nord Teknik,Elektronik|Aksesuar,
+IMP-MSE-01,Demo Mouse,demo-mouse,899.00,,TRY,40,Ergonomik mouse,draft,Nord Teknik,Elektronik,
 `;
 
 const PROFILES_KEY = 'catalog-import-mapping-profiles';
@@ -116,107 +108,9 @@ function loadProfiles(): Record<string, Mapping> {
   }
 }
 
-function formatEta(seconds: number | null): string {
-  if (seconds == null || !Number.isFinite(seconds)) return 'hesaplanıyor…';
-  if (seconds < 5) return 'birkaç saniye';
-  if (seconds < 60) return `~${Math.ceil(seconds)} sn`;
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.ceil(seconds % 60);
-  return `~${mins} dk ${secs} sn`;
-}
-
-function ProgressPanel({
-  processed,
-  total,
-  percent,
-  etaSeconds,
-  status,
-  done,
-  mediaTotal,
-  mediaDone,
-  mediaError,
-}: {
-  processed: number;
-  total: number;
-  percent: number;
-  etaSeconds: number | null;
-  status: string;
-  done: boolean;
-  mediaTotal: number;
-  mediaDone: number;
-  mediaError: number;
-}) {
-  const mediaPercent =
-    mediaTotal > 0 ? Math.min(100, Math.round((mediaDone / mediaTotal) * 100)) : 0;
-  const mediaDoneAll = mediaTotal > 0 && mediaDone >= mediaTotal;
-
-  return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-muted/30 p-4">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <span className="font-medium">
-            {done ? 'Ürünler tamamlandı' : 'Ürünler işleniyor…'}{' '}
-            <span className="text-muted-foreground">({status})</span>
-          </span>
-          <span className="font-mono tabular-nums">
-            {processed}/{total} · %{percent}
-          </span>
-        </div>
-        <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
-          <div
-            className={`h-full rounded-full bg-primary transition-[width] duration-500 ease-out ${
-              done ? '' : 'animate-pulse'
-            }`}
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-        {!done && (
-          <p className="text-xs text-muted-foreground">
-            Tahmini ürün süresi: <strong>{formatEta(etaSeconds)}</strong>
-          </p>
-        )}
-        {done && (
-          <p className="flex items-center gap-2 text-sm text-foreground">
-            <span
-              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
-              aria-hidden
-            >
-              ✓
-            </span>
-            Ürün kayıtları katalogda hazır
-          </p>
-        )}
-      </div>
-
-      {mediaTotal > 0 && (
-        <div className="flex flex-col gap-2 border-t border-border pt-3">
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-medium">
-              {mediaDoneAll ? 'Görseller tamamlandı' : 'Görseller arka planda…'}
-            </span>
-            <span className="font-mono tabular-nums">
-              {mediaDone}/{mediaTotal} · %{mediaPercent}
-              {mediaError > 0 ? ` · ${mediaError} hata` : ''}
-            </span>
-          </div>
-          <div className="relative h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              className={`h-full rounded-full bg-foreground/70 transition-[width] duration-500 ease-out ${
-                mediaDoneAll ? '' : 'animate-pulse'
-              }`}
-              style={{ width: `${mediaPercent}%` }}
-            />
-          </div>
-          {!mediaDoneAll && (
-            <p className="text-xs text-muted-foreground">
-              Ürünler ayrı kuyrukta saniyeler içinde yazılır; görseller tamamen ayrı medya
-              kuyruğunda arka planda indirilir.
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
+function dryRunActionable(summary: JobSummary | undefined): boolean {
+  if (!summary) return false;
+  return (summary.create ?? 0) + (summary.update ?? 0) > 0;
 }
 
 export default function ImportWizard() {
@@ -232,10 +126,6 @@ export default function ImportWizard() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [job, setJob] = useState<JobDetail | null>(null);
   const [jobs, setJobs] = useState<JobRow[]>([]);
-  const [exportFormat, setExportFormat] = useState<ExportFormat>('woo-json');
-  const [exportBusy, setExportBusy] = useState(false);
-  const [exportMsg, setExportMsg] = useState<string | null>(null);
-  const applyStartedAt = useRef<number | null>(null);
 
   useEffect(() => {
     setProfiles(loadProfiles());
@@ -281,46 +171,6 @@ export default function ImportWizard() {
     job?.status === 'pending' ||
     (Boolean(jobId) && !job);
   const dryRunReady = job?.status === 'ready';
-
-  const progress = useMemo(() => {
-    if (!job) {
-      return {
-        processed: 0,
-        total: 0,
-        percent: 0,
-        etaSeconds: null as number | null,
-        done: false,
-        mediaTotal: 0,
-        mediaDone: 0,
-        mediaError: 0,
-      };
-    }
-    const total = job.progress?.total ?? summary?.total ?? job.items.length ?? 0;
-    const processed =
-      job.progress?.processed ?? job.items.filter((i) => i.status !== 'pending').length;
-    const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
-    const done =
-      job.status === 'completed' ||
-      job.status === 'failed' ||
-      (total > 0 && processed >= total && (job.status === 'processing' || job.status === 'queued'));
-    let etaSeconds: number | null = null;
-    if (!done && processed > 0 && applyStartedAt.current) {
-      const elapsed = (Date.now() - applyStartedAt.current) / 1000;
-      const rate = processed / elapsed;
-      const remaining = Math.max(0, total - processed);
-      etaSeconds = rate > 0 ? remaining / rate : null;
-    }
-    return {
-      processed,
-      total,
-      percent,
-      etaSeconds,
-      done,
-      mediaTotal: summary?.mediaTotal ?? 0,
-      mediaDone: summary?.mediaDone ?? 0,
-      mediaError: summary?.mediaError ?? 0,
-    };
-  }, [job, summary]);
 
   async function refreshJobs() {
     try {
@@ -389,15 +239,20 @@ export default function ImportWizard() {
     if (!jobId) return;
     setBusy(true);
     setError(null);
-    applyStartedAt.current = Date.now();
     try {
       const res = await fetch(`/api/admin/import/jobs/${jobId}/apply`, { method: 'POST' });
       const json = await readApiJson<{ job: JobRow }>(res);
       if (!json.ok) {
         setError(json.error.message ?? 'Apply başarısız');
+        if (job?.status === 'queued' || job?.status === 'processing') setStep(4);
         return;
       }
       setStep(4);
+      setJob((prev) =>
+        prev && json.data.job
+          ? { ...prev, ...json.data.job, summary: prev.summary, items: prev.items }
+          : prev,
+      );
       await refreshJobs();
     } catch {
       setError('Apply isteği gönderilemedi');
@@ -406,75 +261,94 @@ export default function ImportWizard() {
     }
   }
 
-  async function runExport() {
-    setExportBusy(true);
-    setExportMsg(null);
+  async function runPause() {
+    if (!jobId) return;
+    setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/export/products?format=${exportFormat}`);
-      if (!res.ok) {
-        const json = (await res.json().catch(() => null)) as ApiResult<unknown> | null;
-        setError(json && !json.ok ? json.error.message : 'Export başarısız');
+      const res = await fetch(`/api/admin/import/jobs/${jobId}/pause`, { method: 'POST' });
+      const json = await readApiJson<{ job: JobRow }>(res);
+      if (!json.ok) {
+        setError(json.error.message ?? 'Durdurulamadı');
         return;
       }
-      const blob = await res.blob();
-      const count = res.headers.get('X-Export-Count') ?? '?';
-      const disposition = res.headers.get('Content-Disposition') || '';
-      const match = /filename="([^"]+)"/.exec(disposition);
-      const filename =
-        match?.[1] ||
-        (exportFormat === 'csv' ? 'products-export.csv' : 'products-export.json');
-      const href = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = href;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(href);
-      setExportMsg(`${count} ürün indirildi.`);
+      setJob((prev) =>
+        prev && json.data.job
+          ? { ...prev, ...json.data.job, summary: prev.summary, items: prev.items }
+          : prev,
+      );
+      await refreshJobs();
     } catch {
-      setError('Export sırasında ağ hatası');
+      setError('Durdurma isteği gönderilemedi');
     } finally {
-      setExportBusy(false);
+      setBusy(false);
+    }
+  }
+
+  async function runResume() {
+    if (!jobId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/import/jobs/${jobId}/resume`, { method: 'POST' });
+      const json = await readApiJson<{ job: JobRow }>(res);
+      if (!json.ok) {
+        setError(json.error.message ?? 'Devam ettirilemedi');
+        return;
+      }
+      setJob((prev) =>
+        prev && json.data.job
+          ? { ...prev, ...json.data.job, summary: prev.summary, items: prev.items }
+          : prev,
+      );
+      await refreshJobs();
+    } catch {
+      setError('Devam ettirme isteği gönderilemedi');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runCancel() {
+    if (!jobId) return;
+    const confirmed = window.confirm(
+      'Import iptal edilsin mi? Bu işte yeni oluşturulan ürünler silinecek. Mevcut ürünlere yapılan güncellemeler kalır.',
+    );
+    if (!confirmed) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/import/jobs/${jobId}/cancel`, { method: 'POST' });
+      const json = await readApiJson<{ job: JobRow; deleted?: number }>(res);
+      if (!json.ok) {
+        setError(json.error.message ?? 'İptal edilemedi');
+        return;
+      }
+      setJob((prev) =>
+        prev && json.data.job
+          ? {
+              ...prev,
+              ...json.data.job,
+              summary: prev.summary,
+              items: prev.items,
+            }
+          : prev,
+      );
+      // Refresh full job for updated summary message
+      const detailRes = await fetch(`/api/admin/import/jobs/${jobId}`);
+      const detail = await readApiJson<{ job: JobDetail }>(detailRes);
+      if (detail.ok) setJob(detail.data.job);
+      await refreshJobs();
+    } catch {
+      setError('İptal isteği gönderilemedi');
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
     <div className="flex max-w-4xl flex-col gap-8">
-      <section className="rounded-lg border border-border bg-muted/20 p-4">
-        <h2 className="font-display text-lg font-semibold">Dışa aktarım</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Katalogdaki ürünleri CSV veya WooCommerce JSON olarak indirin (round-trip uyumlu).
-        </p>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium">Format</span>
-            <select
-              className="min-h-11 rounded-md border border-input bg-background px-3 py-2"
-              value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
-            >
-              <option value="woo-json">WooCommerce JSON</option>
-              <option value="csv">CSV</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            className="relative min-h-11 overflow-hidden rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-            disabled={exportBusy}
-            onClick={() => void runExport()}
-          >
-            {exportBusy ? (
-              <span className="inline-flex items-center gap-2">
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
-                Hazırlanıyor…
-              </span>
-            ) : (
-              'İndir'
-            )}
-          </button>
-        </div>
-        {exportMsg && <p className="mt-2 text-sm text-muted-foreground">{exportMsg}</p>}
-      </section>
+      <ExportPanel />
 
       <ol className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border border-border p-3 text-sm sm:flex sm:flex-wrap sm:gap-3 sm:border-0 sm:p-0">
         {['1. Kaynak', '2. Eşleme', '3. Dry-run', '4. Apply'].map((label, i) => (
@@ -757,14 +631,39 @@ export default function ImportWizard() {
             >
               Yeni iş
             </button>
-            {jobId && dryRunReady && (
+            {jobId &&
+              (dryRunReady ||
+                job?.status === 'queued' ||
+                job?.status === 'processing') && (
               <button
                 type="button"
                 className="min-h-11 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:flex-none"
-                disabled={busy || !summary || summary.create + summary.update === 0}
+                disabled={
+                  busy ||
+                  (!dryRunActionable(summary) &&
+                    job?.status !== 'queued' &&
+                    job?.status !== 'processing')
+                }
                 onClick={() => void runApply()}
               >
-                {busy ? 'Kuyruğa alınıyor…' : 'Apply (Queue)'}
+                {busy
+                  ? 'Kuyruğa alınıyor…'
+                  : job?.status === 'queued' || job?.status === 'processing'
+                    ? 'Apply’e devam et'
+                    : 'Apply (Queue)'}
+              </button>
+            )}
+            {jobId && (job?.status === 'queued' || job?.status === 'processing') && (
+              <button
+                type="button"
+                className="min-h-11 flex-1 rounded-md border border-border px-3 py-2 text-sm sm:flex-none"
+                disabled={busy}
+                onClick={() => {
+                  setStep(4);
+                  setError(null);
+                }}
+              >
+                İlerlemeyi göster
               </button>
             )}
           </div>
@@ -774,33 +673,73 @@ export default function ImportWizard() {
       {step === 4 && (
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-lg font-semibold">Apply durumu</h2>
-          <ProgressPanel
-            processed={progress.processed}
-            total={progress.total}
-            percent={progress.percent}
-            etaSeconds={progress.etaSeconds}
-            status={job?.status ?? '…'}
-            done={progress.done}
-            mediaTotal={progress.mediaTotal}
-            mediaDone={progress.mediaDone}
-            mediaError={progress.mediaError}
-          />
+          {jobId && summary && (
+            <ImportJobProgress
+              jobId={jobId}
+              initialSummary={summary}
+              status={job?.status ?? 'processing'}
+              onSummaryChange={(next, nextStatus) => {
+                setJob((prev) =>
+                  prev
+                    ? { ...prev, summary: next, status: nextStatus }
+                    : prev,
+                );
+              }}
+            />
+          )}
+          {(job?.status === 'queued' ||
+            job?.status === 'processing' ||
+            job?.status === 'paused') && (
+            <div className="flex flex-wrap gap-2">
+              {(job.status === 'queued' || job.status === 'processing') && (
+                <button
+                  type="button"
+                  className="min-h-11 rounded-md border border-border px-4 py-2 text-sm font-medium disabled:opacity-60"
+                  disabled={busy}
+                  onClick={() => void runPause()}
+                >
+                  Durdur
+                </button>
+              )}
+              {job.status === 'paused' && (
+                <button
+                  type="button"
+                  className="min-h-11 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+                  disabled={busy}
+                  onClick={() => void runResume()}
+                >
+                  Devam Et
+                </button>
+              )}
+              <button
+                type="button"
+                className="min-h-11 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive disabled:opacity-60"
+                disabled={busy}
+                onClick={() => void runCancel()}
+              >
+                İptal Et
+              </button>
+            </div>
+          )}
+          {summary?.message && (
+            <p className="text-sm text-muted-foreground">{summary.message}</p>
+          )}
           {summary && (
             <ul className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
               <li className="rounded-md border border-border p-3">
                 Toplam: <strong>{summary.total}</strong>
               </li>
               <li className="rounded-md border border-border p-3">
-                Create: <strong>{summary.create}</strong>
+                Create: <strong>{summary.create ?? 0}</strong>
               </li>
               <li className="rounded-md border border-border p-3">
-                Update: <strong>{summary.update}</strong>
+                Update: <strong>{summary.update ?? 0}</strong>
               </li>
               <li className="rounded-md border border-border p-3">
-                Skip: <strong>{summary.skip}</strong>
+                Skip: <strong>{summary.skip ?? 0}</strong>
               </li>
               <li className="rounded-md border border-border p-3">
-                Error: <strong>{summary.error}</strong>
+                Error: <strong>{summary.error ?? summary.core?.failed ?? 0}</strong>
               </li>
             </ul>
           )}
@@ -810,7 +749,6 @@ export default function ImportWizard() {
             onClick={() => {
               setJobId(null);
               setJob(null);
-              applyStartedAt.current = null;
               setStep(1);
             }}
           >

@@ -8,6 +8,8 @@ export const conflictPolicySchema = z.enum(['skip', 'overwrite', 'merge']);
 export const importRecordMediaSchema = z.object({
   url: z.string().min(1),
   alt: z.string().optional(),
+  isPrimary: z.boolean().optional(),
+  position: z.number().int().optional(),
 });
 
 export const importRecordSeoSchema = z.object({

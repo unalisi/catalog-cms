@@ -6,4 +6,5 @@ export * from './settings';
 export * from './auth';
 export * from './content';
 export * from './import';
+export * from './import-media-items';
 export * from './contact';

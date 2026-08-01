@@ -6,12 +6,12 @@ const DEFAULT_MAPPING: MappingProfile = {
   slug: 'slug',
   sku: 'sku',
   price: 'price',
-  compareAtPrice: 'compareAtPrice',
+  compareAtPrice: 'compare_at_price',
   stock: 'stock',
   description: 'description',
   brand: 'brand',
   categories: 'categories',
-  imageUrl: 'image',
+  imageUrl: 'images',
   status: 'status',
 };
 
@@ -101,18 +101,28 @@ export function parseToRecords(input: string, mapping?: MappingProfile): ImportR
   if (rows.length === 0) return [];
 
   const header = rows[0].map((h) => h.trim());
-  const colIndex = (key: string) => header.indexOf(key);
+  const colIndex = (...keys: string[]) => {
+    for (const key of keys) {
+      const idx = header.indexOf(key);
+      if (idx >= 0) return idx;
+    }
+    return -1;
+  };
 
   const nameIdx = colIndex(map.name);
   const slugIdx = map.slug ? colIndex(map.slug) : -1;
   const skuIdx = map.sku ? colIndex(map.sku) : -1;
   const priceIdx = colIndex(map.price);
-  const compareAtIdx = map.compareAtPrice ? colIndex(map.compareAtPrice) : -1;
+  const compareAtIdx = map.compareAtPrice
+    ? colIndex(map.compareAtPrice, 'compareAtPrice', 'compare_at_price')
+    : colIndex('compareAtPrice', 'compare_at_price');
   const stockIdx = map.stock ? colIndex(map.stock) : -1;
   const descriptionIdx = map.description ? colIndex(map.description) : -1;
   const brandIdx = map.brand ? colIndex(map.brand) : -1;
   const categoriesIdx = map.categories ? colIndex(map.categories) : -1;
-  const imageUrlIdx = map.imageUrl ? colIndex(map.imageUrl) : -1;
+  const imageUrlIdx = map.imageUrl
+    ? colIndex(map.imageUrl, 'images', 'image')
+    : colIndex('images', 'image');
   const statusIdx = map.status ? colIndex(map.status) : -1;
 
   const records: ImportRecord[] = [];
@@ -131,7 +141,7 @@ export function parseToRecords(input: string, mapping?: MappingProfile): ImportR
     const categories =
       categoriesIdx >= 0 && row[categoriesIdx]
         ? row[categoriesIdx]
-            .split(',')
+            .split(/[|,]/)
             .map((c) => c.trim())
             .filter(Boolean)
         : [];
@@ -141,7 +151,7 @@ export function parseToRecords(input: string, mapping?: MappingProfile): ImportR
           .split('|')
           .map((u) => u.trim())
           .filter(Boolean)
-          .map((url) => ({ url }))
+          .map((url, i) => ({ url, position: i, isPrimary: i === 0 }))
       : [];
     const compareRaw = compareAtIdx >= 0 ? row[compareAtIdx] : undefined;
     const compareAtPrice = compareRaw?.trim()

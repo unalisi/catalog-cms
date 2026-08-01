@@ -1,5 +1,5 @@
-import { handle } from '@astrojs/cloudflare/handler';
 import type { ImportQueueMessage } from './lib/import/types';
+import { handle } from '@astrojs/cloudflare/handler';
 import { processImportMediaQueue, processImportQueue } from './server/services/import';
 
 export default {
@@ -7,12 +7,12 @@ export default {
     return handle(request, env, ctx);
   },
   async queue(batch, _env, _ctx) {
-    const messages = batch as MessageBatch<ImportQueueMessage>;
-    // Product apply/prepare must never share concurrency with slow image downloads.
+    // catalog-import: prepare/dry-run only
+    // catalog-import-media: per-image fetch → publish when product pending=0
     if (batch.queue === 'catalog-import-media') {
-      await processImportMediaQueue(messages);
+      await processImportMediaQueue(batch as MessageBatch<ImportQueueMessage>);
       return;
     }
-    await processImportQueue(messages);
+    await processImportQueue(batch as MessageBatch<ImportQueueMessage>);
   },
 } satisfies ExportedHandler<Env>;

@@ -1,7 +1,7 @@
 import { slugify } from '../../utils/id';
 import type { ImportRecord, MappingProfile } from '../types';
 
-type WooImage = { src?: string; alt?: string };
+type WooImage = { src?: string; alt?: string; position?: number };
 type WooTerm = { name?: string; slug?: string };
 type WooProduct = {
   name?: string;
@@ -112,10 +112,19 @@ export function parseToRecords(input: string, _mapping?: MappingProfile): Import
     const categories = (item.categories || [])
       .map(categoryLabel)
       .filter((n): n is string => Boolean(n));
-    const media: { url: string; alt?: string }[] = [];
-    for (const img of item.images || []) {
-      if (img.src) media.push({ url: img.src, alt: img.alt || undefined });
-    }
+    const media: { url: string; alt?: string; position: number; isPrimary: boolean }[] = [];
+    const images = [...(item.images || [])].sort(
+      (a, b) => (a.position ?? 0) - (b.position ?? 0),
+    );
+    images.forEach((img, i) => {
+      if (!img.src) return;
+      media.push({
+        url: img.src,
+        alt: img.alt || undefined,
+        position: typeof img.position === 'number' ? img.position : i,
+        isPrimary: i === 0,
+      });
+    });
 
     records.push({
       name,

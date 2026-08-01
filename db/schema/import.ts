@@ -1,11 +1,22 @@
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { users } from './auth';
+import { products } from './products';
 
 export const importJobs = sqliteTable('import_jobs', {
   id: text('id').primaryKey(),
   source: text('source', { enum: ['csv', 'woo', 'wxr'] }).notNull(),
   status: text('status', {
-    enum: ['pending', 'validating', 'ready', 'queued', 'processing', 'completed', 'failed'],
+    enum: [
+      'pending',
+      'validating',
+      'ready',
+      'queued',
+      'processing',
+      'paused',
+      'completed',
+      'failed',
+      'cancelled',
+    ],
   })
     .notNull()
     .default('pending'),
@@ -30,13 +41,17 @@ export const importItems = sqliteTable(
     rawJson: text('raw_json').notNull(),
     mappedJson: text('mapped_json'),
     action: text('action', { enum: ['create', 'update', 'skip', 'error'] }),
-    status: text('status', { enum: ['pending', 'ok', 'error'] })
+    status: text('status', { enum: ['pending', 'ok', 'error', 'core_done', 'failed'] })
       .notNull()
       .default('pending'),
     error: text('error'),
+    productId: text('product_id').references(() => products.id),
     createdAt: text('created_at').notNull(),
   },
-  (t) => [index('import_items_job_row_idx').on(t.jobId, t.rowIndex)],
+  (t) => [
+    index('import_items_job_row_idx').on(t.jobId, t.rowIndex),
+    index('import_items_job_product_idx').on(t.jobId, t.productId),
+  ],
 );
 
 export type ImportJob = typeof importJobs.$inferSelect;

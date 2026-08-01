@@ -7,6 +7,7 @@ import type {
   ConflictPolicy,
   ImportItemAction,
   ImportJobSummary,
+  ImportMediaMessage,
   ImportQueueMessage,
   ImportRecord,
   ImportSource,
@@ -14,14 +15,11 @@ import type {
 } from '../../lib/import/types';
 import { zodFieldErrors } from '../../lib/validation/admin';
 import { importJobCreateSchema, importRecordSchema } from '../../lib/validation/import';
-import {
-  applyImportRecord,
-  applyProductMediaGallery,
-  createTaxonomyCache,
-  loadProductLookupIndex,
-} from '../import/apply-item';
 import { getDb, type Db } from '../db';
+import { handleImportMediaBatch } from '../queue/import-media.consumer';
 import * as importRepo from '../repos/import';
+import { applyImportJob } from './import-apply';
+import { emptyImportJobSummary, updateJobSummary } from './import-job-summary';
 
 const ADAPTERS: Record<
   ImportSource,
@@ -31,9 +29,6 @@ const ADAPTERS: Record<
   woo: wooAdapter,
   wxr: wxrAdapter,
 };
-
-/** Product apply item ids per queue message (media goes to IMPORT_MEDIA_QUEUE). */
-const QUEUE_ITEM_BATCH_SIZE = 50;
 
 /** Spill mapped_json to R2 when larger than this (D1 max SQL statement is 100KB). */
 const MAPPED_JSON_R2_THRESHOLD_BYTES = 60_000;
@@ -152,7 +147,7 @@ function leanRawJson(record: ImportRecord): string {
 }
 
 function emptySummary(extra?: Partial<ImportJobSummary>): ImportJobSummary {
-  return { total: 0, create: 0, update: 0, skip: 0, error: 0, ...extra };
+  return emptyImportJobSummary(extra);
 }
 
 /**
@@ -172,7 +167,7 @@ function buildDryRunItems(
     const validated = importRecordSchema.safeParse(record);
 
     if (!validated.success) {
-      summary.error++;
+      summary.error = (summary.error ?? 0) + 1;
       itemsToInsert.push({
         rowIndex: i,
         rawJson: leanRawJson(record),
@@ -185,7 +180,9 @@ function buildDryRunItems(
     }
 
     const action = previewActionWithIndex(validated.data, conflictPolicy, index);
-    summary[action]++;
+    if (action === 'create') summary.create = (summary.create ?? 0) + 1;
+    else if (action === 'update') summary.update = (summary.update ?? 0) + 1;
+    else if (action === 'skip') summary.skip = (summary.skip ?? 0) + 1;
     itemsToInsert.push({
       rowIndex: i,
       rawJson: leanRawJson(validated.data),
@@ -326,54 +323,9 @@ export async function createJobFromPayload(payload: {
   };
 }
 
-/** Marks a ready job as queued and enqueues its pending items in product-only batches. */
+/** Marks a ready job processing: batch-writes product drafts, enqueues media only. */
 export async function applyJob(jobId: string) {
-  const db = getDb();
-  const job = await importRepo.getImportJobById(db, jobId);
-  if (!job) return { ok: false as const, notFound: true as const };
-  if (job.status !== 'ready' && job.status !== 'completed') {
-    return {
-      ok: false as const,
-      fields: { _form: `İş durumu apply için uygun değil: ${job.status}` },
-    };
-  }
-
-  const items = await importRepo.listImportItemsByJob(db, jobId);
-  const pendingItems = items.filter((item) => item.status === 'pending' && item.action !== 'error');
-
-  if (pendingItems.length === 0) {
-    await importRepo.updateImportJobStatus(db, jobId, 'completed');
-    return { ok: true as const, data: await importRepo.getImportJobById(db, jobId) };
-  }
-
-  await importRepo.updateImportJobStatus(db, jobId, 'queued');
-
-  // Reset media counters for this apply run; preserve product dry-run totals after first apply batch.
-  const existingSummary: ImportJobSummary = job.summaryJson
-    ? (JSON.parse(job.summaryJson) as ImportJobSummary)
-    : emptySummary();
-  await importRepo.updateImportJobSummary(db, jobId, {
-    ...existingSummary,
-    mediaTotal: 0,
-    mediaDone: 0,
-    mediaError: 0,
-  });
-
-  const messages: Extract<ImportQueueMessage, { type: 'apply' }>[] = [];
-  for (let i = 0; i < pendingItems.length; i += QUEUE_ITEM_BATCH_SIZE) {
-    messages.push({
-      type: 'apply',
-      jobId,
-      itemIds: pendingItems.slice(i, i + QUEUE_ITEM_BATCH_SIZE).map((item) => item.id),
-    });
-  }
-
-  for (let i = 0; i < messages.length; i += 100) {
-    const chunk = messages.slice(i, i + 100);
-    await env.IMPORT_QUEUE.sendBatch(chunk.map((body) => ({ body })));
-  }
-
-  return { ok: true as const, data: await importRepo.getImportJobById(db, jobId) };
+  return applyImportJob(jobId);
 }
 
 export async function getJob(jobId: string) {
@@ -399,9 +351,21 @@ export async function getJob(jobId: string) {
   }
 
   const items = await importRepo.listImportItemsByJob(db, jobId, { limit: 100 });
-  const summary: ImportJobSummary = job.summaryJson
-    ? (JSON.parse(job.summaryJson) as ImportJobSummary)
-    : await importRepo.getImportJobSummaryFromItems(db, jobId);
+
+  let summary: ImportJobSummary;
+  if (job.status === 'processing' || job.status === 'queued' || job.status === 'completed') {
+    const refreshed = await updateJobSummary(db, jobId);
+    summary =
+      refreshed ??
+      (job.summaryJson
+        ? (JSON.parse(job.summaryJson) as ImportJobSummary)
+        : await importRepo.getImportJobSummaryFromItems(db, jobId));
+    job = (await importRepo.getImportJobById(db, jobId)) ?? job;
+  } else {
+    summary = job.summaryJson
+      ? (JSON.parse(job.summaryJson) as ImportJobSummary)
+      : await importRepo.getImportJobSummaryFromItems(db, jobId);
+  }
   const progress = await importRepo.getImportJobProgress(db, jobId);
 
   return { ...job, summary, items, progress };
@@ -414,74 +378,21 @@ export async function listJobs() {
 function isPrepareMessage(
   body: ImportQueueMessage,
 ): body is { type: 'prepare'; jobId: string } {
-  return 'type' in body && body.type === 'prepare';
-}
-
-function isMediaMessage(
-  body: ImportQueueMessage,
-): body is { type: 'media'; jobId: string; itemId: string; productId: string } {
-  return 'type' in body && body.type === 'media';
-}
-
-function getApplyPayload(
-  body: ImportQueueMessage,
-): { jobId: string; itemIds: string[] } | null {
-  if ('type' in body && (body.type === 'prepare' || body.type === 'media')) return null;
-  if ('itemIds' in body && Array.isArray(body.itemIds)) {
-    return { jobId: body.jobId, itemIds: body.itemIds };
-  }
-  return null;
-}
-
-async function readJobSummary(db: Db, jobId: string): Promise<ImportJobSummary> {
-  const job = await importRepo.getImportJobById(db, jobId);
-  if (job?.summaryJson) {
-    try {
-      return JSON.parse(job.summaryJson) as ImportJobSummary;
-    } catch {
-      // fall through
-    }
-  }
-  return emptySummary();
-}
-
-async function bumpMediaCounters(
-  db: Db,
-  jobId: string,
-  patch: { mediaTotal?: number; mediaDone?: number; mediaError?: number },
-): Promise<void> {
-  const summary = await readJobSummary(db, jobId);
-  await importRepo.updateImportJobSummary(db, jobId, {
-    ...summary,
-    mediaTotal: (summary.mediaTotal ?? 0) + (patch.mediaTotal ?? 0),
-    mediaDone: (summary.mediaDone ?? 0) + (patch.mediaDone ?? 0),
-    mediaError: (summary.mediaError ?? 0) + (patch.mediaError ?? 0),
-  });
-}
-
-async function refreshProductSummaryPreserveMedia(db: Db, jobId: string): Promise<void> {
-  const prev = await readJobSummary(db, jobId);
-  const summary = await importRepo.getImportJobSummaryFromItems(db, jobId);
-  await importRepo.updateImportJobSummary(db, jobId, {
-    ...summary,
-    mediaTotal: prev.mediaTotal ?? 0,
-    mediaDone: prev.mediaDone ?? 0,
-    mediaError: prev.mediaError ?? 0,
-    message: prev.message,
-  });
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    'type' in body &&
+    (body as { type?: string }).type === 'prepare'
+  );
 }
 
 /**
- * Product queue consumer (`catalog-import` / IMPORT_QUEUE).
- * prepare + product apply only — never fetches remote images.
+ * Product queue (`catalog-import` / IMPORT_QUEUE): prepare/dry-run only.
+ * Product drafts are written synchronously in applyImportJob; images use IMPORT_MEDIA_QUEUE.
  */
 export async function processImportQueue(batch: MessageBatch<ImportQueueMessage>): Promise<void> {
-  const db = getDb();
-  const affectedJobIds = new Set<string>();
-
   for (const message of batch.messages) {
     const body = message.body;
-
     if (isPrepareMessage(body)) {
       try {
         await prepareImportJob(body.jobId);
@@ -491,153 +402,37 @@ export async function processImportQueue(batch: MessageBatch<ImportQueueMessage>
       }
       continue;
     }
-
-    // Stray media messages on the product queue: re-route, do not process here.
-    if (isMediaMessage(body)) {
-      try {
-        await env.IMPORT_MEDIA_QUEUE.send(body);
-        message.ack();
-      } catch {
-        message.retry();
-      }
-      continue;
-    }
-
-    const apply = getApplyPayload(body);
-    if (!apply) {
-      message.ack();
-      continue;
-    }
-
-    const { jobId, itemIds } = apply;
-    affectedJobIds.add(jobId);
-
-    try {
-      const job = await importRepo.getImportJobById(db, jobId);
-      if (!job) {
-        message.ack();
-        continue;
-      }
-      await importRepo.updateImportJobStatus(db, jobId, 'processing');
-
-      const taxonomyCache = createTaxonomyCache();
-      const productIndex = await loadProductLookupIndex(db);
-      const mediaMessages: Extract<ImportQueueMessage, { type: 'media' }>[] = [];
-      const items = await importRepo.getImportItemsByIds(db, itemIds);
-
-      for (const item of items) {
-        if (item.status === 'ok') continue;
-
-        let record: ImportRecord | null = null;
-        try {
-          record = await resolveMappedRecord(item.mappedJson);
-        } catch {
-          record = null;
-        }
-
-        if (!record) {
-          await importRepo.updateImportItem(db, item.id, {
-            status: 'error',
-            action: 'error',
-            error: 'Geçersiz eşlenmiş kayıt',
-          });
-          continue;
-        }
-
-        const result = await applyImportRecord(
-          db,
-          record,
-          job.conflictPolicy,
-          taxonomyCache,
-          productIndex,
-        );
-        if (result.action === 'error') {
-          await importRepo.updateImportItem(db, item.id, {
-            status: 'error',
-            action: 'error',
-            error: result.error,
-          });
-        } else if (result.action === 'skip') {
-          await importRepo.updateImportItem(db, item.id, { status: 'ok', action: 'skip' });
-        } else {
-          await importRepo.updateImportItem(db, item.id, { status: 'ok', action: result.action });
-          if (result.pendingMedia.length > 0) {
-            mediaMessages.push({
-              type: 'media',
-              jobId,
-              itemId: item.id,
-              productId: result.productId,
-            });
-          }
-        }
-      }
-
-      if (mediaMessages.length > 0) {
-        await bumpMediaCounters(db, jobId, { mediaTotal: mediaMessages.length });
-        for (let i = 0; i < mediaMessages.length; i += 100) {
-          const chunk = mediaMessages.slice(i, i + 100);
-          await env.IMPORT_MEDIA_QUEUE.sendBatch(chunk.map((msg) => ({ body: msg })));
-        }
-      }
-
-      message.ack();
-    } catch {
-      message.retry();
-    }
-  }
-
-  for (const jobId of affectedJobIds) {
-    await refreshProductSummaryPreserveMedia(db, jobId);
-    const allDone = await importRepo.isAllItemsProcessed(db, jobId);
-    if (allDone) {
-      await importRepo.updateImportJobStatus(db, jobId, 'completed');
-    }
+    // Drop legacy core/apply envelopes — products are no longer queued.
+    message.ack();
   }
 }
 
 /**
  * Media queue consumer (`catalog-import-media` / IMPORT_MEDIA_QUEUE).
- * Runs fully in the background; does not block product apply concurrency.
  */
 export async function processImportMediaQueue(
   batch: MessageBatch<ImportQueueMessage>,
 ): Promise<void> {
-  const db = getDb();
+  const mediaMessages: Message<ImportMediaMessage>[] = [];
 
   for (const message of batch.messages) {
     const body = message.body;
-    if (!isMediaMessage(body)) {
+    if (
+      typeof body === 'object' &&
+      body !== null &&
+      'importMediaItemId' in body &&
+      'sourceUrl' in body
+    ) {
+      mediaMessages.push(message as Message<ImportMediaMessage>);
+    } else {
       message.ack();
-      continue;
-    }
-
-    try {
-      const item = (await importRepo.getImportItemsByIds(db, [body.itemId]))[0];
-      const record = item ? await resolveMappedRecord(item.mappedJson) : null;
-      const mediaItems = (record?.media ?? [])
-        .filter((m): m is { url: string; alt?: string } => Boolean(m?.url))
-        .map((m) => ({ url: m.url, alt: m.alt }));
-
-      if (mediaItems.length === 0) {
-        await bumpMediaCounters(db, body.jobId, { mediaDone: 1 });
-        message.ack();
-        continue;
-      }
-
-      const result = await applyProductMediaGallery(
-        db,
-        body.productId,
-        mediaItems,
-        record?.name || 'import',
-      );
-      if (result.ok) {
-        await bumpMediaCounters(db, body.jobId, { mediaDone: 1 });
-      } else {
-        await bumpMediaCounters(db, body.jobId, { mediaDone: 1, mediaError: 1 });
-      }
-      message.ack();
-    } catch {
-      message.retry();
     }
   }
+
+  if (mediaMessages.length === 0) return;
+
+  await handleImportMediaBatch({
+    queue: batch.queue,
+    messages: mediaMessages,
+  } as unknown as MessageBatch<ImportMediaMessage>);
 }

@@ -52,12 +52,17 @@ function extractCategories(itemXml: string, domain: string): string[] {
   return names;
 }
 
-function extractImagesFromContent(html: string | null): { url: string }[] {
+function extractImagesFromContent(
+  html: string | null,
+): { url: string; position: number; isPrimary: boolean }[] {
   if (!html) return [];
-  const images: { url: string }[] = [];
+  const images: { url: string; position: number; isPrimary: boolean }[] = [];
   const re = /<img[^>]+src=["']([^"']+)["']/gi;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(html))) images.push({ url: m[1] });
+  while ((m = re.exec(html))) {
+    const i = images.length;
+    images.push({ url: m[1], position: i, isPrimary: i === 0 });
+  }
   return images;
 }
 
@@ -121,7 +126,11 @@ export function parseToRecords(input: string, _mapping?: MappingProfile): Import
     const images = extractImagesFromContent(contentHtml);
     const enclosureUrl = extractEnclosureUrl(itemXml);
     if (enclosureUrl && !images.some((img) => img.url === enclosureUrl)) {
-      images.unshift({ url: enclosureUrl });
+      images.unshift({ url: enclosureUrl, position: 0, isPrimary: true });
+      images.forEach((img, i) => {
+        img.position = i;
+        img.isPrimary = i === 0;
+      });
     }
 
     records.push({

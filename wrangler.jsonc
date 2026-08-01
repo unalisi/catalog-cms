@@ -19,7 +19,7 @@
 			"binding": "DB",
 			"database_name": "catalog-db",
 			"database_id": "93c9c5cc-6651-4dda-95f7-0fa610b85f67",
-			"migrations_dir": "../../db/migrations"
+			"migrations_dir": "db/migrations"
 		}
 	],
 	"kv_namespaces": [
@@ -55,15 +55,15 @@
 		"consumers": [
 			{
 				"queue": "catalog-import",
-				"max_batch_size": 25,
-				"max_concurrency": 10,
+				"max_batch_size": 50,
+				"max_batch_timeout": 5,
 				"max_retries": 3
 			},
 			{
 				"queue": "catalog-import-media",
-				"max_batch_size": 5,
-				"max_concurrency": 5,
-				"max_retries": 3
+				"max_batch_size": 8,
+				"max_batch_timeout": 10,
+				"max_retries": 5
 			}
 		]
 	}
