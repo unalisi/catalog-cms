@@ -12,6 +12,7 @@ import {
   Upload,
   Users,
   Settings,
+  Palette,
 } from 'lucide-react';
 import type { Permission } from '@/lib/auth/permissions';
 
@@ -35,7 +36,22 @@ export type NavItem = {
   matchPrefix?: boolean;
 };
 
-export const ADMIN_NAV: NavItem[] = [
+/** Collapsible parent with leaf children (e.g. Tasarım → Sayfalar / Menüler). */
+export type NavDropdown = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  group: NavGroup;
+  children: NavItem[];
+};
+
+export type NavEntry = NavItem | NavDropdown;
+
+export function isNavDropdown(entry: NavEntry): entry is NavDropdown {
+  return Array.isArray((entry as NavDropdown).children);
+}
+
+export const ADMIN_NAV: NavEntry[] = [
   {
     id: 'dashboard',
     label: 'Genel Bakış',
@@ -72,20 +88,28 @@ export const ADMIN_NAV: NavItem[] = [
     group: 'İçerik',
   },
   {
-    id: 'pages',
-    label: 'Sayfalar',
-    href: '/admin/pages',
-    icon: FileStack,
-    permission: 'pages.manage',
+    id: 'design',
+    label: 'Tasarım',
+    icon: Palette,
     group: 'İçerik',
-  },
-  {
-    id: 'menus',
-    label: 'Menüler',
-    href: '/admin/menus',
-    icon: Menu,
-    permission: 'pages.manage',
-    group: 'İçerik',
+    children: [
+      {
+        id: 'pages',
+        label: 'Sayfalar',
+        href: '/admin/pages',
+        icon: FileStack,
+        permission: 'pages.manage',
+        group: 'İçerik',
+      },
+      {
+        id: 'menus',
+        label: 'Menüler',
+        href: '/admin/menus',
+        icon: Menu,
+        permission: 'pages.manage',
+        group: 'İçerik',
+      },
+    ],
   },
   {
     id: 'blog',
@@ -139,18 +163,37 @@ export const ADMIN_NAV: NavItem[] = [
 
 const GROUP_ORDER: NavGroup[] = ['İçerik', 'Pazarlama', 'Sistem'];
 
+/** Flat leaf list (command palette, active matching, mobile tabs). */
+export function flattenNavItems(entries: NavEntry[] = ADMIN_NAV): NavItem[] {
+  const out: NavItem[] = [];
+  for (const entry of entries) {
+    if (isNavDropdown(entry)) out.push(...entry.children);
+    else out.push(entry);
+  }
+  return out;
+}
+
 export function filterNavByPermissions(
   userPermissions: Set<string> | readonly string[],
-): NavItem[] {
+): NavEntry[] {
   const set =
     userPermissions instanceof Set ? userPermissions : new Set(userPermissions);
-  return ADMIN_NAV.filter((item) => set.has(item.permission));
+  const result: NavEntry[] = [];
+  for (const entry of ADMIN_NAV) {
+    if (isNavDropdown(entry)) {
+      const children = entry.children.filter((c) => set.has(c.permission));
+      if (children.length > 0) result.push({ ...entry, children });
+      continue;
+    }
+    if (set.has(entry.permission)) result.push(entry);
+  }
+  return result;
 }
 
 export function groupNav(
-  items: NavItem[],
-): Array<{ group: NavGroup; items: NavItem[] }> {
-  const map = new Map<NavGroup, NavItem[]>();
+  items: NavEntry[],
+): Array<{ group: NavGroup; items: NavEntry[] }> {
+  const map = new Map<NavGroup, NavEntry[]>();
   for (const item of items) {
     if (!map.has(item.group)) map.set(item.group, []);
     map.get(item.group)!.push(item);
@@ -178,24 +221,43 @@ function pathMatchesItem(pathname: string, item: NavItem): boolean {
 
 export function findActiveNavItem(
   pathname: string,
-  items: NavItem[] = ADMIN_NAV,
+  items: NavEntry[] = ADMIN_NAV,
 ): NavItem | null {
+  const leaves = flattenNavItems(items);
   let best: NavItem | null = null;
-  for (const item of items) {
+  for (const item of leaves) {
     if (!pathMatchesItem(pathname, item)) continue;
     if (!best || item.href.length > best.href.length) best = item;
   }
   return best;
 }
 
+export function findParentDropdown(
+  pathname: string,
+  items: NavEntry[] = ADMIN_NAV,
+): NavDropdown | null {
+  const active = findActiveNavItem(pathname, items);
+  if (!active) return null;
+  for (const entry of items) {
+    if (isNavDropdown(entry) && entry.children.some((c) => c.id === active.id)) {
+      return entry;
+    }
+  }
+  return null;
+}
+
 export type BreadcrumbEntry = { label: string; href?: string };
 
 export function buildBreadcrumb(pathname: string, extra?: string): BreadcrumbEntry[] {
   const active = findActiveNavItem(pathname);
+  const parent = findParentDropdown(pathname);
   const trail: BreadcrumbEntry[] = [{ label: 'Panel', href: '/admin' }];
 
   if (active) {
     trail.push({ label: active.group });
+    if (parent) {
+      trail.push({ label: parent.label });
+    }
     trail.push({ label: active.label, href: extra ? active.href : undefined });
   }
 

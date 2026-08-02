@@ -262,3 +262,80 @@ export function SidebarMenuBadge({ className, ...props }: React.ComponentPropsWi
     />
   );
 }
+
+export function SidebarMenuSub({ className, ...props }: React.ComponentPropsWithoutRef<"ul">) {
+  return (
+    <ul
+      className={cn("mx-2.5 flex min-w-0 translate-x-px flex-col gap-0.5 border-l border-border px-2.5 py-0.5", className)}
+      {...props}
+    />
+  );
+}
+
+export function SidebarMenuSubItem({ className, ...props }: React.ComponentPropsWithoutRef<"li">) {
+  return <li className={cn("relative", className)} {...props} />;
+}
+
+type SidebarMenuSubButtonProps = React.ComponentPropsWithoutRef<"a"> & {
+  isActive?: boolean;
+};
+
+export const SidebarMenuSubButton = React.forwardRef<HTMLAnchorElement, SidebarMenuSubButtonProps>(
+  ({ className, isActive, ...props }, ref) => (
+    <a
+      ref={ref}
+      data-active={isActive}
+      className={cn(
+        "flex h-8 min-w-0 items-center gap-2 overflow-hidden rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+        "data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-foreground",
+        className,
+      )}
+      {...props}
+    />
+  ),
+);
+SidebarMenuSubButton.displayName = "SidebarMenuSubButton";
+
+type SidebarMenuButtonActionProps = React.ComponentPropsWithoutRef<"button"> & {
+  isActive?: boolean;
+  tooltip?: string;
+};
+
+/** Non-link menu button (collapsible parents, icon-rail dropdown triggers). */
+export const SidebarMenuButtonAction = React.forwardRef<
+  HTMLButtonElement,
+  SidebarMenuButtonActionProps
+>(({ className, isActive, tooltip, children, ...props }, ref) => {
+  const { open, isMobile } = useSidebar();
+  const showTooltip = !open && !isMobile && tooltip;
+
+  const button = (
+    <button
+      ref={ref}
+      type="button"
+      data-active={isActive}
+      className={cn(
+        "group flex h-9 w-full items-center gap-2.5 overflow-hidden rounded-md px-2.5 text-sm transition-colors",
+        "text-foreground hover:bg-muted",
+        "data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-foreground",
+        "border-l-2 border-transparent data-[active=true]:border-l-primary",
+        !open && !isMobile && "justify-center px-0",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+
+  if (!showTooltip) return button;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="right">{tooltip}</TooltipContent>
+    </Tooltip>
+  );
+});
+SidebarMenuButtonAction.displayName = "SidebarMenuButtonAction";
+

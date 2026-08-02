@@ -10,7 +10,7 @@ import {
   CommandShortcut,
   CommandSeparator,
 } from '@/components/ui/command';
-import { ADMIN_NAV, groupNav, type NavItem } from '@/lib/nav/admin-nav';
+import { ADMIN_NAV, flattenNavItems, type NavItem } from '@/lib/nav/admin-nav';
 
 type ProductHit = { id: string; title: string; sku: string | null };
 
@@ -19,7 +19,10 @@ type CommandPaletteProps = {
   onNavigate?: (href: string) => void;
 };
 
-export function CommandPalette({ nav = ADMIN_NAV, onNavigate }: CommandPaletteProps) {
+export function CommandPalette({
+  nav = flattenNavItems(ADMIN_NAV),
+  onNavigate,
+}: CommandPaletteProps) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
   const [products, setProducts] = React.useState<ProductHit[]>([]);
@@ -84,7 +87,16 @@ export function CommandPalette({ nav = ADMIN_NAV, onNavigate }: CommandPalettePr
     else window.location.href = href;
   }
 
-  const grouped = groupNav(nav);
+  const grouped = React.useMemo(() => {
+    const order = ['İçerik', 'Pazarlama', 'Sistem'] as const;
+    const map = new Map<string, NavItem[]>();
+    for (const item of nav) {
+      const list = map.get(item.group) ?? [];
+      list.push(item);
+      map.set(item.group, list);
+    }
+    return order.filter((g) => map.has(g)).map((g) => ({ group: g, items: map.get(g)! }));
+  }, [nav]);
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>

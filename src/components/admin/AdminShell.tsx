@@ -1,5 +1,13 @@
 import * as React from 'react';
-import { Search, Bell, LogOut, User as UserIcon, ChevronsUpDown } from 'lucide-react';
+import {
+  Search,
+  Bell,
+  LogOut,
+  User as UserIcon,
+  ChevronsUpDown,
+  ChevronRight,
+} from 'lucide-react';
+import * as Collapsible from '@radix-ui/react-collapsible';
 import {
   SidebarProvider,
   Sidebar,
@@ -12,7 +20,11 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuButtonAction,
   SidebarMenuBadge,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   useSidebar,
 } from '@/components/ui/sidebar';
 import {
@@ -37,9 +49,14 @@ import { CommandPalette, triggerCommandPalette } from '@/components/admin/Comman
 import {
   groupNav,
   findActiveNavItem,
+  findParentDropdown,
   buildBreadcrumb,
   filterNavByPermissions,
+  flattenNavItems,
+  isNavDropdown,
   type BreadcrumbEntry,
+  type NavDropdown,
+  type NavEntry,
 } from '@/lib/nav/admin-nav';
 import { ToastFromQuery } from '@/components/admin/ToastFromQuery';
 import ForcePasswordChangeModal from '@/components/admin/ForcePasswordChangeModal';
@@ -84,6 +101,7 @@ export function AdminShell({
     () => filterNavByPermissions(user?.permissions ?? []),
     [user?.permissions],
   );
+  const leafNav = React.useMemo(() => flattenNavItems(nav), [nav]);
   const grouped = groupNav(nav);
   const crumbTrail =
     breadcrumbs && breadcrumbs.length > 0
@@ -119,22 +137,32 @@ export function AdminShell({
               <SidebarGroup key={group}>
                 <SidebarGroupLabel>{group}</SidebarGroupLabel>
                 <SidebarMenu>
-                  {items.map((item) => {
-                    const active = findActiveNavItem(currentPath, nav)?.id === item.id;
-                    return (
-                      <SidebarMenuItem key={item.id}>
-                        <SidebarMenuButton href={item.href} isActive={active} tooltip={item.label}>
-                          <item.icon className="h-4 w-4 shrink-0" />
-                          <SidebarLabel>{item.label}</SidebarLabel>
-                          {item.badge ? (
+                  {items.map((entry) =>
+                    isNavDropdown(entry) ? (
+                      <NavDropdownItem
+                        key={entry.id}
+                        entry={entry}
+                        currentPath={currentPath}
+                        nav={nav}
+                      />
+                    ) : (
+                      <SidebarMenuItem key={entry.id}>
+                        <SidebarMenuButton
+                          href={entry.href}
+                          isActive={findActiveNavItem(currentPath, nav)?.id === entry.id}
+                          tooltip={entry.label}
+                        >
+                          <entry.icon className="h-4 w-4 shrink-0" />
+                          <SidebarLabel>{entry.label}</SidebarLabel>
+                          {entry.badge ? (
                             <SidebarMenuBadge>
-                              {item.badge === 'new' ? 'Yeni' : 'Beta'}
+                              {entry.badge === 'new' ? 'Yeni' : 'Beta'}
                             </SidebarMenuBadge>
                           ) : null}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                    );
-                  })}
+                    ),
+                  )}
                 </SidebarMenu>
               </SidebarGroup>
             ))}
@@ -158,10 +186,87 @@ export function AdminShell({
           </main>
         </SidebarInset>
 
-        <CommandPalette nav={nav} />
+        <CommandPalette nav={leafNav} />
         {user?.mustChangePassword ? <ForcePasswordChangeModal /> : null}
       </SidebarProvider>
     </AdminChromeProvider>
+  );
+}
+
+function NavDropdownItem({
+  entry,
+  currentPath,
+  nav,
+}: {
+  entry: NavDropdown;
+  currentPath: string;
+  nav: NavEntry[];
+}) {
+  const { open, isMobile } = useSidebar();
+  const parentActive = findParentDropdown(currentPath, nav)?.id === entry.id;
+  const activeLeaf = findActiveNavItem(currentPath, nav);
+  const [expanded, setExpanded] = React.useState(parentActive);
+  const iconCollapsed = !open && !isMobile;
+
+  React.useEffect(() => {
+    if (parentActive) setExpanded(true);
+  }, [parentActive]);
+
+  if (iconCollapsed) {
+    return (
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButtonAction isActive={parentActive} tooltip={entry.label}>
+              <entry.icon className="h-4 w-4 shrink-0" />
+            </SidebarMenuButtonAction>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="start" className="w-48">
+            <DropdownMenuLabel>{entry.label}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {entry.children.map((child) => (
+              <DropdownMenuItem key={child.id} asChild>
+                <a href={child.href} className="flex items-center gap-2">
+                  <child.icon className="h-4 w-4" />
+                  {child.label}
+                </a>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    );
+  }
+
+  return (
+    <SidebarMenuItem>
+      <Collapsible.Root open={expanded} onOpenChange={setExpanded}>
+        <Collapsible.Trigger asChild>
+          <SidebarMenuButtonAction isActive={parentActive} aria-expanded={expanded}>
+            <entry.icon className="h-4 w-4 shrink-0" />
+            <SidebarLabel>{entry.label}</SidebarLabel>
+            <ChevronRight
+              className={[
+                'ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform',
+                expanded ? 'rotate-90' : '',
+              ].join(' ')}
+            />
+          </SidebarMenuButtonAction>
+        </Collapsible.Trigger>
+        <Collapsible.Content>
+          <SidebarMenuSub>
+            {entry.children.map((child) => (
+              <SidebarMenuSubItem key={child.id}>
+                <SidebarMenuSubButton href={child.href} isActive={activeLeaf?.id === child.id}>
+                  <child.icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{child.label}</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        </Collapsible.Content>
+      </Collapsible.Root>
+    </SidebarMenuItem>
   );
 }
 
