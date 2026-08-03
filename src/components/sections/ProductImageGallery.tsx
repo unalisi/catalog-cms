@@ -75,7 +75,15 @@ export default function ProductImageGallery({
           } ${thumbsPosition === 'left' ? 'h-16 w-16' : 'h-16 w-16'}`}
           onClick={() => setIndex(i)}
         >
-          <img src={img.url} alt="" className="h-full w-full object-cover" />
+          <img
+            src={img.url}
+            alt=""
+            width={64}
+            height={64}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         </button>
       ))}
     </div>
@@ -87,6 +95,10 @@ export default function ProductImageGallery({
         key={current.id}
         src={current.url}
         alt={current.alt}
+        width={800}
+        height={800}
+        decoding="async"
+        fetchPriority={index === 0 ? 'high' : 'auto'}
         className="h-full w-full object-contain"
         data-product-image="main"
       />

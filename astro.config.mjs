@@ -11,6 +11,10 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
+  build: {
+    // Avoid render-blocking external CSS round-trip (catalog LCP/FCP).
+    inlineStylesheets: 'always',
+  },
   adapter: cloudflare({
     imageService: 'cloudflare-binding',
     sessionKVBindingName: 'SESSION',

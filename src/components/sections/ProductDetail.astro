@@ -89,7 +89,7 @@ const descriptionClass =
       {
         layout === 'gallery-top' ? (
           <div class="flex flex-col gap-10">
-            <ProductImageGallery client:load images={images} thumbsPosition="bottom" />
+            <ProductImageGallery client:visible images={images} thumbsPosition="bottom" />
             <div class="grid gap-10 md:grid-cols-2">
               <div class="flex flex-col gap-4">
                 {
@@ -153,7 +153,7 @@ const descriptionClass =
                 {
                   hasVariants && (
                     <ProductVariantPicker
-                      client:load
+                      client:visible
                       variants={product.variants.map((v) => ({
                         id: v.id,
                         sku: v.sku,
@@ -186,7 +186,7 @@ const descriptionClass =
           </div>
         ) : layout === 'thumbs-aside' ? (
           <div class="grid gap-10 lg:grid-cols-2">
-            <ProductImageGallery client:load images={images} thumbsPosition="left" />
+            <ProductImageGallery client:visible images={images} thumbsPosition="left" />
             <div class="flex flex-col gap-6 md:sticky md:top-6 md:self-start">
               {
                 showSku && !hasVariants && (
@@ -218,7 +218,7 @@ const descriptionClass =
               {
                 hasVariants && (
                   <ProductVariantPicker
-                    client:load
+                    client:visible
                     variants={product.variants.map((v) => ({
                       id: v.id,
                       sku: v.sku,
@@ -278,7 +278,7 @@ const descriptionClass =
           </div>
         ) : (
           <div class="grid gap-10 lg:grid-cols-2">
-            <ProductImageGallery client:load images={images} thumbsPosition="bottom" />
+            <ProductImageGallery client:visible images={images} thumbsPosition="bottom" />
             <div class="flex flex-col gap-6">
               {
                 showSku && !hasVariants && (
@@ -310,7 +310,7 @@ const descriptionClass =
               {
                 hasVariants && (
                   <ProductVariantPicker
-                    client:load
+                    client:visible
                     variants={product.variants.map((v) => ({
                       id: v.id,
                       sku: v.sku,
