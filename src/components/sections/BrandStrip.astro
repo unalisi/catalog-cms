@@ -8,10 +8,15 @@ interface Props {
 
 const { config } = Astro.props;
 const { data: brands } = await getBrands();
-const items = brands ?? [];
+const items = [...(brands ?? [])].sort((a, b) => {
+  const aLogo = a.logoUrl ? 0 : 1;
+  const bLogo = b.logoUrl ? 0 : 1;
+  if (aLogo !== bLogo) return aLogo - bLogo;
+  return a.name.localeCompare(b.name, 'tr');
+});
 ---
 
-<section class="border-y border-border bg-muted/40">
+<section class="border-y border-border bg-muted/40" data-brand-strip>
   <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-20">
     {
       config.title && (
@@ -27,15 +32,24 @@ const items = brands ?? [];
             <li>
               <a
                 href={`/brand/${brand.slug}`}
-                class="flex h-24 items-center justify-center border border-border bg-background px-3 transition-colors hover:border-primary"
+                class="group flex h-24 items-center justify-center border border-border bg-background px-4 transition-colors hover:border-primary"
+                title={brand.name}
               >
                 {brand.logoUrl ? (
-                  <img
-                    src={brand.logoUrl}
-                    alt={brand.name}
-                    class="max-h-12 max-w-full object-contain opacity-80 grayscale transition hover:opacity-100 hover:grayscale-0"
-                    loading="lazy"
-                  />
+                  <>
+                    <img
+                      src={brand.logoUrl}
+                      alt={brand.name}
+                      width="128"
+                      height="48"
+                      class="brand-logo max-h-12 max-w-full object-contain opacity-90 transition group-hover:opacity-100"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span class="brand-logo-fallback hidden font-display text-sm font-semibold tracking-tight text-muted-foreground">
+                      {brand.name}
+                    </span>
+                  </>
                 ) : (
                   <span class="font-display text-sm font-semibold tracking-tight text-muted-foreground">
                     {brand.name}
@@ -49,3 +63,14 @@ const items = brands ?? [];
     </ul>
   </div>
 </section>
+
+<script>
+  document.querySelectorAll<HTMLImageElement>('[data-brand-strip] img.brand-logo').forEach((img) => {
+    const showFallback = () => {
+      img.classList.add('hidden');
+      img.nextElementSibling?.classList.remove('hidden');
+    };
+    if (img.complete && img.naturalWidth === 0) showFallback();
+    img.addEventListener('error', showFallback);
+  });
+</script>
