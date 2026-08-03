@@ -26,24 +26,20 @@ const isServerError = code === '500';
     {message}
   </p>
 
-  {/* Future: wire to category–product search (data-future="catalog-search") */}
-  <div class="mt-12 w-full" data-future="catalog-search">
+  <div class="mt-12 w-full">
     <p class="mb-3 text-left text-sm font-medium text-foreground">
       Başka bir şeyler arayın:
     </p>
-    <div class="relative">
+    <form method="get" action="/catalog" class="relative">
       <label for={`error-search-${code}`} class="sr-only">Ara</label>
       <input
         id={`error-search-${code}`}
         type="search"
         name="q"
-        placeholder="Ürün veya kategori…"
-        disabled
-        aria-disabled="true"
-        tabindex="-1"
-        class="min-h-11 w-full cursor-not-allowed rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground placeholder:text-muted-foreground/70"
+        placeholder="Ürün, SKU veya açıklama…"
+        class="min-h-11 w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
-    </div>
+    </form>
   </div>
 
     <a

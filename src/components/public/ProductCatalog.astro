@@ -21,11 +21,13 @@ const {
 const page = Math.max(1, Number(Astro.url.searchParams.get('page') ?? '1') || 1);
 const brandSlug = Astro.url.searchParams.get('brand') ?? undefined;
 const categorySlug = Astro.url.searchParams.get('category') ?? undefined;
+const qRaw = Astro.url.searchParams.get('q')?.trim() ?? '';
+const q = qRaw.slice(0, 100) || undefined;
 const useFilters = showFilters && layout === 'grid';
 const colClass = columns === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3';
 
 const [{ data: list, status }, { data: categories }, { data: brands }] = await Promise.all([
-  getProductList({ page, pageSize, brandSlug, categorySlug }),
+  getProductList({ page, pageSize, brandSlug, categorySlug, q }),
   getCategories(),
   getBrands(),
 ]);
@@ -34,20 +36,71 @@ const items = list?.items ?? [];
 const total = list?.total ?? 0;
 const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
+function filterQuery(overrides: Record<string, string | undefined> = {}) {
+  const params = new URLSearchParams();
+  const next = {
+    brand: brandSlug,
+    category: categorySlug,
+    q,
+    ...overrides,
+  };
+  if (next.category) params.set('category', next.category);
+  if (next.brand) params.set('brand', next.brand);
+  if (next.q) params.set('q', next.q);
+  const qs = params.toString();
+  return qs ? `/catalog?${qs}` : '/catalog';
+}
+
 function hrefFor(nextPage: number) {
   const params = new URLSearchParams();
   if (nextPage > 1) params.set('page', String(nextPage));
   if (categorySlug) params.set('category', categorySlug);
   if (brandSlug) params.set('brand', brandSlug);
-  const q = params.toString();
-  return q ? `/catalog?${q}` : '/catalog';
+  if (q) params.set('q', q);
+  const qs = params.toString();
+  return qs ? `/catalog?${qs}` : '/catalog';
 }
 ---
 
 <section class="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16" data-cache={status}>
   <div class="flex flex-col gap-3">
-    <h1 class="font-display text-3xl font-bold tracking-tight">{title}</h1>
-    <p class="text-muted-foreground">{total} ürün</p>
+    <h1 class="text-3xl font-bold tracking-tight">{title}</h1>
+    <p class="text-muted-foreground">
+      {total} ürün{q ? ` · “${q}”` : ''}
+    </p>
+    {
+      useFilters && (
+        <form method="get" action="/catalog" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {categorySlug && <input type="hidden" name="category" value={categorySlug} />}
+          {brandSlug && <input type="hidden" name="brand" value={brandSlug} />}
+          <label class="sr-only" for="catalog-q">Ürün ara</label>
+          <input
+            id="catalog-q"
+            type="search"
+            name="q"
+            value={qRaw}
+            placeholder="Ürün, SKU veya açıklama ara…"
+            class="min-h-11 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button
+            type="submit"
+            class="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            Ara
+          </button>
+          {
+            q && (
+              <a
+                href={filterQuery({ q: undefined })}
+                class="inline-flex min-h-11 items-center justify-center rounded-md border border-border px-4 py-2 text-sm hover:bg-muted"
+              >
+                Temizle
+              </a>
+            )
+          }
+        </form>
+      )
+    }
   </div>
 
   <div class:list={['mt-8 flex flex-col gap-8', useFilters && 'lg:flex-row']}>
@@ -63,7 +116,7 @@ function hrefFor(nextPage: number) {
               <ul class="flex flex-col gap-1 text-sm">
                 <li>
                   <a
-                    href={brandSlug ? `/catalog?brand=${brandSlug}` : '/catalog'}
+                    href={filterQuery({ category: undefined })}
                     class:list={[
                       'hover:text-foreground',
                       !categorySlug ? 'font-semibold text-foreground' : 'text-muted-foreground',
@@ -75,7 +128,7 @@ function hrefFor(nextPage: number) {
                 {(categories ?? []).map((cat) => (
                   <li>
                     <a
-                      href={`/catalog?category=${cat.slug}${brandSlug ? `&brand=${brandSlug}` : ''}`}
+                      href={filterQuery({ category: cat.slug })}
                       class:list={[
                         'hover:text-foreground',
                         categorySlug === cat.slug
@@ -92,10 +145,21 @@ function hrefFor(nextPage: number) {
             <div>
               <p class="mb-2 text-sm font-medium">Marka</p>
               <ul class="flex flex-col gap-1 text-sm">
+                <li>
+                  <a
+                    href={filterQuery({ brand: undefined })}
+                    class:list={[
+                      'hover:text-foreground',
+                      !brandSlug ? 'font-semibold text-foreground' : 'text-muted-foreground',
+                    ]}
+                  >
+                    Tümü
+                  </a>
+                </li>
                 {(brands ?? []).map((brand) => (
                   <li>
                     <a
-                      href={`/catalog?brand=${brand.slug}${categorySlug ? `&category=${categorySlug}` : ''}`}
+                      href={filterQuery({ brand: brand.slug })}
                       class:list={[
                         'hover:text-foreground',
                         brandSlug === brand.slug
@@ -205,7 +269,7 @@ function hrefFor(nextPage: number) {
           </ul>
         ) : (
           <ul class:list={['grid gap-4 sm:grid-cols-2', colClass]}>
-            {items.map((product) => (
+            {items.map((product, i) => (
               <li>
                 <a
                   href={`/product/${product.slug}`}
@@ -216,8 +280,12 @@ function hrefFor(nextPage: number) {
                       <img
                         src={product.imageUrl}
                         alt=""
+                        width={128}
+                        height={96}
                         class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-                        loading="lazy"
+                        loading={i < 6 ? 'eager' : 'lazy'}
+                        fetchpriority={i === 0 ? 'high' : 'auto'}
+                        decoding="async"
                       />
                     ) : (
                       <div class="flex h-full items-center justify-center font-display text-sm text-muted-foreground">
@@ -226,7 +294,7 @@ function hrefFor(nextPage: number) {
                     )}
                   </div>
                   <div class="flex flex-1 flex-col gap-2 p-4">
-                    <h2 class="font-display text-base font-semibold tracking-tight group-hover:underline">
+                    <h2 class="text-base font-semibold tracking-tight group-hover:underline">
                       {product.name}
                     </h2>
                     {product.brand && (
