@@ -1,4 +1,4 @@
-import { and, asc, count, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNotNull, like, or } from 'drizzle-orm';
 import {
   brands,
   categories,
@@ -16,7 +16,7 @@ import {
 } from '../../../db/schema';
 import type { Db } from '../db';
 import { listPublishedPostsForSitemap } from './posts';
-import { mediaPublicPath } from '../../lib/media/urls';
+import { mediaPublicPath, mediaTransformPath } from '../../lib/media/urls';
 
 export type ProductListItem = {
   id: string;
@@ -60,7 +60,14 @@ export type CategoryDetail = Category & {
 
 export async function listPublishedProducts(
   db: Db,
-  opts: { page: number; pageSize: number; brandSlug?: string; categorySlug?: string },
+  opts: {
+    page: number;
+    pageSize: number;
+    brandSlug?: string;
+    categorySlug?: string;
+    /** Free-text query against name / sku / description */
+    q?: string;
+  },
 ): Promise<{ items: ProductListItem[]; total: number }> {
   const offset = (opts.page - 1) * opts.pageSize;
 
@@ -94,6 +101,20 @@ export async function listPublishedProducts(
   const conditions = [eq(products.status, 'published')];
   if (brandId) conditions.push(eq(products.brandId, brandId));
   if (productIdsFilter) conditions.push(inArray(products.id, productIdsFilter));
+
+  const q = opts.q?.trim().slice(0, 100);
+  if (q) {
+    const escaped = q.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
+    const pattern = `%${escaped}%`;
+    conditions.push(
+      or(
+        like(products.name, pattern),
+        like(products.sku, pattern),
+        like(products.description, pattern),
+      )!,
+    );
+  }
+
   const where = and(...conditions);
 
   const [totalRow] = await db.select({ value: count() }).from(products).where(where);
@@ -123,7 +144,7 @@ export async function listPublishedProducts(
       compareAtPrice: product.compareAtPrice,
       currency: product.currency,
       stock: product.stock,
-      imageUrl: mediaKey ? mediaPublicPath(mediaKey) : null,
+      imageUrl: mediaKey ? mediaTransformPath(mediaKey, 128) : null,
       brand: brand ? { id: brand.id, slug: brand.slug, name: brand.name } : null,
     })),
   };
@@ -201,7 +222,7 @@ export async function getPublishedProductBySlug(
 
   let images: ProductImage[] = galleryRows.map((g) => ({
     id: g.id,
-    url: mediaPublicPath(g.key),
+    url: mediaTransformPath(g.key, 960),
     alt: g.alt || row.product.name,
   }));
 
@@ -210,13 +231,13 @@ export async function getPublishedProductBySlug(
     images = [
       {
         id: row.product.primaryMediaId ?? 'primary',
-        url: mediaPublicPath(row.mediaKey),
+        url: mediaTransformPath(row.mediaKey, 960),
         alt: row.product.name,
       },
     ];
   }
 
-  const imageUrl = images[0]?.url ?? (row.mediaKey ? mediaPublicPath(row.mediaKey) : null);
+  const imageUrl = images[0]?.url ?? (row.mediaKey ? mediaTransformPath(row.mediaKey, 960) : null);
 
   return {
     id: row.product.id,
@@ -270,15 +291,24 @@ export async function listPublishedBrands(db: Db): Promise<(Brand & { logoUrl: s
     .select({
       brand: brands,
       mediaKey: media.key,
+      mediaMime: media.mime,
     })
     .from(brands)
     .leftJoin(media, eq(brands.logoMediaId, media.id))
     .where(eq(brands.status, 'published'))
     .orderBy(asc(brands.name));
-  return rows.map(({ brand, mediaKey }) => ({
-    ...brand,
-    logoUrl: mediaKey ? mediaPublicPath(mediaKey) : null,
-  }));
+  return rows.map(({ brand, mediaKey, mediaMime }) => {
+    if (!mediaKey) return { ...brand, logoUrl: null };
+    // SVG/GIF: serve original (Images binding skips or mishandles these)
+    const useOriginal =
+      mediaMime === 'image/svg+xml' ||
+      mediaMime === 'image/gif' ||
+      mediaMime === 'image/svg';
+    return {
+      ...brand,
+      logoUrl: useOriginal ? mediaPublicPath(mediaKey) : mediaTransformPath(mediaKey, 128),
+    };
+  });
 }
 
 export async function getPublishedCategoryBySlug(
@@ -350,7 +380,7 @@ export async function listPublishedCategories(
     .orderBy(asc(categories.position), asc(categories.name));
   return rows.map(({ category, mediaKey }) => ({
     ...category,
-    imageUrl: mediaKey ? mediaPublicPath(mediaKey) : null,
+    imageUrl: mediaKey ? mediaTransformPath(mediaKey, 320) : null,
   }));
 }
 
