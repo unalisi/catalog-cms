@@ -24,6 +24,8 @@ export const CACHE_KEYS = {
   sitemap: 'sitemap:v1',
   settings: 'settings:site',
   nav: 'nav:main',
+  listBrands: 'list:brands:published:v2',
+  listCategories: 'list:categories:published',
 } as const;
 
 export function stableHash(input: unknown): string {

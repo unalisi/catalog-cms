@@ -32,17 +32,20 @@ export async function getProductList(opts: {
   pageSize?: number;
   brandSlug?: string;
   categorySlug?: string;
+  q?: string;
 }) {
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(48, Math.max(1, opts.pageSize ?? 12));
+  const q = opts.q?.trim().slice(0, 100) || undefined;
   const filter = {
     page,
     pageSize,
     brandSlug: opts.brandSlug,
     categorySlug: opts.categorySlug,
+    q,
   };
   const ver = await getListProductsVersion();
-  const hash = stableHash(filter);
+  const hash = stableHash({ ...filter, _thumb: 'w128q75' });
   const key = CACHE_KEYS.listProducts(ver, hash);
 
   return cacheFirst(key, CACHE_TTL.list, () =>
@@ -51,13 +54,13 @@ export async function getProductList(opts: {
 }
 
 export async function getBrands() {
-  return cacheFirst('list:brands:published', CACHE_TTL.brand, () =>
+  return cacheFirst(CACHE_KEYS.listBrands, CACHE_TTL.brand, () =>
     catalogRepo.listPublishedBrands(getDb()),
   );
 }
 
 export async function getCategories() {
-  return cacheFirst('list:categories:published', CACHE_TTL.category, () =>
+  return cacheFirst(CACHE_KEYS.listCategories, CACHE_TTL.category, () =>
     catalogRepo.listPublishedCategories(getDb()),
   );
 }
