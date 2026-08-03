@@ -39,3 +39,6 @@ db/seed-efor-telsiz.sql
 
 # D1 backups (FAZ 9)
 backups/
+
+# Lighthouse MVP reports
+.lighthouse/

@@ -27,31 +27,42 @@ Run before / after production deploy. Mark items as you go.
 - [ ] 404 / 500 pages have clear headings and escape links
 - [ ] Contrast AA on primary (yellow) + black text
 
-## Performance / CWV (manual Lighthouse)
+## Performance / CWV (Lighthouse)
 
 Target (ARCHITECTURE §14): public Lighthouse ≥ 90 (Perf, SEO, Best Practices, a11y).
 
 ```bash
-# After deploy, against production or preview URL:
-npx lighthouse https://catalog-cms.unalisi-dev.workers.dev \
-  --only-categories=performance,accessibility,best-practices,seo \
-  --preset=desktop --quiet --chrome-flags="--headless"
+# Four-page MVP sweep (writes .lighthouse/SUMMARY.md):
+npm run lighthouse:mvp
+# Optional: BASE_URL=https://your-preview.workers.dev npm run lighthouse:mvp
 ```
 
-- [ ] Home ≥ 90
-- [ ] Catalog listing ≥ 90
-- [ ] Product detail ≥ 90
-- [ ] Blog post ≥ 90
-- [ ] No layout shift from late font/images on hero
+### Baseline (2026-08-03, desktop, `catalog-cms.unalisi-dev.workers.dev`)
+
+| Page | Perf | A11y | Best Practices | SEO |
+|------|------|------|----------------|-----|
+| Home | 92 | 97 | 100 | 100 |
+| Catalog | 93 | 96 | 100 | 100 |
+| Product | 91 | 95 | 100 | 100 |
+| Blog | 100 | 96 | 100 | 100 |
+
+- [x] Home ≥ 90
+- [x] Catalog listing ≥ 90
+- [x] Product detail ≥ 90
+- [x] Blog post ≥ 90
+- [x] No layout shift from late font/images on hero (CLS ~0 on measured pages)
 
 ## Functional smoke
 
 - [ ] `/api/health` → `{ ok: true }`
-- [ ] Catalog search / filters
+- [x] Catalog `?q=` search + brand/category filters
+- [x] Product description rich-text (Tiptap) → public HTML render
+- [x] Navbar layouts via Tasarım → Menüler (classic / mega / fullscreen / mega-img)
 - [ ] Admin product grid edit + save
 - [ ] Media upload + `/media/...` transform `?w=`
-- [ ] Settings change reflects on public header
-- [ ] Import dry-run + apply (sample CSV)
+- [ ] Settings / Menüler change reflects on public header
+- [x] Import dry-run + apply (batch drafts + media queue; pause/cancel)
+- [x] Export streaming (CSV / XML / Woo JSON) with status/brand/category filters
 - [ ] SEO redirect works
 
 ## Backup

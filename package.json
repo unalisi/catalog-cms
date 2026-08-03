@@ -14,6 +14,7 @@
     "types": "wrangler types",
     "typecheck": "astro check && tsc --noEmit",
     "lint:design": "node scripts/check-design.mjs",
+    "lighthouse:mvp": "node scripts/lighthouse-mvp.mjs",
     "db:backup:local": "node scripts/db-backup.mjs --local",
     "db:backup:remote": "node scripts/db-backup.mjs --remote",
     "db:restore:test": "node scripts/db-restore-test.mjs",
