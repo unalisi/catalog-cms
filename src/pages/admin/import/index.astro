@@ -1,6 +1,5 @@
 ---
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import DesktopOnlyGate from '../../../components/admin/DesktopOnlyGate.astro';
 import ImportWizard from '../../../components/admin/ImportWizard';
 ---
 
@@ -8,17 +7,15 @@ import ImportWizard from '../../../components/admin/ImportWizard';
   title="İçe / dışa aktarım"
   breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'İçe / dışa aktarım' }]}
 >
-  <DesktopOnlyGate>
-    <div class="flex flex-col gap-4">
-      <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight">Katalog içe / dışa aktarım</h1>
-        <p class="mt-1 text-sm text-muted-foreground">
-          CSV · WooCommerce JSON · WXR → dry-run → Queue apply · Export (galeri, kategori, marka)
-        </p>
-      </div>
-      <div class="rounded-lg border border-border bg-background p-4 md:p-6">
-        <ImportWizard client:media="(min-width: 768px)" />
-      </div>
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">Katalog içe / dışa aktarım</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        CSV · WooCommerce JSON · WXR → dry-run → ürünleri yaz + görselleri kuyruğa al · Export
+      </p>
     </div>
-  </DesktopOnlyGate>
+    <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+      <ImportWizard client:load />
+    </div>
+  </div>
 </AdminLayout>

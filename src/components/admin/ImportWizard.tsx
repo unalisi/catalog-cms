@@ -647,10 +647,10 @@ export default function ImportWizard() {
                 onClick={() => void runApply()}
               >
                 {busy
-                  ? 'Kuyruğa alınıyor…'
+                  ? 'Ürünler yazılıyor…'
                   : job?.status === 'queued' || job?.status === 'processing'
                     ? 'Apply’e devam et'
-                    : 'Apply (Queue)'}
+                    : 'Apply'}
               </button>
             )}
             {jobId && (job?.status === 'queued' || job?.status === 'processing') && (
