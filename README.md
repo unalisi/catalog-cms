@@ -190,7 +190,16 @@ Sonraki adım: **FAZ 7 — WordPress / katalog içe aktarımı**.
 - [x] 404/500, admin skip-link, design token lint
 - [x] Custom domain adımları runbook’ta
 
-Sonraki: Lighthouse skorlarını production URL üzerinde [`docs/QA.md`](./docs/QA.md) ile doğrula; gerekirse custom domain bağla.
+Sonraki: Custom domain bağla; post-MVP için varyant admin CRUD, facet counts ve otomatik test suite.
+
+## MVP kapanış (2026-08)
+
+- [x] Import: batch draft apply + media-only queue + pause/cancel
+- [x] Export: streaming formatters + brand/category filters
+- [x] Ürün rich-text (Tiptap lazy) + whitelist sanitize
+- [x] Navbar 4 layout + MenusEditor (Tasarım dropdown)
+- [x] Katalog `?q=` metin araması (marka/kategori ile)
+- [x] Lighthouse ≥ 90 (home / catalog / PDP / blog) — `npm run lighthouse:mvp`
 
 ## Admin UI (Enterprise shell)
 
