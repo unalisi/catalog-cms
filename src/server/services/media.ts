@@ -143,17 +143,30 @@ export async function serveMediaObject(
   const headers = new Headers();
   headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 
-  if (width != null && contentType !== 'image/svg+xml') {
+  const canTransform =
+    width != null &&
+    contentType !== 'image/svg+xml' &&
+    contentType !== 'image/gif' &&
+    contentType.startsWith('image/');
+
+  if (canTransform) {
     try {
-      const stream = object.body;
-      const result = await env.IMAGES.input(stream)
+      const buffer = await object.arrayBuffer();
+      const result = await env.IMAGES.input(readableFromArrayBuffer(buffer))
         .transform({ width, fit: 'scale-down' })
-        .output({ format: 'image/webp' });
+        .output({ format: 'image/webp', quality: 75 });
       const response = result.response();
       headers.set('Content-Type', result.contentType());
       return new Response(response.body, { status: 200, headers });
     } catch {
-      // fall through to original
+      // Transform failed (unsupported/corrupt) — re-fetch original bytes.
+      const original = await env.MEDIA.get(key);
+      if (!original) {
+        return new Response('Not found', { status: 404 });
+      }
+      headers.set('Content-Type', contentType);
+      if (original.size) headers.set('Content-Length', String(original.size));
+      return new Response(original.body, { status: 200, headers });
     }
   }
 
