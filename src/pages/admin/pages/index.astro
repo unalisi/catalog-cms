@@ -2,7 +2,8 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import EmptyState from '../../../components/admin/EmptyState.astro';
 import DeleteButton from '../../../components/admin/DeleteButton';
-import DesktopOnlyGate from '../../../components/admin/DesktopOnlyGate.astro';
+import AdminListCard from '../../../components/admin/AdminListCard.astro';
+import type { ContentStatus } from '../../../components/admin/StatusDot';
 import { isCorePageSlug } from '../../../lib/pages/core-pages';
 import { listAdminPages } from '../../../server/services/pages';
 
@@ -13,36 +14,49 @@ const pages = await listAdminPages();
   title="Sayfalar"
   breadcrumbs={[{ href: '/admin', label: 'Admin' }, { label: 'Sayfalar' }]}
 >
-  <DesktopOnlyGate>
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-        <div>
-          <h1 class="font-display text-2xl font-bold tracking-tight">Sayfalar</h1>
-          <p class="mt-1 text-sm text-muted-foreground">
-            {pages.length} kayıt · düzenle = tam ekran builder
-          </p>
-        </div>
-        <a
-          href="/admin/pages/new"
-          class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-        >
-          <span aria-hidden="true">+</span>
-          Yeni sayfa
-        </a>
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+      <div>
+        <h1 class="font-display text-2xl font-bold tracking-tight">Sayfalar</h1>
+        <p class="mt-1 text-sm text-muted-foreground">
+          {pages.length} kayıt · düzenle = tam ekran builder
+        </p>
       </div>
+      <a
+        href="/admin/pages/new"
+        class="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:min-h-9"
+      >
+        <span aria-hidden="true">+</span>
+        Yeni sayfa
+      </a>
+    </div>
 
-      {
-        pages.length === 0 ? (
-          <div class="rounded-lg border border-border bg-background p-4 md:p-6">
-            <EmptyState
-              title="Henüz sayfa yok"
-              description="Ana sayfa seed’ini yükleyin veya yeni sayfa oluşturun."
-              actionHref="/admin/pages/new"
-              actionLabel="Sayfa ekle"
-            />
+    {
+      pages.length === 0 ? (
+        <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+          <EmptyState
+            title="Henüz sayfa yok"
+            description="Ana sayfa seed’ini yükleyin veya yeni sayfa oluşturun."
+            actionHref="/admin/pages/new"
+            actionLabel="Sayfa ekle"
+          />
+        </div>
+      ) : (
+        <>
+          <div class="flex flex-col gap-2 md:hidden">
+            {pages.map((page) => (
+              <AdminListCard
+                href={`/admin/builder/${page.slug}`}
+                title={page.title}
+                status={page.status as ContentStatus}
+                meta={[page.slug, page.status, `${page.sectionCount} section`]}
+                deleteEndpoint={
+                  isCorePageSlug(page.slug) ? undefined : `/api/admin/pages/${page.slug}`
+                }
+              />
+            ))}
           </div>
-        ) : (
-          <div class="overflow-x-auto rounded-md border border-border bg-background">
+          <div class="hidden overflow-x-auto rounded-md border border-border bg-background md:block">
             <table class="w-full min-w-[36rem] border-collapse text-left text-sm">
               <thead class="bg-muted text-xs font-medium">
                 <tr>
@@ -81,8 +95,8 @@ const pages = await listAdminPages();
               </tbody>
             </table>
           </div>
-        )
-      }
-    </div>
-  </DesktopOnlyGate>
+        </>
+      )
+    }
+  </div>
 </AdminLayout>

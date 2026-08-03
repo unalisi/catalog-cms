@@ -1,6 +1,5 @@
 ---
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import DesktopOnlyGate from '../../../components/admin/DesktopOnlyGate.astro';
 import PageForm from '../../../components/admin/PageForm';
 ---
 
@@ -12,14 +11,12 @@ import PageForm from '../../../components/admin/PageForm';
     { label: 'Yeni' },
   ]}
 >
-  <DesktopOnlyGate>
-    <div class="flex flex-col gap-4">
-      <div>
-        <h1 class="font-display text-2xl font-bold tracking-tight">Yeni sayfa</h1>
-      </div>
-      <div class="rounded-lg border border-border bg-background p-4 md:p-6">
-        <PageForm client:media="(min-width: 768px)" />
-      </div>
+  <div class="flex flex-col gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold tracking-tight">Yeni sayfa</h1>
     </div>
-  </DesktopOnlyGate>
+    <div class="rounded-lg border border-border bg-background p-4 md:p-6">
+      <PageForm client:load />
+    </div>
+  </div>
 </AdminLayout>
