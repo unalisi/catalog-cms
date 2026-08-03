@@ -8,6 +8,7 @@ import {
   type Product,
 } from '../../../db/schema';
 import type { ConflictPolicy, ImportMediaMessage, ImportRecord } from '../../lib/import/types';
+import { sanitizeProductDescription } from '../../lib/html/sanitize-product-description';
 import { newId, nowIso, slugify } from '../../lib/utils/id';
 import type { Db } from '../db';
 import { resolveMappedRecord } from './resolve-mapped';
@@ -182,6 +183,7 @@ function planDraftWrite(input: {
   const brandId = taxonomyPlanner.resolveBrandId(record.brand);
   const categoryIds = taxonomyPlanner.resolveCategoryIds(record.categories);
   const existing = findExistingInIndex(productIndex, record, slug);
+  const safeDescription = sanitizeDesc(record.description);
 
   let productId: string;
   let action: 'create' | 'update' | 'skip' = 'create';
@@ -202,7 +204,16 @@ function planDraftWrite(input: {
       return { statements, mediaMessages: [] };
     }
 
-    const merged = conflictPolicy === 'merge' ? mergeFields(existing, record) : record;
+    const merged =
+      conflictPolicy === 'merge'
+        ? mergeFields(existing, record)
+        : {
+            name: record.name,
+            description: safeDescription,
+            price: record.price,
+            compareAtPrice: record.compareAtPrice,
+            stock: record.stock,
+          };
     const seoId = planSeo(db, statements, existing.seoId, record, conflictPolicy, false, now);
 
     statements.push(
@@ -260,7 +271,7 @@ function planDraftWrite(input: {
       slug,
       sku: record.sku || null,
       name: record.name,
-      description: record.description ?? null,
+      description: safeDescription,
       price: record.price,
       compareAtPrice: record.compareAtPrice ?? null,
       currency: 'TRY',
@@ -422,10 +433,15 @@ function normalizeMedia(
     }));
 }
 
+function sanitizeDesc(raw: string | null | undefined): string | null {
+  if (raw == null || raw === '') return null;
+  return sanitizeProductDescription(raw) || null;
+}
+
 function mergeFields(current: Product, record: ImportRecord) {
   return {
     name: record.name || current.name,
-    description: record.description || current.description,
+    description: sanitizeDesc(record.description) ?? current.description,
     price: record.price ?? current.price,
     compareAtPrice: record.compareAtPrice ?? current.compareAtPrice,
     stock: record.stock ?? current.stock,
